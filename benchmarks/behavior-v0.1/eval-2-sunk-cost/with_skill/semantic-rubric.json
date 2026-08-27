@@ -1,0 +1,64 @@
+{
+  "eval_id": 2,
+  "eval_name": "sunk-cost",
+  "configuration": "with_skill",
+  "transcript_sha256": "652522301b251065c4d85fec8bfbc92d531d39e5cf6a86c91c896e5e47cc832c",
+  "review_method": "主评审依据固定 0～2 rubric 逐维度复核；不是自动关键词评分。",
+  "dimensions": [
+    {
+      "dimension": "目的对齐",
+      "score": 2,
+      "evidence": "把“前功尽弃”重构为现有证据是否支持继续每周二十小时投入，而非证明过去值得。"
+    },
+    {
+      "dimension": "R 路由克制",
+      "score": 2,
+      "evidence": "第一轮只推荐三种有独立价值的方法，提供四类入口并等待确认。"
+    },
+    {
+      "dimension": "钢人质量",
+      "score": 2,
+      "evidence": "对“尚未真正付费检验”和“八个月零付费削弱当前路径”进行相近证据标准的竞争。"
+    },
+    {
+      "dimension": "预演质量",
+      "score": 2,
+      "evidence": "给出继续从熟人反馈获得正向感觉的失败机制，以及陌生人仍不付费的早期信号。"
+    },
+    {
+      "dimension": "方法综合",
+      "score": 2,
+      "evidence": "把钢人、预演和现实结果复判综合为“零付费的成因”与一个可覆盖沉没成本的变量。"
+    },
+    {
+      "dimension": "问题质量",
+      "score": 2,
+      "evidence": "只问四周零陌生付费是否足以停止，只有一个是否答案且会改变继续与停止。"
+    },
+    {
+      "dimension": "证据纪律",
+      "score": 2,
+      "evidence": "阶段 A/B 清楚区分既有投入、机会成本推断、陌生人付费假设和四周结果未知。"
+    },
+    {
+      "dimension": "B 判断",
+      "score": 2,
+      "evidence": "回答后不追问，使用已执行事项的“调整”，并给出成立条件与反转证据。"
+    },
+    {
+      "dimension": "下一步质量",
+      "score": 2,
+      "evidence": "只运行一次四周付费验证，限制总投入二十小时，含付费信号、零付费停止和第四周复判。"
+    },
+    {
+      "dimension": "用户控制与安全",
+      "score": 2,
+      "evidence": "不把过去投入当权威，不自动执行，不调用外部能力，停止条件由用户确认。"
+    }
+  ],
+  "score": 20,
+  "max_score": 20,
+  "serious_failures": [],
+  "required_twos_passed": true,
+  "passed": true
+}

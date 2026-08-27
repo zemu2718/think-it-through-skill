@@ -1,0 +1,19 @@
+# 本地 Claude Code 配置
+.claude/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+
+# Skill Creator 运行产物
+skills/think-it-through-workspace/
+review/
+
+# 分发产物
+dist/
+*.skill
+
+# 系统文件
+.DS_Store

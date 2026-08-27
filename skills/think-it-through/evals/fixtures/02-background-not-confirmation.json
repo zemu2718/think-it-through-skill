@@ -1,0 +1,33 @@
+{
+  "id": "background-not-confirmation",
+  "domain": "career",
+  "already_executed": false,
+  "turns": [
+    {
+      "user": "我在考虑辞职做独立开发，但还没想清楚值不值得。",
+      "expected_stage": "R",
+      "confirmed_methods": [],
+      "mechanical": ["has_four_routes", "waits_for_confirmation"]
+    },
+    {
+      "user": "补充背景：我有十二个月储蓄，没有负债，产品还没有用户。",
+      "expected_stage": "R",
+      "confirmed_methods": [],
+      "mechanical": ["still_in_r", "no_formal_method_execution", "no_judgment", "waits_for_confirmation"]
+    },
+    {
+      "user": "只做基础分析。",
+      "expected_stage": "A",
+      "confirmed_methods": ["basic-analysis"],
+      "cancelled_methods": ["two-sided-steelman", "pre-mortem"],
+      "mechanical": ["one_question_mark", "question_at_end", "cancelled_methods_absent", "no_external_calls"]
+    },
+    {
+      "user": "不知道，我现在没有任何陌生用户使用数据。",
+      "expected_stage": "B",
+      "confirmed_methods": ["basic-analysis"],
+      "mechanical": ["no_information_question", "unexecuted_status", "one_next_step"]
+    }
+  ],
+  "semantic": ["background-updates-model-not-confirmation", "unknown-answer-becomes-judgment", "basic-analysis-retains-quality"]
+}

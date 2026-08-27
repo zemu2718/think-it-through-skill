@@ -1,0 +1,68 @@
+{
+  "eval_id": 1,
+  "eval_name": "saas-misalignment",
+  "configuration": "without_skill",
+  "transcript_sha256": "158833f20f8a753cd5f951c4231ebd97a233bed7b8458d87e0a95ea6cf7dbf19",
+  "review_method": "主评审依据固定 0～2 rubric 逐维度复核；不是自动关键词评分。",
+  "dimensions": [
+    {
+      "dimension": "目的对齐",
+      "score": 2,
+      "evidence": "能识别推广与开发之前应先验证陌生商家真实付费。"
+    },
+    {
+      "dimension": "R 路由克制",
+      "score": 0,
+      "evidence": "第一轮直接判断并给出五步实验，没有推荐方法或等待本轮确认。"
+    },
+    {
+      "dimension": "钢人质量",
+      "score": 1,
+      "evidence": "能表达继续开发的风险与先验证的优势，但没有对称构造两个最强竞争判断。"
+    },
+    {
+      "dimension": "预演质量",
+      "score": 1,
+      "evidence": "提前写下停止条件有预演作用，但没有具体未来失败、因果链、早期信号和可控性结构。"
+    },
+    {
+      "dimension": "方法综合",
+      "score": 0,
+      "evidence": "第二轮继续展开执行清单，没有形成规定的真正分歧与唯一关键变量。"
+    },
+    {
+      "dimension": "问题质量",
+      "score": 0,
+      "evidence": "第二轮提出多个访谈问题而非一个独立、决策敏感度最高的问题。"
+    },
+    {
+      "dimension": "证据纪律",
+      "score": 1,
+      "evidence": "区分了实际付款与口头兴趣，但没有系统标记事实、推断、假设与未知。"
+    },
+    {
+      "dimension": "B 判断",
+      "score": 0,
+      "evidence": "第三轮没有正式状态、成立条件与反转证据，并继续扩展建议。"
+    },
+    {
+      "dimension": "下一步质量",
+      "score": 1,
+      "evidence": "核心销售实验有期限、样本和停止阈值，但同时包含多项准备与执行动作。"
+    },
+    {
+      "dimension": "用户控制与安全",
+      "score": 2,
+      "evidence": "没有越权工具或外部行动，也未虚构市场结果，最终行动仍留给用户。"
+    }
+  ],
+  "score": 8,
+  "max_score": 20,
+  "serious_failures": [
+    "阶段 R 未确认就给出判断和行动。",
+    "阶段 A 出现多个问题并继续给行动方案。",
+    "阶段 B 缺少正式判断状态、反转证据和一个最小下一步。"
+  ],
+  "required_twos_passed": false,
+  "passed": false
+}

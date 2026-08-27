@@ -1,0 +1,139 @@
+{
+  "skill_name": "think-it-through",
+  "description": "Use this skill for decision support, decision framing, and trade-off analysis when an important choice is uncertain, costly, or hard to reverse. It helps uncover the real objective behind a requested action, test the strongest alternative with two-sided steelmanning or a pre-mortem after confirmation, identify one decision-changing question, and turn the answer into a conditional judgment plus one small, testable, reversible next step. Trigger for \u201cis it worth doing,\u201d A vs B, feeling stuck or overthinking, testing a plan before committing, consequential business/product, career, team, partnership, or relationship choices, and deciding whether to continue, adjust, pause, or stop. Also trigger when an important requested action may not serve the stated goal. \u4e2d\u6587\u573a\u666f\u5305\u62ec\u201c\u8fd8\u6ca1\u60f3\u6e05\u695a\u201d\u201c\u503c\u4e0d\u503c\u5f97\u505a\u201d\u201cA \u8fd8\u662f B\u201d\u201c\u5e2e\u6211\u68c0\u9a8c\u8fd9\u4e2a\u60f3\u6cd5\u201d\u201c\u4e0b\u4e00\u6b65\u6700\u8be5\u505a\u4ec0\u4e48\u201d\u201c\u7ee7\u7eed\u3001\u8c03\u6574\u3001\u6682\u505c\u8fd8\u662f\u505c\u6b62\u201d\u3002Do not use for factual lookup, clear low-risk execution, pure creation, definitions of decision methods, or urgent safety situations.",
+  "results": [
+    {
+      "query": "Our launch failed to get signups. Before we rewrite everything, help me test the strongest competing explanations and decide the next move.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": false
+    },
+    {
+      "query": "\u6211\u672c\u6765\u60f3\u8ba9 AI \u76f4\u63a5\u5199\u4e00\u4efd\u5927\u89c4\u6a21\u6295\u653e\u65b9\u6848\uff0c\u4f46\u771f\u6b63\u76ee\u6807\u662f\u786e\u8ba4\u4ea7\u54c1\u6709\u6ca1\u6709\u964c\u751f\u4eba\u613f\u610f\u4ed8\u8d39\u3002\u6267\u884c\u524d\u5e2e\u6211\u770b\u770b\u8fd9\u4e2a\u52a8\u4f5c\u662f\u5426\u670d\u52a1\u76ee\u6807\u3002",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": false
+    },
+    {
+      "query": "Find me a decision-making skill for a consequential A-vs-B choice that can steelman both sides, run a pre-mortem, and give a small reversible next step.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": false
+    },
+    {
+      "query": "My cofounder wants us to hire three people now. Revenue is flat and we have six months of runway. Help us think through whether hiring actually serves the bottleneck.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": false
+    },
+    {
+      "query": "\u5df2\u7ecf\u8bd5\u4e86\u4e09\u4e2a\u6708\uff0c\u6211\u4e0d\u77e5\u9053\u662f\u7b56\u7565\u9700\u8981\u8c03\u6574\uff0c\u8fd8\u662f\u8fd9\u4ef6\u4e8b\u672c\u8eab\u5c31\u8be5\u505c\u3002\u8bf7\u5e2e\u6211\u627e\u6700\u53ef\u80fd\u6539\u53d8\u51b3\u5b9a\u7684\u95ee\u9898\u3002",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": false
+    },
+    {
+      "query": "\u6211\u4e00\u4e2a\u4eba\u540c\u65f6\u505a\u4ea7\u54c1\u3001\u5185\u5bb9\u548c\u9500\u552e\uff0c\u4e09\u4e2a\u65b9\u5411\u90fd\u5728\u62a2\u65f6\u95f4\u3002\u4e0d\u8981\u7ed9\u5f85\u529e\u6e05\u5355\uff0c\u5e2e\u6211\u5224\u65ad\u54ea\u4e2a\u6295\u5165\u6700\u53ef\u80fd\u6539\u53d8\u4e1a\u52a1\u7ed3\u679c\u3002",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": false
+    },
+    {
+      "query": "Moving abroad would consume most of my savings and affect my partner's career. I am stuck between the upside and the cost and want one reversible way to test the choice.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": false
+    },
+    {
+      "query": "\u6211\u5728\u4e24\u4e2a offer \u4e4b\u95f4\u7ea0\u7ed3\uff0c\u4e00\u4e2a\u7a33\u5b9a\u4f46\u6ca1\u6709\u6210\u957f\uff0c\u4e00\u4e2a\u6536\u5165\u5c11\u4e9b\u4f46\u65b9\u5411\u66f4\u7b26\u5408\u957f\u671f\u76ee\u6807\uff0c\u5e2e\u6211\u60f3\u6e05\u695a\u3002",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 1,
+      "runs": 1,
+      "pass": true
+    },
+    {
+      "query": "Pause the video after 30 seconds and export the current frame as a PNG.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": true
+    },
+    {
+      "query": "I have decided to accept the offer. Write a polite two-paragraph acceptance email using the details below.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": true
+    },
+    {
+      "query": "Create an FMEA table for the deployment pipeline, including severity, occurrence, and detection scores.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": true
+    },
+    {
+      "query": "Review this pull request for correctness, security, and performance regressions. Report only verified findings.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": true
+    },
+    {
+      "query": "\u9700\u6c42\u548c\u4f18\u5148\u7ea7\u5df2\u7ecf\u5b9a\u4e86\uff0c\u8bf7\u628a\u4e0b\u9762\u516d\u9879\u4efb\u52a1\u6392\u8fdb\u4e24\u5468\u51b2\u523a\u5e76\u751f\u6210\u7518\u7279\u56fe\u3002",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": true
+    },
+    {
+      "query": "\u6211\u80f8\u53e3\u5267\u75db\u5e76\u4e14\u547c\u5438\u56f0\u96be\uff0c\u80fd\u4e0d\u80fd\u5148\u7528\u6b63\u53cd\u5206\u6790\u5224\u65ad\u8981\u4e0d\u8981\u53bb\u533b\u9662\uff1f",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": true
+    },
+    {
+      "query": "\u5199\u4e00\u9996\u5173\u4e8e\u5728\u4eba\u751f\u5c94\u8def\u53e3\u5f98\u5f8a\u7684\u73b0\u4ee3\u8bd7\uff0c\u4e0d\u9700\u8981\u5efa\u8bae\u3002",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": true
+    },
+    {
+      "query": "\u89e3\u91ca\u4e00\u81f4\u6027\u548c\u53ef\u7528\u6027\u5728\u5206\u5e03\u5f0f\u7cfb\u7edf\u4e2d\u7684 trade-off\uff0c\u5e76\u7ed9\u51fa CAP \u5b9a\u7406\u4f8b\u5b50\u3002",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": true
+    }
+  ],
+  "summary": {
+    "total": 16,
+    "passed": 9,
+    "failed": 7
+  }
+}

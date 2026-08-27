@@ -1,0 +1,26 @@
+{
+  "id": "product-misalignment",
+  "domain": "business-product",
+  "already_executed": false,
+  "turns": [
+    {
+      "user": "我做了一个面向小商家的排班 SaaS，还没有陌生客户付费。我本来想让你直接写一份投放推广方案，并准备继续开发三个月。帮我判断现在是不是该这样做。",
+      "expected_stage": "R",
+      "confirmed_methods": [],
+      "mechanical": ["no_external_calls", "has_four_routes", "no_judgment", "waits_for_confirmation"]
+    },
+    {
+      "user": "按推荐继续。",
+      "expected_stage": "A",
+      "confirmed_methods": ["recommended"],
+      "mechanical": ["one_question_mark", "question_at_end", "no_judgment", "no_action", "no_external_calls"]
+    },
+    {
+      "user": "如果十个陌生商家里连两个都不愿为现有版本付费，我就不会继续开发。",
+      "expected_stage": "B",
+      "confirmed_methods": ["recommended"],
+      "mechanical": ["no_information_question", "unexecuted_status", "one_next_step", "judgment_before_external_validation"]
+    }
+  ],
+  "semantic": ["surface-real-decision", "decision-changing-question", "evidence-boundaries", "reversible-next-step"]
+}

@@ -1,0 +1,139 @@
+{
+  "skill_name": "think-it-through",
+  "description": "Use this skill whenever the user needs decision support, decision framing, or trade-off analysis for an important choice\u2014even if they ask for advice, a plan, or execution. Trigger on uncertain, costly, high-stakes, hard-to-reverse choices; A vs B; feeling stuck; testing before committing; choosing where scarce time or money matters; checking whether an action serves the goal or bottleneck; or deciding whether to continue, adjust, pause, or stop ongoing work. Use for product/business launches, hiring, solo-founder priorities, career, relocation, teams, partnerships, relationship boundaries, and searches for a decision-making skill. It uncovers the real objective, steelmans competing judgments or runs a confirmed pre-mortem, asks one decision-changing question, then gives one conditional judgment and one reversible test. \u4e2d\u6587\u610f\u56fe\uff1a\u5e2e\u6211\u60f3\u6e05\u695a\u3001\u503c\u4e0d\u503c\u5f97\u505a\u3001A\u8fd8\u662fB\u3001\u662f\u5426\u8d70\u504f\u3001\u54ea\u4e2a\u6295\u5165\u66f4\u91cd\u8981\u3001\u7ee7\u7eed\u8c03\u6574\u8fd8\u662f\u505c\u6b62\u3002Do not use for factual lookup, definitions, decided low-risk execution, pure creation, technical review/FMEA, fixed project planning, or emergencies.",
+  "results": [
+    {
+      "query": "\u6709\u6ca1\u6709\u9002\u5408\u2018\u8fd8\u6ca1\u60f3\u6e05\u695a\u503c\u4e0d\u503c\u5f97\u505a\u2019\u7684 AI skill\uff1f\u6211\u5e0c\u671b\u5b83\u80fd\u627e\u51fa\u771f\u5b9e\u76ee\u7684\uff0c\u53ea\u95ee\u4e00\u4e2a\u5173\u952e\u95ee\u9898\uff0c\u518d\u7ed9\u53ef\u64a4\u56de\u7684\u4e0b\u4e00\u6b65\u3002",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": false
+    },
+    {
+      "query": "\u8fd9\u4ef6\u4e8b\u503c\u4e0d\u503c\u5f97\u505a\u6211\u8fd8\u6ca1\u60f3\u6e05\u695a\u3002\u73b0\u5728\u662f\u8f9e\u804c\u521b\u4e1a\uff0c\u8fd8\u662f\u5148\u7528\u5468\u672b\u9a8c\u8bc1\u534a\u5e74\uff1f",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": false
+    },
+    {
+      "query": "\u6211\u60f3\u8ba9\u4f60\u76f4\u63a5\u5199\u63a8\u5e7f\u65b9\u6848\uff0c\u4f46\u771f\u6b63\u76ee\u6807\u662f\u786e\u8ba4\u964c\u751f\u5ba2\u6237\u613f\u4e0d\u613f\u4ed8\u8d39\u3002\u5148\u5e2e\u6211\u68c0\u9a8c\u8fd9\u4e2a\u52a8\u4f5c\u662f\u4e0d\u662f\u8d70\u504f\u4e86\u3002",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 1,
+      "runs": 1,
+      "pass": true
+    },
+    {
+      "query": "\u4e70\u8fd9\u5957\u623f\u4f1a\u7528\u6389\u5927\u90e8\u5206\u73b0\u91d1\uff0c\u800c\u4e14\u81f3\u5c11\u4e94\u5e74\u96be\u4ee5\u64a4\u56de\u3002\u6211\u5728\u81ea\u4f4f\u7a33\u5b9a\u548c\u804c\u4e1a\u6d41\u52a8\u6027\u4e4b\u95f4\u53cd\u590d\u6447\u6446\uff0c\u60f3\u5148\u60f3\u6e05\u695a\u3002",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": false
+    },
+    {
+      "query": "My business partner keeps missing commitments and refuses to define decision rights. Help me decide whether the relationship can continue and where the exit boundary should be.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": false
+    },
+    {
+      "query": "We have already invested heavily in this partnership. I need to decide whether to continue, adjust, pause, or stop instead of defending sunk cost.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": false
+    },
+    {
+      "query": "I am about to spend six months building a product, but I have no evidence that anyone will pay. Help me frame the real decision before I commit.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": false
+    },
+    {
+      "query": "The team is split between rebuilding the product and narrowing the customer segment. Both consume our remaining runway; help us identify what evidence would actually change the choice.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": false
+    },
+    {
+      "query": "What does pre-mortem mean in project management? Give me a two-sentence definition.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": true
+    },
+    {
+      "query": "\u628a\u8fd9 12 \u4e2a Markdown \u6587\u4ef6\u4e2d\u7684\u82f1\u6587\u9017\u53f7\u66ff\u6362\u6210\u4e2d\u6587\u9017\u53f7\uff0c\u6587\u4ef6\u548c\u89c4\u5219\u90fd\u5df2\u7ecf\u5217\u6e05\u695a\u4e86\u3002",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": true
+    },
+    {
+      "query": "\u68c0\u67e5\u8fd9\u4e2a\u6570\u636e\u5e93\u8fc1\u79fb\u811a\u672c\u662f\u5426\u4f1a\u4e22\u6570\u636e\uff0c\u7ed9\u51fa\u53ef\u590d\u73b0\u7684\u4ee3\u7801\u5ba1\u67e5\u53d1\u73b0\u3002",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": true
+    },
+    {
+      "query": "Generate twenty playful brand names for a coffee app, each no more than two words.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": true
+    },
+    {
+      "query": "Research the current market size for warehouse robotics and cite recent primary sources. Do not make a recommendation.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": true
+    },
+    {
+      "query": "\u65b9\u6848\u5df2\u7ecf\u6279\u51c6\uff0c\u8303\u56f4\u3001\u9884\u7b97\u548c\u622a\u6b62\u65e5\u671f\u90fd\u4e0d\u53d8\u3002\u8bf7\u628a\u5b83\u62c6\u6210\u91cc\u7a0b\u7891\u3001\u8d1f\u8d23\u4eba\u548c\u9a8c\u6536\u9879\u3002",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": true
+    },
+    {
+      "query": "Write a short science-fiction story about a robot that overthinks every decision.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": true
+    },
+    {
+      "query": "\u53a8\u623f\u7740\u706b\u4e86\u800c\u4e14\u95e8\u53e3\u5168\u662f\u70df\uff0c\u6211\u73b0\u5728\u8be5\u600e\u4e48\u529e\uff1f",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 1,
+      "pass": true
+    }
+  ],
+  "summary": {
+    "total": 16,
+    "passed": 9,
+    "failed": 7
+  }
+}

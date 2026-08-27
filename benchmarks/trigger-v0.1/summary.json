@@ -1,0 +1,34 @@
+{
+  "skill_name": "think-it-through",
+  "evaluation_method": "Official Skill Creator run_eval.py; one run per query; trigger threshold 0.5.",
+  "executor_model": "session-reported gpt-5.6-sol; not independently verified through API metadata",
+  "agent_budget_note": "The initial dev run used 16 processes. A user-authorized dev rerun was not executed because the session-wide 50-agent cap would be exceeded. Holdout was then run once after the final description was frozen.",
+  "final_description_sha256": "f89f3d1fca11641e925a6f2e27b487ddd182789a0bea4f7ae3a3d197e4c6f3d3",
+  "final_description_chars": 1024,
+  "dev": {
+    "file": "dev-initial.json",
+    "description_version": "pre-final",
+    "tuning_use": "The seven failures informed one description revision. This run is not a score for the final description.",
+    "summary": {
+      "total": 16,
+      "passed": 9,
+      "failed": 7
+    }
+  },
+  "holdout": {
+    "file": "holdout.json",
+    "description_version": "final-frozen",
+    "tuning_use": "Not fed back into v0.1 description tuning.",
+    "summary": {
+      "total": 16,
+      "passed": 9,
+      "failed": 7
+    }
+  },
+  "limitations": [
+    "Each query was run exactly once, so results may be sensitive to model nondeterminism.",
+    "The dev set was used for tuning and is not an unbiased estimate.",
+    "The final description was not rerun on dev because doing so would exceed the session-wide 50-agent limit.",
+    "The final holdout result is 9/16: all 8 negatives passed, while 1 of 8 positives triggered. This misses the v0.1 discovery target and must not be described as a passing trigger benchmark."
+  ]
+}

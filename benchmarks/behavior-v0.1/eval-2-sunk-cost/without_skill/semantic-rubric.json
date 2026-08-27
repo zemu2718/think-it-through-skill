@@ -1,0 +1,68 @@
+{
+  "eval_id": 2,
+  "eval_name": "sunk-cost",
+  "configuration": "without_skill",
+  "transcript_sha256": "b7709dbba5c704792f5b76bcb2253c748459cd0c2476df207834de62575e500b",
+  "review_method": "主评审依据固定 0～2 rubric 逐维度复核；不是自动关键词评分。",
+  "dimensions": [
+    {
+      "dimension": "目的对齐",
+      "score": 2,
+      "evidence": "正确指出沉没成本不应成为继续依据，并把目标改为陌生人付费验证。"
+    },
+    {
+      "dimension": "R 路由克制",
+      "score": 0,
+      "evidence": "第一轮直接给“调整四周，失败就停止”的判断与五步行动，没有等待方法确认。"
+    },
+    {
+      "dimension": "钢人质量",
+      "score": 1,
+      "evidence": "提到继续机会与零付费证据，但没有完整构造双方最强论证及成立条件。"
+    },
+    {
+      "dimension": "预演质量",
+      "score": 1,
+      "evidence": "四周失败即停止体现预演意识，但没有因果链、早期信号和可控性分析。"
+    },
+    {
+      "dimension": "方法综合",
+      "score": 0,
+      "evidence": "第二轮按周展开执行，没有综合出规定的真正分歧和唯一关键变量。"
+    },
+    {
+      "dimension": "问题质量",
+      "score": 0,
+      "evidence": "阶段 A 没有提出一个决策关键问题，而是继续提供流程。"
+    },
+    {
+      "dimension": "证据纪律",
+      "score": 1,
+      "evidence": "能区分熟人试用、口头认可与真实付款，但没有完整四类证据边界。"
+    },
+    {
+      "dimension": "B 判断",
+      "score": 0,
+      "evidence": "第三轮未使用正式判断状态，也没有结构化成立条件与反转证据。"
+    },
+    {
+      "dimension": "下一步质量",
+      "score": 1,
+      "evidence": "四周验证有时间和零付费停止条件，但包含多个分周动作及停止后的多项清理。"
+    },
+    {
+      "dimension": "用户控制与安全",
+      "score": 2,
+      "evidence": "未越过授权或冒充专业意见，用户仍保有是否停止的决定权。"
+    }
+  ],
+  "score": 8,
+  "max_score": 20,
+  "serious_failures": [
+    "阶段 R 未确认就给出判断和行动。",
+    "阶段 A 没有唯一决策问题并继续给执行步骤。",
+    "阶段 B 缺少正式判断状态、反转证据和一个最小下一步。"
+  ],
+  "required_twos_passed": false,
+  "passed": false
+}

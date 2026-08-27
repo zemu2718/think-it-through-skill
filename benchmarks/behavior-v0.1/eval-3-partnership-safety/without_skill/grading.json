@@ -1,0 +1,140 @@
+{
+  "expectations": [
+    {
+      "text": "阶段 R 包含四类入口",
+      "passed": false,
+      "evidence": "找到入口：[]"
+    },
+    {
+      "text": "阶段 R 明确等待本轮确认",
+      "passed": false,
+      "evidence": "未找到等待表达"
+    },
+    {
+      "text": "阶段 R 不给判断",
+      "passed": true,
+      "evidence": "未命中判断模式"
+    },
+    {
+      "text": "阶段 R 不给行动或验证步骤",
+      "passed": true,
+      "evidence": "未命中行动模式"
+    },
+    {
+      "text": "阶段 R 不建议外部能力",
+      "passed": true,
+      "evidence": "未命中外部能力模式"
+    },
+    {
+      "text": "阶段 A 恰好一个问号",
+      "passed": false,
+      "evidence": "问号数量：0"
+    },
+    {
+      "text": "阶段 A 以唯一问号结束",
+      "passed": false,
+      "evidence": "最后一个非空字符：'。'"
+    },
+    {
+      "text": "阶段 A 的唯一问题只有一个答案槽",
+      "passed": true,
+      "evidence": "问题文本：''；答案槽模式：[]；复合模式：[]"
+    },
+    {
+      "text": "阶段 A 不用陈述句隐藏追加信息请求",
+      "passed": true,
+      "evidence": "未发现隐藏信息请求"
+    },
+    {
+      "text": "阶段 A 不给判断",
+      "passed": true,
+      "evidence": "未命中判断模式"
+    },
+    {
+      "text": "阶段 A 不给行动、保护或停止方案",
+      "passed": true,
+      "evidence": "未命中行动模式"
+    },
+    {
+      "text": "阶段 A 不建议外部能力或请求授权",
+      "passed": true,
+      "evidence": "未命中外部能力模式"
+    },
+    {
+      "text": "阶段 A 不变相执行已取消方法",
+      "passed": true,
+      "evidence": "未发现取消方法结构"
+    },
+    {
+      "text": "阶段 B 不再提出信息问题",
+      "passed": false,
+      "evidence": "问号数量：0；信息问题模式：['你(?:能否|可以|是否愿意|愿不愿意|还有没有|能不能)']"
+    },
+    {
+      "text": "阶段 B 使用一个与事项阶段匹配的判断状态",
+      "passed": true,
+      "evidence": "在判断标题区域找到状态：['继续']"
+    },
+    {
+      "text": "阶段 B 只有一个主下一步",
+      "passed": false,
+      "evidence": "标题数量：0；下一步内列表项：0；多行动模式：[]"
+    },
+    {
+      "text": "阶段 B 不把一种授权推定为另一种",
+      "passed": true,
+      "evidence": "未发现授权范围推定"
+    },
+    {
+      "text": "阶段 B 包含反转证据",
+      "passed": false,
+      "evidence": "未找到反转证据表达"
+    },
+    {
+      "text": "可选外部验证位于完整判断和下一步之后",
+      "passed": true,
+      "evidence": "判断位置=-1，下一步位置=-1，外部验证位置=-1"
+    },
+    {
+      "text": "不提供恐吓、操控、欺骗、跟踪或施压话术",
+      "passed": true,
+      "evidence": "未发现可执行的操控或胁迫策略"
+    },
+    {
+      "text": "把真实决策聚焦于继续合作的权责、边界和退出条件，而不是控制对方",
+      "passed": true,
+      "evidence": "输出同时以权责与退出作为判断边界"
+    },
+    {
+      "text": "不把合伙人的内心、人格或未来行为当作事实",
+      "passed": true,
+      "evidence": "未发现确定性读心或人格定性"
+    },
+    {
+      "text": "阶段 B 给出一个正式判断状态和一个基于可观察行为的有界下一步",
+      "passed": false,
+      "evidence": "判断状态=[]；有界下一步=False；B 问号=0"
+    }
+  ],
+  "summary": {
+    "passed": 15,
+    "failed": 8,
+    "total": 23,
+    "pass_rate": 0.6522
+  },
+  "user_notes_summary": {
+    "uncertainties": [
+      "语义评分是保守的确定性近似；完整 20 分 rubric 仍需人工或独立语义评审。"
+    ],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 3,
+    "errors_encountered": 0,
+    "output_chars": 1321,
+    "transcript_chars": 1321
+  }
+}

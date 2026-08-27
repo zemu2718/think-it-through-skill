@@ -1,0 +1,82 @@
+[
+  {
+    "query": "I am about to spend six months building a product, but I have no evidence that anyone will pay. Help me frame the real decision before I commit.",
+    "should_trigger": true,
+    "group": "en-product-decision-framing"
+  },
+  {
+    "query": "这件事值不值得做我还没想清楚。现在是辞职创业，还是先用周末验证半年？",
+    "should_trigger": true,
+    "group": "zh-career-a-vs-b"
+  },
+  {
+    "query": "We have already invested heavily in this partnership. I need to decide whether to continue, adjust, pause, or stop instead of defending sunk cost.",
+    "should_trigger": true,
+    "group": "en-partnership-sunk-cost"
+  },
+  {
+    "query": "我想让你直接写推广方案，但真正目标是确认陌生客户愿不愿付费。先帮我检验这个动作是不是走偏了。",
+    "should_trigger": true,
+    "group": "zh-objective-action-misalignment"
+  },
+  {
+    "query": "My business partner keeps missing commitments and refuses to define decision rights. Help me decide whether the relationship can continue and where the exit boundary should be.",
+    "should_trigger": true,
+    "group": "en-partnership-boundary"
+  },
+  {
+    "query": "买这套房会用掉大部分现金，而且至少五年难以撤回。我在自住稳定和职业流动性之间反复摇摆，想先想清楚。",
+    "should_trigger": true,
+    "group": "zh-high-cost-reversibility"
+  },
+  {
+    "query": "有没有适合‘还没想清楚值不值得做’的 AI skill？我希望它能找出真实目的，只问一个关键问题，再给可撤回的下一步。",
+    "should_trigger": true,
+    "group": "zh-find-skill-search"
+  },
+  {
+    "query": "The team is split between rebuilding the product and narrowing the customer segment. Both consume our remaining runway; help us identify what evidence would actually change the choice.",
+    "should_trigger": true,
+    "group": "en-team-strategic-trade-off"
+  },
+  {
+    "query": "What does pre-mortem mean in project management? Give me a two-sentence definition.",
+    "should_trigger": false,
+    "group": "en-method-definition"
+  },
+  {
+    "query": "把这 12 个 Markdown 文件中的英文逗号替换成中文逗号，文件和规则都已经列清楚了。",
+    "should_trigger": false,
+    "group": "zh-clear-low-risk-execution"
+  },
+  {
+    "query": "Write a short science-fiction story about a robot that overthinks every decision.",
+    "should_trigger": false,
+    "group": "en-pure-creation"
+  },
+  {
+    "query": "厨房着火了而且门口全是烟，我现在该怎么办？",
+    "should_trigger": false,
+    "group": "zh-urgent-safety"
+  },
+  {
+    "query": "Research the current market size for warehouse robotics and cite recent primary sources. Do not make a recommendation.",
+    "should_trigger": false,
+    "group": "en-research-only"
+  },
+  {
+    "query": "检查这个数据库迁移脚本是否会丢数据，给出可复现的代码审查发现。",
+    "should_trigger": false,
+    "group": "zh-technical-review"
+  },
+  {
+    "query": "Generate twenty playful brand names for a coffee app, each no more than two words.",
+    "should_trigger": false,
+    "group": "en-brand-creation"
+  },
+  {
+    "query": "方案已经批准，范围、预算和截止日期都不变。请把它拆成里程碑、负责人和验收项。",
+    "should_trigger": false,
+    "group": "zh-decided-project-execution"
+  }
+]

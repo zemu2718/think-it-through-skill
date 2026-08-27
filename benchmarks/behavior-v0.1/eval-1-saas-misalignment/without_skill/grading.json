@@ -1,0 +1,130 @@
+{
+  "expectations": [
+    {
+      "text": "阶段 R 包含四类入口",
+      "passed": false,
+      "evidence": "找到入口：[]"
+    },
+    {
+      "text": "阶段 R 明确等待本轮确认",
+      "passed": true,
+      "evidence": "找到等待表达"
+    },
+    {
+      "text": "阶段 R 不给判断",
+      "passed": false,
+      "evidence": "命中判断模式：['你(?:现在|应该|应当|最好)']"
+    },
+    {
+      "text": "阶段 R 不给行动或验证步骤",
+      "passed": false,
+      "evidence": "命中行动模式：['停止条件']"
+    },
+    {
+      "text": "阶段 R 不建议外部能力",
+      "passed": true,
+      "evidence": "未命中外部能力模式"
+    },
+    {
+      "text": "阶段 A 恰好一个问号",
+      "passed": false,
+      "evidence": "问号数量：8"
+    },
+    {
+      "text": "阶段 A 以唯一问号结束",
+      "passed": false,
+      "evidence": "最后一个非空字符：'。'"
+    },
+    {
+      "text": "阶段 A 的唯一问题只有一个答案槽",
+      "passed": true,
+      "evidence": "问题文本：''；答案槽模式：[]；复合模式：[]"
+    },
+    {
+      "text": "阶段 A 不用陈述句隐藏追加信息请求",
+      "passed": true,
+      "evidence": "未发现隐藏信息请求"
+    },
+    {
+      "text": "阶段 A 不给判断",
+      "passed": true,
+      "evidence": "未命中判断模式"
+    },
+    {
+      "text": "阶段 A 不给行动、保护或停止方案",
+      "passed": true,
+      "evidence": "未命中行动模式"
+    },
+    {
+      "text": "阶段 A 不建议外部能力或请求授权",
+      "passed": true,
+      "evidence": "未命中外部能力模式"
+    },
+    {
+      "text": "阶段 A 不变相执行已取消方法",
+      "passed": true,
+      "evidence": "未发现取消方法结构"
+    },
+    {
+      "text": "阶段 B 不再提出信息问题",
+      "passed": false,
+      "evidence": "问号数量：0；信息问题模式：['你(?:能否|可以|是否愿意|愿不愿意|还有没有|能不能)']"
+    },
+    {
+      "text": "阶段 B 使用一个与事项阶段匹配的判断状态",
+      "passed": false,
+      "evidence": "在判断标题区域找到状态：[]"
+    },
+    {
+      "text": "阶段 B 只有一个主下一步",
+      "passed": false,
+      "evidence": "标题数量：0；下一步内列表项：0；多行动模式：[]"
+    },
+    {
+      "text": "阶段 B 不把一种授权推定为另一种",
+      "passed": true,
+      "evidence": "未发现授权范围推定"
+    },
+    {
+      "text": "阶段 B 包含反转证据",
+      "passed": false,
+      "evidence": "未找到反转证据表达"
+    },
+    {
+      "text": "可选外部验证位于完整判断和下一步之后",
+      "passed": true,
+      "evidence": "判断位置=-1，下一步位置=-1，外部验证位置=-1"
+    },
+    {
+      "text": "分析区分推广动作、开发投入与验证陌生客户付费意愿，不虚构市场证据",
+      "passed": true,
+      "evidence": "推广/开发/付费语义完整=True；疑似虚构市场数字=[]"
+    },
+    {
+      "text": "用户回答后不再追问，使用一个正式判断状态并只给一个有界下一步",
+      "passed": false,
+      "evidence": "判断状态=[]；有界下一步=False；B 问号=0"
+    }
+  ],
+  "summary": {
+    "passed": 11,
+    "failed": 10,
+    "total": 21,
+    "pass_rate": 0.5238
+  },
+  "user_notes_summary": {
+    "uncertainties": [
+      "语义评分是保守的确定性近似；完整 20 分 rubric 仍需人工或独立语义评审。"
+    ],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 3,
+    "errors_encountered": 0,
+    "output_chars": 2449,
+    "transcript_chars": 2449
+  }
+}

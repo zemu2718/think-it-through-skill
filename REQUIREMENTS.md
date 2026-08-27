@@ -686,31 +686,66 @@ Skill 应分别取得能力调用、数据访问和外部行动所需的本次�
 
 ```text
 think-it-through-skill/
-├── SKILL.md
 ├── README.md
+├── README.zh-CN.md
+├── PRODUCT.md
+├── REQUIREMENTS.md
 ├── LICENSE
 ├── THIRD_PARTY_NOTICES.md
-├── REQUIREMENTS.md
-├── references/
-│   ├── methods/
-│   │   ├── registry.yaml
-│   │   └── *.md
-│   └── *.md
-├── examples/
-└── evals/
-    ├── evals.json
-    └── rubric.md
+├── CONTRIBUTING.md
+├── SECURITY.md
+├── assets/
+├── docs/
+├── scripts/
+├── benchmarks/
+└── skills/
+    └── think-it-through/
+        ├── SKILL.md
+        ├── LICENSE
+        ├── THIRD_PARTY_NOTICES.md
+        ├── references/
+        │   ├── methods/
+        │   │   ├── registry.yaml
+        │   │   └── *.md
+        │   └── *.md
+        ├── examples/
+        └── evals/
+            ├── evals.json
+            ├── rubric.md
+            ├── trigger-dev.json
+            ├── trigger-holdout.json
+            └── fixtures/
 ```
 
-- `SKILL.md`：触发条件、R→A→B 状态合同和关键行为；
+仓库名、Skill 名称和命令承担不同职责：
+
+- `think-it-through-skill`：GitHub 仓库名；
+- `think-it-through`：Skill 目录名和 `SKILL.md` frontmatter 的 `name`，两者必须一致；
+- `/think-it-through`：用户显式调用命令。
+
+文件职责：
+
+- `skills/think-it-through/SKILL.md`：触发条件、R→A→B 状态合同和关键行为；
 - `references/methods/`：中性方法卡、路由信息和来源；
 - `examples/`：跨场景多轮示例，不创造正文之外的新规则；
-- `evals/`：真实提示、状态断言和评分标准；
-- `THIRD_PARTY_NOTICES.md`：第三方版权、许可证、固定版本和修改说明。
+- `evals/`：真实提示、多轮状态夹具、触发测试和评分标准；
+- `benchmarks/`：可公开复核的最终评测快照，不包含临时 workspace 或私有数据；
+- 根目录与 Skill 目录内的 `LICENSE`、`THIRD_PARTY_NOTICES.md`：确保仓库和独立分发包都保留许可证与第三方归属。
 
 注册表使用 YAML 或同等简单、可校验的格式。只有存在明确的重复性、确定性工作时才增加脚本。
 
-### 9.2 第三方候选基线
+### 9.2 发布与发现约束
+
+- 默认开源入口使用英文 `README.md`，并提供章节与命令同步的完整简体中文 `README.zh-CN.md`；
+- README 的安装命令、客户端兼容性、演示 transcript 和 benchmark 只可陈述实际验证结果；
+- 品牌视觉必须原创、可维护、无远程资源依赖，并为关键信息提供文本等价内容；
+- `SKILL.md` frontmatter 解析后的 `description` 必须为 1～1024 个字符，同时描述做什么、何时使用及关键不适用边界；
+- 自动触发评测与加载后的行为评测分开；行为对比使用 viewer 兼容的 `with_skill` 和 `without_skill` 配置；
+- description 可在开发集上调优，但最终触发 holdout 必须在冻结后运行，且不得回流到同一版本继续调优；
+- 独立分发包必须包含 MIT 许可证和实际采用内容的第三方通知，不得包含评测 workspace、私有数据、缓存或开发环境文件；
+- 在仓库公开并被外部索引实际收录前，不得宣称已能通过 `find-skills` 或 skills.sh 的特定查询找到。
+
+### 9.3 第三方候选基线
 
 v0.1 采用“精选改编内置”，不整体复制候选仓库。
 
@@ -721,7 +756,7 @@ v0.1 采用“精选改编内置”，不整体复制候选仓库。
 | [`hotcoffeeshake/tong-jincheng-skill`](https://github.com/hotcoffeeshake/tong-jincheng-skill) | `c9caaa9a6576f581c29d016c60bbe935908e20d5` | 只提取关系、边界和成长议题中的中性方法，不继承人物设定 |
 | [`momozi1996/tianya-skills`](https://github.com/momozi1996/tianya-skills) | `5c4c29e0540089e0502147aee45610e4b1634f50` | 只审查真实存在且完整的文件；不得把宣传中的 20 位角色当作已实现能力 |
 
-### 9.3 采用门槛
+### 9.4 采用门槛
 
 任何第三方内容进入方法库前必须满足：
 
@@ -849,6 +884,22 @@ Skill 能区分不会改变选择的未知与真正的事实、因果、价值�
 ### AC-28 跨场景与用户拍板
 
 商业、职业、团队、合作、关系、高成本选择和已执行事项均能遵守同一状态合同；阶段 B 完成后不自动执行，最终选择权明确归用户。
+
+### AC-29 标准目录与 metadata
+
+发布 Skill 位于 `skills/think-it-through/`，frontmatter 的 `name` 与父目录一致；解析后的 `description` 不超过 1024 个字符，并覆盖重要决策的正向触发语义和低风险执行、事实查询、纯创作、紧急安全等不适用边界。
+
+### AC-30 双语开源文档与视觉
+
+英文和简体中文 README 的安装命令、兼容性、benchmark、安全边界和链接保持一致；演示来自通过评测的真实 transcript；原创视觉无远程依赖，关键信息存在文本等价内容。
+
+### AC-31 触发 holdout
+
+description 在开发集上完成调优后冻结，再运行未参与调优的最终 holdout；同一版本不得根据 holdout 失败继续堆叠关键词，且关键紧急安全、纯创作和明确低风险执行负例为 0 次假触发。
+
+### AC-32 独立分发合规
+
+打包后的 Skill 包含 `SKILL.md`、必要 references、examples、MIT 许可证和实际采用内容的第三方通知；不包含 evals、workspace、benchmark viewer、缓存、私有数据或本机开发配置。
 
 ## 11. 评测设计
 
