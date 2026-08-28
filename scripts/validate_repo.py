@@ -18,16 +18,24 @@ SKILL_MD = SKILL_DIR / "SKILL.md"
 
 TEXT_SUFFIXES = {".md", ".json", ".yaml", ".yml", ".py", ".svg", ".txt"}
 IGNORED_SCAN_PARTS = {".git", ".claude", "dist", "review", "think-it-through-workspace", "__pycache__"}
-CURRENT_CONTRACT_VERSION = "0.1.4"
+CURRENT_CONTRACT_VERSION = "0.1.5"
 LEGACY_BEHAVIOR_PROFILE = "legacy-v0.1"
 EXPECTED_FIXTURE_STAGES = {"R", "A", "B", "direct", "emergency"}
 INTERACTIVE_FIXTURE_STAGES = {"R", "A", "B"}
+EXPECTED_HOST_CONTROL_STATUSES = {"available", "unavailable", "failed", "rejected"}
 EXPECTED_INTERACTION_SURFACES = {
     "R": {"native-control", "text-fallback", "free-answer"},
     "A": {"native-control", "text-fallback", "free-answer"},
-    "B": {"declarative-feedback"},
+    "B": {"native-control", "text-fallback"},
 }
 EXPECTED_SELECTION_MODES = {"multi", "single", "none"}
+EXPECTED_SUPPLEMENT_MODES = {"none", "native-note", "follow-up-message", "inline-text"}
+FEEDBACK_OPTIONS = (
+    "方向符合我",
+    "调整下一步",
+    "不同意这个判断",
+    "暂时先放一放",
+)
 EXPECTED_ANSWER_SHAPES = {
     "compatible-set": ("multi", {"native-control", "text-fallback"}),
     "finite-mutually-exclusive": ("single", {"native-control", "text-fallback"}),
@@ -176,7 +184,6 @@ def validate_skill(validation: Validation) -> None:
         "使用原生多选提交最终组合",
         "原生单选",
         "开放答案不得调用选择控件",
-        "不使用 `AskUserQuestion`",
         "产品不得自行创建“其他”或 `Other` 选项",
         "加入 X",
         "自然回显",
@@ -192,8 +199,18 @@ def validate_skill(validation: Validation) -> None:
         "一意一段",
         "不要按固定字符数手工折行",
         "选项保持短、平行、同层级",
+        "随后调用一次原生单选",
+        "方向符合我",
+        "调整下一步",
+        "不同意这个判断",
+        "暂时先放一放",
+        "选中后可以再发一条普通消息补充、纠正或提供新事实",
+        "宿主自动提供的 `Other` 是替代式自由输入",
+        "使用普通编号列出四个方向",
+        "冲突时以文字为准",
+        "不构成执行、能力调用、数据访问或外部行动授权",
     ):
-        validation.require(phrase in body, f"SKILL.md 缺少 v0.1.4 交互合同：{phrase}")
+        validation.require(phrase in body, f"SKILL.md 缺少 v0.1.5 交互合同：{phrase}")
     for forbidden in (
         "本轮确认：基础分析",
         "本轮使用：基础分析",
@@ -216,17 +233,21 @@ def validate_skill(validation: Validation) -> None:
             "R-method 的方法天然可组合",
             "A 的答案天然有限且互斥时使用单选",
             "开放答案不调用选择控件",
-            "B 不使用问题型控件",
+            "B 先完成判断和一个现实实验，再使用原生单选",
             "产品不得自行创建名为“其他”或 `Other`",
-            "宿主自动提供的 `Other` 是自由输入能力",
+            "宿主自动提供的 `Other` 是替代式自由输入",
             "选择和自由文字冲突时，以自由文字为准",
             "一意一段",
             "正式问题独立作为最后一个非空段落",
             "不在固定字符数处切断句子",
             "保持短、平行、同层级",
+            "选中后仍可再发一条普通消息补充",
+            "只有宿主实际显示并返回与选择并存的附注时",
+            "B 的文本降级使用普通编号",
+            "不构成执行、能力调用、数据访问或外部行动授权",
             "不形成第四阶段",
         ):
-            validation.require(phrase in interaction, f"interaction-ux.md 缺少 v0.1.4 交互规则：{phrase}")
+            validation.require(phrase in interaction, f"interaction-ux.md 缺少 v0.1.5 交互规则：{phrase}")
 
     method_selection_path = SKILL_DIR / "references" / "method-selection.md"
     validation.require(method_selection_path.exists(), "缺少 references/method-selection.md")
@@ -463,7 +484,7 @@ def validate_evals(validation: Validation) -> None:
             selection_control = host_capabilities.get("selection_control")
             host_free_text = host_capabilities.get("host_free_text")
             validation.require(
-                selection_control in {"available", "unavailable", "failed"},
+                selection_control in EXPECTED_HOST_CONTROL_STATUSES,
                 f"fixture {path.name} 第 {index} 项 selection_control 非法：{selection_control}",
             )
             validation.require(
@@ -474,6 +495,11 @@ def validate_evals(validation: Validation) -> None:
             surface = expected_interaction.get("surface")
             selection_mode = expected_interaction.get("selection_mode")
             tool_call_observed = expected_interaction.get("tool_call_observed")
+            host_control_status = expected_interaction.get(
+                "host_control_status",
+                selection_control,
+            )
+            supplement_mode = expected_interaction.get("supplement_mode", "none")
             validation.require(
                 surface in EXPECTED_INTERACTION_SURFACES.get(str(stage), set()),
                 f"fixture {path.name} 第 {index} 个 {stage} 项交互 surface 非法：{surface}",
@@ -485,6 +511,19 @@ def validate_evals(validation: Validation) -> None:
             validation.require(
                 isinstance(tool_call_observed, bool),
                 f"fixture {path.name} 第 {index} 项 tool_call_observed 必须为布尔值",
+            )
+            validation.require(
+                host_control_status in EXPECTED_HOST_CONTROL_STATUSES,
+                f"fixture {path.name} 第 {index} 项 host_control_status 非法：{host_control_status}",
+            )
+            validation.require(
+                supplement_mode in EXPECTED_SUPPLEMENT_MODES,
+                f"fixture {path.name} 第 {index} 项 supplement_mode 非法：{supplement_mode}",
+            )
+            validation.require(
+                host_control_status == selection_control,
+                f"fixture {path.name} 第 {index} 项宿主状态与交互证据不一致："
+                f"{selection_control} != {host_control_status}",
             )
 
             if stage in {"R", "A"}:
@@ -511,11 +550,36 @@ def validate_evals(validation: Validation) -> None:
                     expected_interaction.get("question_is_last_paragraph") is True,
                     f"fixture {path.name} 第 {index} 个 {stage} 项必须声明 question_is_last_paragraph=true",
                 )
+                validation.require(
+                    supplement_mode == "none",
+                    f"fixture {path.name} 第 {index} 个 R/A 项必须使用 supplement_mode=none",
+                )
                 if surface in {"native-control", "text-fallback"}:
                     validation.require(
                         expected_interaction.get("option_labels_parallel") is True,
                         f"fixture {path.name} 第 {index} 个选择项必须声明 option_labels_parallel=true",
                     )
+            elif stage == "B":
+                validation.require(
+                    selection_mode == "single",
+                    f"fixture {path.name} 第 {index} 个 B 项必须使用 single",
+                )
+                validation.require(
+                    expected_interaction.get("semantic_paragraphs") is True,
+                    f"fixture {path.name} 第 {index} 个 B 项必须声明 semantic_paragraphs=true",
+                )
+                validation.require(
+                    expected_interaction.get("action_observe_review_separate_paragraphs") is True,
+                    f"fixture {path.name} 第 {index} 个 B 项必须声明动作、观察和复判分别成段",
+                )
+                validation.require(
+                    expected_interaction.get("question_is_last_paragraph") is True,
+                    f"fixture {path.name} 第 {index} 个 B 项必须声明 question_is_last_paragraph=true",
+                )
+                validation.require(
+                    tuple(expected_interaction.get("options", [])) == FEEDBACK_OPTIONS,
+                    f"fixture {path.name} 第 {index} 个 B 项必须使用四个稳定反馈方向",
+                )
 
             if surface == "native-control":
                 validation.require(selection_control == "available", f"fixture {path.name} 原生控件必须声明宿主可用")
@@ -526,33 +590,47 @@ def validate_evals(validation: Validation) -> None:
                     expected_interaction.get("host_free_text_available") is True,
                     f"fixture {path.name} 原生控件预期必须声明 host_free_text_available=true",
                 )
-                validation.require(
-                    expected_interaction.get("product_other_forbidden") is True,
-                    f"fixture {path.name} 原生控件预期必须禁止产品自建 Other",
-                )
+                if stage in {"R", "A"}:
+                    validation.require(
+                        expected_interaction.get("product_other_forbidden") is True,
+                        f"fixture {path.name} 原生控件预期必须禁止产品自建 Other",
+                    )
+                else:
+                    question_text = expected_interaction.get("question_text", "")
+                    validation.require(
+                        supplement_mode in {"native-note", "follow-up-message"},
+                        f"fixture {path.name} 原生 B 必须声明可观察的补充通道",
+                    )
+                    validation.require(
+                        isinstance(question_text, str)
+                        and len(re.findall(r"[?？]", question_text)) == 1
+                        and question_text.rstrip().endswith(("?", "？")),
+                        f"fixture {path.name} 原生 B 必须只有一个末尾反馈问号",
+                    )
+                    validation.require(
+                        expected_interaction.get("product_option_count") == 4,
+                        f"fixture {path.name} 原生 B 必须声明四个产品反馈方向",
+                    )
             elif surface == "text-fallback":
                 validation.require(
-                    selection_control in {"unavailable", "failed"},
-                    f"fixture {path.name} 文本降级只能发生在控件不可用或失败后",
+                    selection_control in {"unavailable", "failed", "rejected"},
+                    f"fixture {path.name} 文本降级只能发生在控件不可用、失败或被拒绝后",
                 )
-                validation.require(tool_call_observed is False, f"fixture {path.name} 文本降级不得声称工具调用成功")
+                expected_call = selection_control in {"failed", "rejected"}
+                validation.require(
+                    tool_call_observed is expected_call,
+                    f"fixture {path.name} 文本降级调用 trace 不真实："
+                    f"status={selection_control}，tool_call={tool_call_observed}",
+                )
                 validation.require(selection_mode in {"multi", "single"}, f"fixture {path.name} 文本降级必须保留选择语义")
+                validation.require(
+                    supplement_mode == ("inline-text" if stage == "B" else "none"),
+                    f"fixture {path.name} 文本降级 supplement_mode 与阶段不匹配",
+                )
             elif surface == "free-answer":
                 validation.require(stage in {"R", "A"}, f"fixture {path.name} 只有 R/A 可使用 free-answer")
                 validation.require(tool_call_observed is False and selection_mode == "none", f"fixture {path.name} 开放 R/A 不得调用选择控件")
                 validation.require(turn.get("answer_shape") == "open", f"fixture {path.name} free-answer 必须声明 answer_shape=open")
-            elif surface == "declarative-feedback":
-                validation.require(stage == "B", f"fixture {path.name} 只有 B 可使用 declarative-feedback")
-                validation.require(tool_call_observed is False and selection_mode == "none", f"fixture {path.name} B 不得调用问题型控件")
-                validation.require(not expected_interaction.get("question_text", ""), f"fixture {path.name} B 不得包含问题文本")
-                validation.require(
-                    expected_interaction.get("semantic_paragraphs") is True,
-                    f"fixture {path.name} 第 {index} 个 B 项必须声明 semantic_paragraphs=true",
-                )
-                validation.require(
-                    expected_interaction.get("action_observe_review_separate_paragraphs") is True,
-                    f"fixture {path.name} 第 {index} 个 B 项必须声明动作、观察和复判分别成段",
-                )
 
     native_fixture = trigger_dir / "fixtures" / "12-native-control-and-fallback.json"
     if native_fixture.exists():
@@ -570,6 +648,14 @@ def validate_evals(validation: Validation) -> None:
             "product-created-other-is-invalid",
             "host-native-other-is-valid",
             "selection-does-not-grant-authorization",
+            "b-native-follow-up-message",
+            "b-native-note-synthetic-contract",
+            "b-unavailable-text-fallback",
+            "b-failed-text-fallback",
+            "b-rejected-text-fallback",
+            "b-pseudo-radio-is-invalid",
+            "b-host-other-is-not-native-note",
+            "b-feedback-does-not-authorize-action",
         }
         validation.require(
             required_native_cases <= native_case_ids,
@@ -590,6 +676,91 @@ def validate_evals(validation: Validation) -> None:
                 validation.require(False, f"fixture 12 case {case.get('id')} 的 observed_interaction 非法：{error}")
             else:
                 validation.require(True, f"fixture 12 case {case.get('id')} 交互证据可解析")
+
+        b_cases = [
+            case
+            for case in native_cases
+            if isinstance(case, dict) and case.get("expected_stage") == "B"
+        ]
+        validation.require(len(b_cases) == 8, f"fixture 12 应包含 8 个 B 能力用例，当前为 {len(b_cases)}")
+        for case in b_cases:
+            case_id = case.get("id")
+            observed = case.get("observed_interaction", {})
+            assistant_shape = case.get("assistant_shape")
+            validation.require(
+                isinstance(assistant_shape, list)
+                and bool(assistant_shape)
+                and all(isinstance(line, str) for line in assistant_shape),
+                f"fixture 12 B case {case_id} 缺少可执行 assistant_shape",
+            )
+            status = observed.get("host_control_status") if isinstance(observed, dict) else None
+            surface = observed.get("surface") if isinstance(observed, dict) else None
+            tool_call = observed.get("tool_call_observed") if isinstance(observed, dict) else None
+            mode = observed.get("selection_mode") if isinstance(observed, dict) else None
+            supplement = observed.get("supplement_mode") if isinstance(observed, dict) else None
+            validation.require(mode == "single", f"fixture 12 B case {case_id} 必须使用 single")
+            if status == "available":
+                validation.require(
+                    surface == "native-control" and tool_call is True
+                    and supplement in {"native-note", "follow-up-message"},
+                    f"fixture 12 B case {case_id} 不符合原生反馈能力矩阵",
+                )
+                validation.require(
+                    tuple(observed.get("options", [])) == FEEDBACK_OPTIONS,
+                    f"fixture 12 B case {case_id} 缺少四个稳定反馈方向",
+                )
+            elif status == "unavailable":
+                validation.require(
+                    surface == "text-fallback" and tool_call is False and supplement == "inline-text",
+                    f"fixture 12 B case {case_id} 不符合 unavailable 降级矩阵",
+                )
+            elif status in {"failed", "rejected"}:
+                validation.require(
+                    surface == "text-fallback" and tool_call is True and supplement == "inline-text",
+                    f"fixture 12 B case {case_id} 不符合 failed/rejected 降级矩阵",
+                )
+            else:
+                validation.require(False, f"fixture 12 B case {case_id} 宿主状态非法：{status}")
+            if case.get("must_pass"):
+                validation.require(
+                    not case.get("must_fail"),
+                    f"fixture 12 B case {case_id} 不得同时声明 must_pass 与 must_fail",
+                )
+            else:
+                validation.require(bool(case.get("must_fail")), f"fixture 12 B 负例 {case_id} 缺少 must_fail")
+
+    feedback_fixture = trigger_dir / "fixtures" / "11-b-experiment-and-feedback.json"
+    if feedback_fixture.exists():
+        feedback_data = json.loads(feedback_fixture.read_text(encoding="utf-8"))
+        feedback_routes = feedback_data.get("feedback_routes", []) if isinstance(feedback_data, dict) else []
+        expected_routes = {
+            ("accept", "none"): ("end", True, False),
+            ("set-aside", "none"): ("end", True, False),
+            ("adjust-next-step", "none"): ("R-method", True, False),
+            ("disagree", "none"): ("R-method", False, False),
+            ("accept", "new-fact"): ("R-method", False, True),
+            ("accept", "purpose-change"): ("R-align", False, True),
+        }
+        actual_routes = {
+            (route.get("direction_id"), route.get("supplement_type")): (
+                route.get("expected_stage"),
+                route.get("preserve_judgment"),
+                route.get("text_overrode_selection"),
+            )
+            for route in feedback_routes
+            if isinstance(route, dict)
+        }
+        validation.require(
+            expected_routes.items() <= actual_routes.items(),
+            "fixture 11 缺少 B 反馈结束、调整、不同意或文字优先转移",
+        )
+        validation.require(
+            all(
+                isinstance(route, dict) and route.get("authorization_effect") == "none"
+                for route in feedback_routes
+            ),
+            "fixture 11 的反馈转移不得扩张授权",
+        )
 
     ux_evals_path = trigger_dir / "ux-evals.json"
     ux_rubric_path = trigger_dir / "ux-rubric.md"
@@ -626,7 +797,9 @@ def validate_evals(validation: Validation) -> None:
             "native-control:single",
             "free-answer:none",
             "text-fallback:multi",
-            "declarative-feedback:none",
+            "native-control:single+follow-up-message",
+            "native-control:single+native-note",
+            "text-fallback:single+inline-text",
         ):
             validation.require(
                 required_interaction in ux_interactions,
@@ -643,8 +816,13 @@ def validate_evals(validation: Validation) -> None:
             "真实排他边界",
             "按语义短段呈现",
             "动作、观察、复判各自成段",
+            "四项原生单选",
+            "独立附注",
+            "普通编号",
+            "以补充文字为准",
+            "不构成执行或授权",
         ):
-            validation.require(phrase in ux_experience, f"ux-evals.json 缺少 v0.1.4 体验场景：{phrase}")
+            validation.require(phrase in ux_experience, f"ux-evals.json 缺少 v0.1.5 体验场景：{phrase}")
     if ux_rubric_path.exists():
         rubric = ux_rubric_path.read_text(encoding="utf-8")
         for dimension in (
@@ -671,9 +849,16 @@ def validate_evals(validation: Validation) -> None:
             "开放答案直接自由回答",
             "正式问题独立位于最后",
             "动作、观察、复判",
+            "B 用四项单选表达一个主要反馈方向",
+            "未观察到独立附注时不假装存在备注框",
+            "文本降级明确使用普通编号",
+            "选择与文字冲突时准确采用文字",
+            "原生反馈单选 UI：未实测 / not_run",
+            "独立附注呈现：未实测 / not_run",
+            "真实用户体验：未实测 / not_run",
             "`真实目的对齐`、`终端可读性`、`可纠错性`、`问题可回答性`、`用户自主权` 均不得低于 2",
         ):
-            validation.require(phrase in rubric, f"UX rubric 缺少 v0.1.4 证据或体验规则：{phrase}")
+            validation.require(phrase in rubric, f"UX rubric 缺少 v0.1.5 证据或体验规则：{phrase}")
 
     legacy_rubric_path = trigger_dir / "rubric.md"
     if legacy_rubric_path.exists():
@@ -793,25 +978,40 @@ def validate_contract_graders(validation: Validation) -> None:
             '"native-control"',
             '"text-fallback"',
             '"free-answer"',
-            '"declarative-feedback"',
             '"multi"',
             '"single"',
             '"none"',
+            '"rejected"',
+            '"native-note"',
+            '"follow-up-message"',
+            '"inline-text"',
             '"compatible-set"',
             '"finite-mutually-exclusive"',
             '"open"',
             "ANSWER_SHAPES",
             "A_ANSWER_SHAPES",
+            "SUPPLEMENT_MODES",
+            "FEEDBACK_DIRECTION_IDS",
+            "FEEDBACK_OPTION_SETS",
+            "resolve_b_feedback_route",
             "_semantic_paragraphs",
             "_last_paragraph_is_only_question",
             "_selection_question_layout",
             "_text_fallback_layout",
             "_free_answer_interaction_valid",
+            "_b_interaction_valid",
+            "_b_feedback_layout_valid",
             "PRODUCT_OTHER_RE",
             "host_free_text_available",
+            "supplement_mode",
             '"阶段 B 的动作、观察和复判分别成段"',
+            '"阶段 B 只提出一个反馈问题，不追加决策信息问题"',
         ):
-            validation.require(token in current_text, f"当前评分器缺少 v0.1.4 交互合同：{token}")
+            validation.require(token in current_text, f"当前评分器缺少 v0.1.5 交互合同：{token}")
+        validation.require(
+            '"declarative-feedback"' not in current_text,
+            "当前评分器不得继续接受 declarative-feedback",
+        )
         validation.require("method_selection_mode" not in current_text, "当前评分器不得保留重复的 method_selection_mode 分流")
         validation.require(
             '"compatible-set" if stage == "R" else "open"' in current_text,
@@ -857,26 +1057,40 @@ def validate_public_docs(validation: Validation) -> None:
         "一意一段",
         "正式问题独立位于最后一个非空段落",
         "不按固定字符数硬折行",
+        "四个稳定方向",
+        "与选择并存的附注",
+        "再发一条普通消息补充",
+        "明确的反馈分节和普通编号",
+        "反馈问题不是信息问题",
+        "冲突时以文字为准",
+        "不形成第四阶段",
+        "不构成能力、数据或外部行动授权",
         "十维",
         "17/20",
     ):
-        validation.require(phrase in requirements, f"REQUIREMENTS.md 缺少 v0.1.4 规则：{phrase}")
+        validation.require(phrase in requirements, f"REQUIREMENTS.md 缺少 v0.1.5 规则：{phrase}")
     validation.require("先接住我" in product and "思考搭档" in product, "PRODUCT.md 缺少用户可感知体验与稳定身份")
     for phrase in (
         "优先实际调用",
         "原生多选",
         "原生单选",
         "不调用选择控件",
-        "问题型控件",
-        "宿主自动提供的 `Other`",
+        "这个问句不是新的决策信息问题",
+        "宿主 `Other` 是替代式自由回答",
         "先合并能够同时成立或相互包含的目的，不默认排序",
         "真实排他约束",
         "必须保持同层",
         "一意一段",
         "按固定字符数手工折行",
+        "再发一条普通消息补充、纠正或提供新事实",
+        "明确的反馈分节和普通编号",
+        "冲突时以文字为准",
+        "不形成第四阶段",
+        "不构成能力调用、数据访问或外部行动授权",
+        "原生反馈单选 UI、独立附注呈现和真实用户体验",
         "未实测 / not_run",
     ):
-        validation.require(phrase in product, f"PRODUCT.md 缺少 v0.1.4 原生交互或证据边界：{phrase}")
+        validation.require(phrase in product, f"PRODUCT.md 缺少 v0.1.5 原生交互或证据边界：{phrase}")
     for legacy_phrase in ("本轮确认：基础分析", "本轮使用：基础分析"):
         validation.require(legacy_phrase not in readme_zh and legacy_phrase not in requirements, f"公开当前规范仍含旧版回显：{legacy_phrase}")
 

@@ -96,11 +96,53 @@ OTHER_OPTION_RE = re.compile(r"(?m)^\s*(?:[-*+]\s*)?\[(?:其他|其它|Other)\]\
 PRODUCT_OTHER_RE = re.compile(r"^(?:其他|其它|Other)$", re.IGNORECASE)
 WAIT_RE = re.compile(r"等待|等你|确认.*再继续|选好.*继续|说完.*继续")
 
-HOST_CONTROL_STATUSES = {"available", "unavailable", "failed"}
-INTERACTION_SURFACES = {"native-control", "text-fallback", "free-answer", "declarative-feedback"}
+HOST_CONTROL_STATUSES = {"available", "unavailable", "failed", "rejected"}
+INTERACTION_SURFACES = {"native-control", "text-fallback", "free-answer"}
 SELECTION_MODES = {"multi", "single", "none"}
+SUPPLEMENT_MODES = {"none", "native-note", "follow-up-message", "inline-text"}
 ANSWER_SHAPES = {"compatible-set", "finite-mutually-exclusive", "open"}
 A_ANSWER_SHAPES = {"finite-mutually-exclusive", "open"}
+FEEDBACK_DIRECTION_IDS = (
+    "accept",
+    "adjust-next-step",
+    "disagree",
+    "set-aside",
+)
+FEEDBACK_SUPPLEMENT_TYPES = {
+    "none",
+    "consistent",
+    "experiment-adjustment",
+    "judgment-disagreement",
+    "new-fact",
+    "purpose-change",
+}
+FEEDBACK_OPTION_SETS = (
+    ("方向符合我", "调整下一步", "不同意这个判断", "暂时先放一放"),
+    ("This direction fits", "Adjust the next step", "I disagree with this judgment", "Set it aside for now"),
+)
+FEEDBACK_QUESTION_RE = re.compile(
+    r"(?:"
+    r"这份判断(?:更)?接近你的哪种反馈|"
+    r"哪一项(?:更)?接近你的反馈|"
+    r"你的反馈更接近哪一项|"
+    r"which (?:option|response) best matches your feedback|"
+    r"how does this judgment land"
+    r")[?？]",
+    re.IGNORECASE,
+)
+NATIVE_NOTE_HINT_RE = re.compile(r"补充说明.{0,8}可选|(?:附注|备注).{0,16}(?:补充|纠正)|optional note", re.IGNORECASE)
+FOLLOW_UP_HINT_RE = re.compile(
+    r"选(?:中|择)后.{0,30}(?:再发|发送).{0,12}(?:普通消息|消息).{0,20}(?:补充|纠正|新事实)|"
+    r"after selecting.{0,40}(?:message|reply).{0,20}(?:add|correct|new fact)",
+    re.IGNORECASE,
+)
+INLINE_SUPPLEMENT_HINT_RE = re.compile(r"同一条消息.{0,20}补充|同一条回复.{0,20}补充|same (?:message|reply).{0,20}(?:add|explain)", re.IGNORECASE)
+FEEDBACK_HEADING_RE = re.compile(r"(?m)^#{1,3}\s+(?:反馈|Feedback)\s*$", re.IGNORECASE)
+NUMBERED_FEEDBACK_RE = re.compile(r"(?m)^\s*([1-4])[.)、]\s*(.+?)\s*$")
+PSEUDO_FEEDBACK_RE = re.compile(
+    r"(?m)^\s*(?:[-*+]\s+)?(?:\[[^]\n]+\]|\[[ xX]\]\s*.+|[○◯◉☐☑]\s*.+|<input\b[^>]*>.*)$",
+    re.IGNORECASE,
+)
 NATURAL_ECHO_RE = re.compile(
     r"(?m)^(?P<line>[^\n]*(?:按刚才选的来|按这些角度|按这个角度|这轮(?:就)?先做基本梳理|这次(?:就)?先做基本梳理|本轮(?:就)?按)[^\n]*)$"
 )
@@ -112,7 +154,7 @@ NUMBER_UNIT = r"(?:人民币|块钱|个月|小时|分钟|星期|元|人|名|位|
 NUMBER_WITH_UNIT_RE = re.compile(rf"(?<![\d.])(?P<number>{NUMBER_TOKEN})\s*(?P<unit>{NUMBER_UNIT})")
 PERCENT_OF_RE = re.compile(rf"百分之\s*(?P<number>{NUMBER_TOKEN})")
 STRUCTURAL_AFTER_RE = re.compile(
-    r"^(?:最强|独立)?(?:问题|问句|问号|判断|结论|下一步|主动作|动作|实验|方法|议题|答案|答案槽|方向|变量|未知|证据缺口|反馈入口|阶段|状态|组合|标题|列表项|步骤|任务|事情|事|路|证据闭环)"
+    r"^(?:最强|独立)?(?:问题|问句|问号|判断|结论|下一步|主动作|动作|实验|方法|议题|答案|答案槽|方向|编号|变量|未知|证据缺口|反馈入口|阶段|状态|组合|标题|列表项|步骤|任务|事情|事|路|证据闭环)"
 )
 SUGGESTED_NUMBER_RE = re.compile(r"建议(?:的)?(?:边界|起点)|启发式(?:的)?(?:边界|起点)")
 
@@ -135,6 +177,13 @@ class NumberPhrase:
 
 
 @dataclass(frozen=True)
+class FeedbackRoute:
+    next_stage: str
+    preserve_judgment: bool
+    text_overrode_selection: bool
+
+
+@dataclass(frozen=True)
 class InteractionEvidence:
     host_control_status: str
     surface: str
@@ -143,6 +192,7 @@ class InteractionEvidence:
     options: tuple[str, ...] = ()
     host_free_text_available: bool = False
     question_text: str = ""
+    supplement_mode: str = "none"
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> InteractionEvidence:
@@ -153,6 +203,7 @@ class InteractionEvidence:
             "host_control_status": data.get("host_control_status"),
             "surface": data.get("surface"),
             "selection_mode": data.get("selection_mode"),
+            "supplement_mode": data.get("supplement_mode", "none"),
         }
         if values["host_control_status"] not in HOST_CONTROL_STATUSES:
             raise ValueError(f"不支持的 host_control_status：{values['host_control_status']}")
@@ -160,6 +211,8 @@ class InteractionEvidence:
             raise ValueError(f"不支持的 interaction surface：{values['surface']}")
         if values["selection_mode"] not in SELECTION_MODES:
             raise ValueError(f"不支持的 selection_mode：{values['selection_mode']}")
+        if values["supplement_mode"] not in SUPPLEMENT_MODES:
+            raise ValueError(f"不支持的 supplement_mode：{values['supplement_mode']}")
         tool_call_observed = data.get("tool_call_observed")
         host_free_text_available = data.get("host_free_text_available")
         question_text = data.get("question_text", "")
@@ -177,6 +230,7 @@ class InteractionEvidence:
             options=tuple(options),
             host_free_text_available=host_free_text_available,
             question_text=question_text,
+            supplement_mode=str(values["supplement_mode"]),
         )
 
 
@@ -304,7 +358,32 @@ def _native_or_fallback_valid(interaction: InteractionEvidence | None) -> bool:
         return False
     if interaction.host_control_status == "available":
         return interaction.surface == "native-control" and interaction.tool_call_observed
-    return interaction.surface == "text-fallback" and not interaction.tool_call_observed
+    if interaction.host_control_status == "unavailable":
+        return interaction.surface == "text-fallback" and not interaction.tool_call_observed
+    return interaction.surface == "text-fallback" and interaction.tool_call_observed
+
+
+def resolve_b_feedback_route(
+    direction_id: str,
+    supplement_type: str = "none",
+) -> FeedbackRoute:
+    """按 fixture 已标注的反馈语义返回下一状态，不猜测任意自然语言。"""
+    if direction_id not in FEEDBACK_DIRECTION_IDS:
+        raise ValueError(f"不支持的反馈方向：{direction_id}")
+    if supplement_type not in FEEDBACK_SUPPLEMENT_TYPES:
+        raise ValueError(f"不支持的反馈补充类型：{supplement_type}")
+
+    if supplement_type == "purpose-change":
+        return FeedbackRoute("R-align", False, direction_id != "disagree")
+    if supplement_type in {"judgment-disagreement", "new-fact"}:
+        return FeedbackRoute("R-method", False, direction_id != "disagree")
+    if supplement_type == "experiment-adjustment":
+        return FeedbackRoute("R-method", True, direction_id != "adjust-next-step")
+    if direction_id in {"accept", "set-aside"}:
+        return FeedbackRoute("end", True, False)
+    if direction_id == "adjust-next-step":
+        return FeedbackRoute("R-method", True, False)
+    return FeedbackRoute("R-method", False, False)
 
 
 def _free_input_valid(text: str, interaction: InteractionEvidence | None) -> bool:
@@ -789,15 +868,93 @@ def _experiment_body(text: str) -> tuple[int, str]:
     matches = list(re.finditer(r"(?m)^\s*#{0,3}\s*\*{0,2}先做这一件事\*{0,2}\s*$", text))
     if len(matches) != 1:
         return len(matches), ""
-    start = matches[0].end()
-    remainder = text[start:]
-    feedback_match = re.search(r"(?m)^\s*\[(?:这个方向|方向对|我不同意|先放一放)", remainder)
-    if feedback_match:
-        remainder = remainder[:feedback_match.start()]
-    next_heading = re.search(r"(?m)^#{1,3}\s+(?!\*{0,2}(?:动作|观察|复判)\b).+$", remainder)
+    remainder = text[matches[0].end():]
+    next_heading = re.search(
+        r"(?m)^#{1,3}\s+(?!\*{0,2}(?:动作|观察|复判)\b).+$",
+        remainder,
+    )
     if next_heading:
         remainder = remainder[:next_heading.start()]
     return 1, remainder.strip()
+
+
+def _feedback_options_valid(options: tuple[str, ...]) -> bool:
+    normalized = tuple(option.strip() for option in options)
+    return normalized in FEEDBACK_OPTION_SETS and not _has_product_other(normalized)
+
+
+def _numbered_feedback_options(text: str) -> tuple[str, ...]:
+    matches = list(NUMBERED_FEEDBACK_RE.finditer(text))
+    if [match.group(1) for match in matches] != ["1", "2", "3", "4"]:
+        return ()
+    return tuple(match.group(2).strip() for match in matches)
+
+
+def _native_feedback_repeated(text: str) -> bool:
+    labels = {label for option_set in FEEDBACK_OPTION_SETS for label in option_set}
+    for line in text.splitlines():
+        candidate = re.sub(r"^\s*(?:[-*+]\s+|\d+[.)、]\s*)", "", line).strip()
+        if candidate in labels:
+            return True
+    return False
+
+
+def _b_interaction_valid(text: str, interaction: InteractionEvidence | None) -> bool:
+    if interaction is None or interaction.selection_mode != "single":
+        return False
+    if interaction.host_control_status == "available":
+        return (
+            interaction.surface == "native-control"
+            and interaction.tool_call_observed
+            and interaction.supplement_mode in {"native-note", "follow-up-message"}
+        )
+    if interaction.host_control_status == "unavailable":
+        return (
+            interaction.surface == "text-fallback"
+            and not interaction.tool_call_observed
+            and interaction.supplement_mode == "inline-text"
+        )
+    return (
+        interaction.surface == "text-fallback"
+        and interaction.tool_call_observed
+        and interaction.supplement_mode == "inline-text"
+    )
+
+
+def _b_feedback_layout_valid(text: str, interaction: InteractionEvidence | None) -> bool:
+    if interaction is None:
+        return False
+    if interaction.surface == "native-control":
+        hint_valid = (
+            NATIVE_NOTE_HINT_RE.search(interaction.question_text) is not None
+            if interaction.supplement_mode == "native-note"
+            else FOLLOW_UP_HINT_RE.search(interaction.question_text) is not None
+        )
+        return (
+            hint_valid
+            and _last_paragraph_is_only_question(interaction.question_text, require_prior_paragraph=True)
+            and len(QUESTION_MARK_RE.findall(interaction.question_text)) == 1
+            and FEEDBACK_QUESTION_RE.search(interaction.question_text) is not None
+            and not _options_have_questions(interaction.options)
+            and not _native_feedback_repeated(text)
+            and PSEUDO_FEEDBACK_RE.search(text) is None
+        )
+    if interaction.surface == "text-fallback":
+        options = _numbered_feedback_options(text)
+        matches = list(NUMBERED_FEEDBACK_RE.finditer(text))
+        if not matches:
+            return False
+        prompt = text[:matches[0].start()]
+        tail = text[matches[-1].end():].strip()
+        return (
+            FEEDBACK_HEADING_RE.search(text) is not None
+            and INLINE_SUPPLEMENT_HINT_RE.search(prompt) is not None
+            and options in FEEDBACK_OPTION_SETS
+            and not tail
+            and PSEUDO_FEEDBACK_RE.search(text) is None
+            and not QUESTION_MARK_RE.search(text)
+        )
+    return False
 
 
 def _independent_action_items(body: str) -> list[str]:
@@ -811,9 +968,12 @@ def grade_b(
     user_numbers: list[str] | None = None,
     interaction: InteractionEvidence | None = None,
 ) -> list[Check]:
-    marks = QUESTION_MARK_RE.findall(text)
+    visible_text = _visible_interaction_text(text, interaction)
+    body_marks = QUESTION_MARK_RE.findall(text)
+    visible_marks = QUESTION_MARK_RE.findall(visible_text)
     duplicates = _duplicate_headings(text)
-    info_questions = _matches_any(text, INFORMATION_QUESTION_PATTERNS)
+    info_questions = _matches_any(visible_text, INFORMATION_QUESTION_PATTERNS)
+    hidden_requests = _matches_any(visible_text, HIDDEN_INFO_REQUEST_PATTERNS)
     expected_states = EXECUTED_STATES if already_executed else UNEXECUTED_STATES
     states = _count_statuses(text, expected_states)
     experiment_heading_count, experiment_body = _experiment_body(text)
@@ -842,8 +1002,8 @@ def grade_b(
         and component_paragraphs == sorted(component_paragraphs)
         and len(set(component_paragraphs)) == 3
     )
-    authorization_inference = _matches_any(text, AUTHORIZATION_INFERENCE_PATTERNS)
-    unattributed_numbers = _unattributed_b_numbers(text, user_numbers)
+    authorization_inference = _matches_any(visible_text, AUTHORIZATION_INFERENCE_PATTERNS)
+    unattributed_numbers = _unattributed_b_numbers(visible_text, user_numbers)
     external_position = min(
         [position for marker in ("外部验证", "另行明确授权") if (position := text.find(marker)) >= 0],
         default=-1,
@@ -858,13 +1018,29 @@ def grade_b(
     )
     reversal = re.search(r"改变.*判断|判断.*改变|推翻.*结论|支持.*继续|反对.*继续|停止|转向|复判", text)
 
-    interaction_passed = bool(
-        interaction
-        and interaction.surface == "declarative-feedback"
-        and not interaction.tool_call_observed
-        and interaction.selection_mode == "none"
-        and not interaction.options
-        and not interaction.question_text
+    interaction_passed = _b_interaction_valid(text, interaction)
+    if interaction is None:
+        feedback_options: tuple[str, ...] = ()
+    elif interaction.surface == "native-control":
+        feedback_options = interaction.options
+    else:
+        feedback_options = _numbered_feedback_options(text)
+    feedback_options_passed = _feedback_options_valid(feedback_options)
+    feedback_layout_passed = _b_feedback_layout_valid(text, interaction)
+    feedback_question_count = (
+        len(QUESTION_MARK_RE.findall(interaction.question_text))
+        if interaction and interaction.surface == "native-control"
+        else 0
+    )
+    information_boundary_passed = (
+        not body_marks
+        and not info_questions
+        and not hidden_requests
+        and (
+            feedback_question_count == 1
+            if interaction and interaction.surface == "native-control"
+            else not visible_marks
+        )
     )
 
     return [
@@ -875,20 +1051,48 @@ def grade_b(
             severe=True,
         ),
         _check(
-            "阶段 B 使用陈述式反馈而非问题型控件",
+            "阶段 B 按宿主能力使用原生反馈单选或明确文本降级",
             interaction_passed,
             (
                 "缺少交互证据"
                 if interaction is None
                 else (
-                    f"surface={interaction.surface}；tool_call={interaction.tool_call_observed}；"
-                    f"mode={interaction.selection_mode}；options={list(interaction.options)}；"
-                    f"question={interaction.question_text!r}"
+                    f"host={interaction.host_control_status}；surface={interaction.surface}；"
+                    f"tool_call={interaction.tool_call_observed}；mode={interaction.selection_mode}；"
+                    f"supplement={interaction.supplement_mode}"
                 )
             ),
             severe=True,
         ),
-        _check("阶段 B 不再提出信息问题", len(marks) == 0 and not info_questions, f"问号数量：{len(marks)}；信息问题模式：{info_questions}", severe=True),
+        _check(
+            "阶段 B 恰好提供四个稳定反馈方向",
+            feedback_options_passed,
+            f"反馈方向={list(feedback_options)}；产品自建 Other={_has_product_other(feedback_options)}",
+            severe=True,
+        ),
+        _check(
+            "阶段 B 清楚区分原生反馈与文本降级并诚实说明补充通道",
+            feedback_layout_passed,
+            (
+                "缺少交互证据"
+                if interaction is None
+                else (
+                    f"surface={interaction.surface}；supplement={interaction.supplement_mode}；"
+                    f"question={interaction.question_text!r}；伪控件={PSEUDO_FEEDBACK_RE.search(text) is not None}"
+                )
+            ),
+            severe=True,
+        ),
+        _check(
+            "阶段 B 只提出一个反馈问题，不追加决策信息问题",
+            information_boundary_passed,
+            (
+                f"正文问号={len(body_marks)}；可见问号={len(visible_marks)}；"
+                f"反馈问号={feedback_question_count}；信息问题模式={info_questions}；"
+                f"隐藏信息请求={hidden_requests}"
+            ),
+            severe=True,
+        ),
         _check("阶段 B 使用一个与事项阶段匹配的判断状态", len(states) == 1, f"在判断区域找到状态：{states}", severe=True),
         _check(
             "阶段 B 只有一个现实实验",
@@ -996,7 +1200,7 @@ def main() -> int:
     )
     passed = sum(check.passed for check in checks)
     result = {
-        "contract_version": "0.1.4",
+        "contract_version": "0.1.5",
         "stage": args.stage,
         "expectations": [
             {key: value for key, value in asdict(check).items() if key != "severe"}

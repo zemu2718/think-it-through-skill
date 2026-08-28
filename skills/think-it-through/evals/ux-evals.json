@@ -1,6 +1,6 @@
 {
   "skill_name": "think-it-through",
-  "contract_version": "0.1.4",
+  "contract_version": "0.1.5",
   "status": "not_run",
   "rubric": "ux-rubric.md",
   "notice": "这些是待执行的体验场景，不是模型输出或用户测试结果。",
@@ -58,14 +58,35 @@
       "id": "ux-cross-stage-terminal-readability",
       "prompt": "请完整走一遍目的对齐、方法确认、关键问题和判断，让我检查终端阅读体验。",
       "expected_experience": "R-align、R-method、A、B 都按语义短段呈现；承接、解释、操作提示和正式问题之间留空行；B 的动作、观察、复判各自成段但仍属于同一个现实实验。",
-      "expected_interaction": "native-control:multi -> native-control:multi -> free-answer:none -> declarative-feedback:none",
+      "expected_interaction": "native-control:multi -> native-control:multi -> free-answer:none -> native-control:single+follow-up-message",
       "fixture": "fixtures/11-b-experiment-and-feedback.json"
     },
     {
       "id": "ux-judgment-experiment-feedback",
       "prompt": "如果没有真实付款，我就不继续投入。",
-      "expected_experience": "给明确但可调整的判断，以及分段清晰的动作、观察、复判组成的一个现实实验；不调用问题型控件，陈述式反馈与自由纠正不构成追问或授权。",
-      "expected_interaction": "declarative-feedback:none",
+      "expected_experience": "给明确但可调整的判断，以及分段清晰的动作、观察、复判组成的一个现实实验；随后实际调用四项原生单选，只收集主要反馈方向。未观察到独立附注时，诚实说明选中后可再发普通消息补充；选择、补充和宿主 Other 都不构成执行或授权。",
+      "expected_interaction": "native-control:single+follow-up-message",
+      "fixture": "fixtures/11-b-experiment-and-feedback.json"
+    },
+    {
+      "id": "ux-b-native-note-capability",
+      "prompt": "宿主这次确实显示并返回了可与选择并存的附注，请给出判断后的反馈入口。",
+      "expected_experience": "判断和现实实验完成后使用四项原生单选；只有实际观察到独立附注时才说明补充说明可选，不能因宿主 Other 或潜在 schema 字段推断所有客户端都有备注框。此场景只定义合成能力合同，不证明真实 UI 已呈现。",
+      "expected_interaction": "native-control:single+native-note",
+      "fixture": "fixtures/12-native-control-and-fallback.json"
+    },
+    {
+      "id": "ux-b-text-fallback",
+      "prompt": "原生反馈单选不可用或调用失败，请给出可读的降级反馈入口。",
+      "expected_experience": "明确标注反馈分节，用普通编号列出四个方向，并说明可在同一条消息补充；不输出方括号、任务列表、圆点 radio 或 HTML 伪装成可点击控件。",
+      "expected_interaction": "text-fallback:single+inline-text",
+      "fixture": "fixtures/12-native-control-and-fallback.json"
+    },
+    {
+      "id": "ux-b-text-overrides-selection",
+      "prompt": "我选方向符合我，但补充：刚拿到第一笔陌生客户付款，判断依据已经变了。",
+      "expected_experience": "以补充文字为准，把新事实用于重新检查判断并开启新一轮 R；不自动执行现实实验，不要求重新点击，也不把反馈当成能力、数据或外部行动授权。",
+      "expected_interaction": "native-control:single+follow-up-message -> native-control:multi",
       "fixture": "fixtures/11-b-experiment-and-feedback.json"
     }
   ]

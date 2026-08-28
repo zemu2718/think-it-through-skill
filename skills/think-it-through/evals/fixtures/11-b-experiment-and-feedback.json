@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.1.4",
+  "contract_version": "0.1.5",
   "id": "b-experiment-and-feedback",
   "domain": "judgment-experiment-feedback",
   "already_executed": false,
@@ -16,12 +16,22 @@
         "host_free_text": true
       },
       "expected_interaction": {
-        "surface": "declarative-feedback",
-        "tool_call_observed": false,
-        "selection_mode": "none",
-        "product_option_count": 0,
-        "question_text": "",
+        "host_control_status": "available",
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "single",
+        "options": [
+          "方向符合我",
+          "调整下一步",
+          "不同意这个判断",
+          "暂时先放一放"
+        ],
+        "product_option_count": 4,
+        "host_free_text_available": true,
+        "question_text": "选中后，你仍可以再发一条普通消息补充、纠正或提供新事实。\n\n这份判断更接近你的哪种反馈？",
+        "supplement_mode": "follow-up-message",
         "semantic_paragraphs": true,
+        "question_is_last_paragraph": true,
         "action_observe_review_separate_paragraphs": true
       },
       "mechanical": [
@@ -29,10 +39,11 @@
         "one_reality_experiment",
         "action_observe_review",
         "local_numeric_provenance",
-        "statement_feedback_controls",
+        "native_single_feedback",
         "equal_free_correction",
         "no_information_question",
-        "feedback_is_not_authorization"
+        "feedback_is_not_authorization",
+        "supplement_via_follow_up_message"
       ]
     },
     {
@@ -65,6 +76,56 @@
         "reroutes_with-new-evidence"
       ],
       "answer_shape": "compatible-set"
+    }
+  ],
+  "feedback_routes": [
+    {
+      "direction_id": "accept",
+      "supplement_type": "none",
+      "expected_stage": "end",
+      "preserve_judgment": true,
+      "text_overrode_selection": false,
+      "authorization_effect": "none"
+    },
+    {
+      "direction_id": "set-aside",
+      "supplement_type": "none",
+      "expected_stage": "end",
+      "preserve_judgment": true,
+      "text_overrode_selection": false,
+      "authorization_effect": "none"
+    },
+    {
+      "direction_id": "adjust-next-step",
+      "supplement_type": "none",
+      "expected_stage": "R-method",
+      "preserve_judgment": true,
+      "text_overrode_selection": false,
+      "authorization_effect": "none"
+    },
+    {
+      "direction_id": "disagree",
+      "supplement_type": "none",
+      "expected_stage": "R-method",
+      "preserve_judgment": false,
+      "text_overrode_selection": false,
+      "authorization_effect": "none"
+    },
+    {
+      "direction_id": "accept",
+      "supplement_type": "new-fact",
+      "expected_stage": "R-method",
+      "preserve_judgment": false,
+      "text_overrode_selection": true,
+      "authorization_effect": "none"
+    },
+    {
+      "direction_id": "accept",
+      "supplement_type": "purpose-change",
+      "expected_stage": "R-align",
+      "preserve_judgment": false,
+      "text_overrode_selection": true,
+      "authorization_effect": "none"
     }
   ],
   "invalid_experiment": {

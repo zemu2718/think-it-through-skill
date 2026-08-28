@@ -1,6 +1,6 @@
 # 通过评测的真实 transcript：推广动作与付费验证错位
 
-> 来源：[公开 behavior benchmark 的逐字 transcript](https://github.com/zemu2718/think-it-through-skill/blob/main/benchmarks/behavior-v0.1/eval-1-saas-misalignment/with_skill/transcript.md)。以下正文是 v0.1 固定评测中的逐字输出，未改写为成功故事；本文件本身保留完整内容，离线安装后也可直接阅读。它只能证明冻结的 v0.1 合同，不能证明 v0.1.4 的目的合并、答案形态驱动控件、自由文字优先、终端语义分段、自然方法回显、阶段 A 防数字锚定、阶段 B 单现实实验或反馈体验已经通过模型复测。
+> 来源：[公开 behavior benchmark 的逐字 transcript](https://github.com/zemu2718/think-it-through-skill/blob/main/benchmarks/behavior-v0.1/eval-1-saas-misalignment/with_skill/transcript.md)。以下正文是 v0.1 固定评测中的逐字输出，未改写为成功故事；本文件本身保留完整内容，离线安装后也可直接阅读。它只能证明冻结的 v0.1 合同，不能证明 v0.1.5 的目的合并、答案形态驱动控件、自由文字优先、终端语义分段、自然方法回显、阶段 A 防数字锚定、阶段 B 单现实实验或反馈体验已经通过模型复测。
 
 ## User 1
 

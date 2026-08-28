@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.1.4",
+  "contract_version": "0.1.5",
   "id": "authorization-and-degradation",
   "domain": "external-validation",
   "already_executed": false,
@@ -76,12 +76,22 @@
         "host_free_text": true
       },
       "expected_interaction": {
-        "surface": "declarative-feedback",
-        "tool_call_observed": false,
-        "selection_mode": "none",
-        "product_option_count": 0,
-        "question_text": "",
+        "host_control_status": "available",
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "single",
+        "options": [
+          "方向符合我",
+          "调整下一步",
+          "不同意这个判断",
+          "暂时先放一放"
+        ],
+        "product_option_count": 4,
+        "host_free_text_available": true,
+        "question_text": "选中后，你仍可以再发一条普通消息补充、纠正或提供新事实。\n\n这份判断更接近你的哪种反馈？",
+        "supplement_mode": "follow-up-message",
         "semantic_paragraphs": true,
+        "question_is_last_paragraph": true,
         "action_observe_review_separate_paragraphs": true
       },
       "mechanical": [
@@ -89,7 +99,8 @@
         "one_reality_experiment",
         "action_observe_review",
         "no_automatic_external_call",
-        "separate_authorization_statement"
+        "separate_authorization_statement",
+        "supplement_via_follow_up_message"
       ]
     }
   ],

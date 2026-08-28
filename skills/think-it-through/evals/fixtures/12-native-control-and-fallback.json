@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.1.4",
+  "contract_version": "0.1.5",
   "id": "native-control-and-fallback",
   "domain": "interaction-evidence",
   "cases": [
@@ -18,7 +18,8 @@
         "selection_mode": "multi",
         "options": [],
         "host_free_text_available": false,
-        "question_text": ""
+        "question_text": "",
+        "supplement_mode": "none"
       },
       "must_fail": [
         "native_control_required_when_available"
@@ -41,7 +42,8 @@
         "selection_mode": "multi",
         "options": [],
         "host_free_text_available": false,
-        "question_text": ""
+        "question_text": "",
+        "supplement_mode": "none"
       },
       "assistant_shape": [
         "可多选，也可以不选，直接补充或纠正。",
@@ -66,11 +68,12 @@
       "observed_interaction": {
         "host_control_status": "failed",
         "surface": "text-fallback",
-        "tool_call_observed": false,
+        "tool_call_observed": true,
         "selection_mode": "multi",
         "options": [],
         "host_free_text_available": false,
-        "question_text": ""
+        "question_text": "",
+        "supplement_mode": "none"
       },
       "assistant_shape": [
         "可多选，也可以不选，直接加入、取消、替换或纠正。",
@@ -105,7 +108,8 @@
         "host_free_text_available": true,
         "question_text": "可多选，也可以直接补充或纠正。\n\n你希望获得哪些结果？",
         "question_text_semantic_paragraphs": true,
-        "question_is_last_paragraph": true
+        "question_is_last_paragraph": true,
+        "supplement_mode": "none"
       },
       "must_fail": [
         "product_other_forbidden"
@@ -133,7 +137,8 @@
         "host_free_text_available": true,
         "question_text": "可多选，也可以直接补充或纠正。\n\n你希望获得哪些结果？",
         "question_text_semantic_paragraphs": true,
-        "question_is_last_paragraph": true
+        "question_is_last_paragraph": true,
+        "supplement_mode": "none"
       },
       "must_pass": [
         "host_other_not_counted_as_product_option",
@@ -161,7 +166,8 @@
         "host_free_text_available": true,
         "question_text": "当前组合已经包含基本梳理。\n\n可多选，也可以直接加入、取消、替换或纠正。\n\n这轮保留哪些思考角度？",
         "question_text_semantic_paragraphs": true,
-        "question_is_last_paragraph": true
+        "question_is_last_paragraph": true,
+        "supplement_mode": "none"
       },
       "mechanical": [
         "method_selection_only",
@@ -170,12 +176,295 @@
         "no_external_action_authorization"
       ],
       "answer_shape": "compatible-set"
+    },
+    {
+      "id": "b-native-follow-up-message",
+      "expected_stage": "B",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "observed_interaction": {
+        "host_control_status": "available",
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "single",
+        "options": [
+          "方向符合我",
+          "调整下一步",
+          "不同意这个判断",
+          "暂时先放一放"
+        ],
+        "host_free_text_available": true,
+        "question_text": "选中后，你仍可以再发一条普通消息补充、纠正或提供新事实。\n\n这份判断更接近你的哪种反馈？",
+        "supplement_mode": "follow-up-message"
+      },
+      "assistant_shape": [
+        "按目前信息，我更建议：小步验证。",
+        "真实付款会改变判断，没有付款就停止。",
+        "### 先做这一件事",
+        "**动作**：展示现有版本并邀请真实付款。",
+        "**观察**：记录付款或明确拒绝。",
+        "**复判**：有付款就重新判断是否推进，否则停止。"
+      ],
+      "must_pass": [
+        "native_single_feedback",
+        "stable_feedback_directions",
+        "supplement_via_follow_up_message"
+      ]
+    },
+    {
+      "id": "b-native-note-synthetic-contract",
+      "expected_stage": "B",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "observed_interaction": {
+        "host_control_status": "available",
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "single",
+        "options": [
+          "方向符合我",
+          "调整下一步",
+          "不同意这个判断",
+          "暂时先放一放"
+        ],
+        "host_free_text_available": true,
+        "question_text": "补充说明可选。\n\n这份判断更接近你的哪种反馈？",
+        "supplement_mode": "native-note"
+      },
+      "assistant_shape": [
+        "按目前信息，我更建议：小步验证。",
+        "真实付款会改变判断，没有付款就停止。",
+        "### 先做这一件事",
+        "**动作**：展示现有版本并邀请真实付款。",
+        "**观察**：记录付款或明确拒绝。",
+        "**复判**：有付款就重新判断是否推进，否则停止。"
+      ],
+      "must_pass": [
+        "native_single_feedback",
+        "native_note_observed"
+      ],
+      "evidence_note": "静态能力合同；不证明任何真实客户端已呈现独立附注。"
+    },
+    {
+      "id": "b-unavailable-text-fallback",
+      "expected_stage": "B",
+      "host_capabilities": {
+        "selection_control": "unavailable",
+        "host_free_text": false
+      },
+      "observed_interaction": {
+        "host_control_status": "unavailable",
+        "surface": "text-fallback",
+        "tool_call_observed": false,
+        "selection_mode": "single",
+        "options": [],
+        "host_free_text_available": false,
+        "question_text": "",
+        "supplement_mode": "inline-text"
+      },
+      "assistant_shape": [
+        "按目前信息，我更建议：小步验证。",
+        "真实付款会改变判断，没有付款就停止。",
+        "### 先做这一件事",
+        "**动作**：展示现有版本并邀请真实付款。",
+        "**观察**：记录付款或明确拒绝。",
+        "**复判**：有付款就重新判断是否推进，否则停止。",
+        "### 反馈",
+        "当前无法显示原生单选。请回复一个编号或方向，也可以在同一条消息补充说明。",
+        "1. 方向符合我",
+        "2. 调整下一步",
+        "3. 不同意这个判断",
+        "4. 暂时先放一放"
+      ],
+      "must_pass": [
+        "numbered_text_fallback",
+        "inline_supplement"
+      ]
+    },
+    {
+      "id": "b-failed-text-fallback",
+      "expected_stage": "B",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": false
+      },
+      "observed_interaction": {
+        "host_control_status": "failed",
+        "surface": "text-fallback",
+        "tool_call_observed": true,
+        "selection_mode": "single",
+        "options": [],
+        "host_free_text_available": false,
+        "question_text": "",
+        "supplement_mode": "inline-text"
+      },
+      "assistant_shape": [
+        "按目前信息，我更建议：小步验证。",
+        "真实付款会改变判断，没有付款就停止。",
+        "### 先做这一件事",
+        "**动作**：展示现有版本并邀请真实付款。",
+        "**观察**：记录付款或明确拒绝。",
+        "**复判**：有付款就重新判断是否推进，否则停止。",
+        "### 反馈",
+        "当前无法显示原生单选。请回复一个编号或方向，也可以在同一条消息补充说明。",
+        "1. 方向符合我",
+        "2. 调整下一步",
+        "3. 不同意这个判断",
+        "4. 暂时先放一放"
+      ],
+      "must_pass": [
+        "failed_call_trace_observed",
+        "numbered_text_fallback"
+      ]
+    },
+    {
+      "id": "b-rejected-text-fallback",
+      "expected_stage": "B",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": false
+      },
+      "observed_interaction": {
+        "host_control_status": "rejected",
+        "surface": "text-fallback",
+        "tool_call_observed": true,
+        "selection_mode": "single",
+        "options": [],
+        "host_free_text_available": false,
+        "question_text": "",
+        "supplement_mode": "inline-text"
+      },
+      "assistant_shape": [
+        "按目前信息，我更建议：小步验证。",
+        "真实付款会改变判断，没有付款就停止。",
+        "### 先做这一件事",
+        "**动作**：展示现有版本并邀请真实付款。",
+        "**观察**：记录付款或明确拒绝。",
+        "**复判**：有付款就重新判断是否推进，否则停止。",
+        "### 反馈",
+        "当前无法显示原生单选。请回复一个编号或方向，也可以在同一条消息补充说明。",
+        "1. 方向符合我",
+        "2. 调整下一步",
+        "3. 不同意这个判断",
+        "4. 暂时先放一放"
+      ],
+      "must_pass": [
+        "rejected_call_trace_observed",
+        "numbered_text_fallback"
+      ]
+    },
+    {
+      "id": "b-pseudo-radio-is-invalid",
+      "expected_stage": "B",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": false
+      },
+      "observed_interaction": {
+        "host_control_status": "failed",
+        "surface": "text-fallback",
+        "tool_call_observed": true,
+        "selection_mode": "single",
+        "options": [],
+        "host_free_text_available": false,
+        "question_text": "",
+        "supplement_mode": "inline-text"
+      },
+      "assistant_shape": [
+        "按目前信息，我更建议：小步验证。",
+        "真实付款会改变判断，没有付款就停止。",
+        "### 先做这一件事",
+        "**动作**：展示现有版本并邀请真实付款。",
+        "**观察**：记录付款或明确拒绝。",
+        "**复判**：有付款就重新判断是否推进，否则停止。",
+        "### 反馈",
+        "○ 方向符合我",
+        "○ 调整下一步",
+        "○ 不同意这个判断",
+        "○ 暂时先放一放"
+      ],
+      "must_fail": [
+        "pseudo_native_feedback_forbidden"
+      ]
+    },
+    {
+      "id": "b-host-other-is-not-native-note",
+      "expected_stage": "B",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "observed_interaction": {
+        "host_control_status": "available",
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "single",
+        "options": [
+          "方向符合我",
+          "调整下一步",
+          "不同意这个判断",
+          "暂时先放一放"
+        ],
+        "host_free_text_available": true,
+        "question_text": "选中后，你仍可以再发一条普通消息补充、纠正或提供新事实。\n\n这份判断更接近你的哪种反馈？",
+        "supplement_mode": "native-note"
+      },
+      "assistant_shape": [
+        "按目前信息，我更建议：小步验证。",
+        "真实付款会改变判断，没有付款就停止。",
+        "### 先做这一件事",
+        "**动作**：展示现有版本并邀请真实付款。",
+        "**观察**：记录付款或明确拒绝。",
+        "**复判**：有付款就重新判断是否推进，否则停止。"
+      ],
+      "must_fail": [
+        "native_note_requires_observed_note_capability"
+      ]
+    },
+    {
+      "id": "b-feedback-does-not-authorize-action",
+      "expected_stage": "B",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "observed_interaction": {
+        "host_control_status": "available",
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "single",
+        "options": [
+          "方向符合我",
+          "调整下一步",
+          "不同意这个判断",
+          "暂时先放一放"
+        ],
+        "host_free_text_available": true,
+        "question_text": "选中后，你仍可以再发一条普通消息补充、纠正或提供新事实。\n\n这份判断更接近你的哪种反馈？",
+        "supplement_mode": "follow-up-message"
+      },
+      "assistant_shape": [
+        "按目前信息，我更建议：小步验证。",
+        "真实付款会改变判断，没有付款就停止。",
+        "### 先做这一件事",
+        "**动作**：点了方向符合我，所以我会自动联系客户。",
+        "**观察**：记录回复。",
+        "**复判**：有付款就推进，否则停止。"
+      ],
+      "must_fail": [
+        "feedback_is_not_authorization"
+      ]
     }
   ],
   "semantic": [
     "native-tool-call-is-observable-behavior",
-    "fallback-only-after-unavailable-or-failed",
-    "host-free-text-is-not-a-product-option",
-    "selection-does-not-expand-authorization"
+    "fallback-only-after-unavailable-failed-or-rejected",
+    "host-free-text-is-not-a-product-option-or-native-note",
+    "selection-note-and-follow-up-do-not-expand-authorization",
+    "native-note-is-static-contract-not-real-ui-evidence"
   ]
 }

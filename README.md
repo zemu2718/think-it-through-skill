@@ -12,7 +12,7 @@ An open Agent Skill that first understands what you truly want to achieve or pro
 </div>
 
 > [!IMPORTANT]
-> The current source contract is **v0.1.4**. Its real multi-turn model behavior, native-control rendering, and real-user UX evaluation have not been run; their status is `not_run`. A wireframe, Markdown, unit tests, and old scores are not substitutes for observed tool-call evidence. The published model-behavior evidence remains the frozen v0.1 snapshot. Automatic discovery also missed its frozen holdout gate (1/8 positive recall; 8/8 negative specificity), so invoke `/think-it-through` explicitly and do not present natural-language auto-loading or other-client compatibility as established.
+> The current source contract is **v0.1.5**. Its real multi-turn model behavior, native feedback single-select UI, separate-note rendering, and real-user UX evaluation have not been run; their status is `not_run`. A wireframe, Markdown, unit tests, a possible note field, and old scores are not substitutes for observed tool-call and UI evidence. The published model-behavior evidence remains the frozen v0.1 snapshot. Automatic discovery also missed its frozen holdout gate (1/8 positive recall; 8/8 negative specificity), so invoke `/think-it-through` explicitly and do not present natural-language auto-loading or other-client compatibility as established.
 
 ## The problem
 
@@ -149,20 +149,36 @@ Observe: …
 
 Reassess: …
 
-[This direction fits]
-[The direction fits, but change the next step]
-[I disagree]
-[Set this aside]
+Native feedback single-select:
+○ This direction fits
+○ Adjust the next step
+○ I disagree with this judgment
+○ Set it aside for now
 
-You can also say what does not fit reality.
+After selecting, you can still send a regular message with a clarification, correction, or new fact.
+
+Which option best matches your feedback?
 ```
 
 Action, observation, and reassessment are separate paragraphs for terminal scanning, but they still test one hypothesis rather than forming three tasks. Every stage uses semantic paragraphs: acknowledgment, explanation, interaction guidance, and the formal question are separated by blank lines, with the question alone at the end. The Skill does not hard-wrap by a fixed character count. Boundaries first reuse numbers you supplied. Every decision-relevant number introduced by the Skill must be labeled locally as a **suggested boundary**, **heuristic starting point**, or supported by a reliable source.
 
-Feedback after the judgment is declarative. Stage B does not call `AskUserQuestion` or any equivalent question control and contains no question mark. It does not request more information or authorize a tool, private data access, or external action. A correction, new fact, or disagreement starts a new round; agreement or setting it aside ends the round and waits.
+After the complete judgment and experiment, stage B actually calls a four-option native single-select. Its question routes feedback on completed content; it does not ask for a budget, deadline, evidence, or another decision answer. The Skill says a note is optional only when the host actually displays and returns a note alongside the selection. Otherwise, it uses the conservative path above: select first, then add a regular message. Host-provided `Other` is an alternative free-text answer, not “selection + note.” Free text wins if it conflicts with the selection. Feedback never executes the experiment or authorizes a tool, private-data access, or external action.
+
+If the native control is unavailable, fails, or is declined, the explicit fallback is:
+
+```text
+### Feedback
+
+The native single-select is unavailable. Reply with a number or direction, and add context in the same message if useful.
+
+1. This direction fits
+2. Adjust the next step
+3. I disagree with this judgment
+4. Set it aside for now
+```
 
 > [!NOTE]
-> The interaction above is a **v0.1.4 specification wireframe**, not a model-generated transcript. Checkboxes and radio buttons represent expected native-control semantics; square brackets represent text fallback or declarative B feedback. Static content cannot prove that a tool was actually called or that real-model behavior or UX has passed.
+> The interaction above is a **v0.1.5 specification wireframe**, not a model-generated transcript. Checkboxes and radio circles represent expected native-control semantics; ordinary numbers represent explicit text fallback. Static content cannot prove that the tool or a separate note field was actually rendered, or that real-model behavior or UX has passed.
 
 ## Methods stay transparent without becoming homework
 
@@ -187,7 +203,7 @@ R, A, B, and method routing stay backstage. They constrain the Skill rather than
 | **R-align** | Help express the real objective; use multi-select for compatible directions, single-select for real exclusive boundaries, and free answer for open ones. Merge compatible objectives without forcing a ranking. | Wait for the user to add or correct the objective. |
 | **R-method** | Recommend only after the objective is clear; use native multi-select for composable methods. | Wait for explicit adoption, adjustment, or basic-only choice. |
 | **A** | Run confirmed angles; use single-select for finite mutually exclusive answers and free answer for open ones. | End with the single final question mark. |
-| **B** | Absorb the answer; give one judgment and one experiment without a question control. | End the round; never execute automatically. |
+| **B** | Absorb the answer; give one judgment and one experiment, then collect feedback through a four-option native single-select without asking for new decision information. | End on acceptance or set-aside; start a new round for adjustment, disagreement, or new facts; never execute automatically. |
 
 For factual lookup, clear low-risk execution, pure creation, and entertainment, the Skill should stay out of the way. Urgent safety situations receive immediate protective guidance instead of a longer decision process.
 
@@ -259,7 +275,7 @@ The repository separates three questions:
 
 ### Frozen v0.1 behavior snapshot
 
-The results below bind only three fixed, three-turn v0.1 scenarios. Each was run once with the Skill and once against an independent no-Skill baseline. They do not establish v0.1.4 behavior.
+The results below bind only three fixed, three-turn v0.1 scenarios. Each was run once with the Skill and once against an independent no-Skill baseline. They do not establish v0.1.5 behavior.
 
 | Metric | With Skill | Without Skill | Delta |
 | --- | ---: | ---: | ---: |
@@ -267,14 +283,14 @@ The results below bind only three fixed, three-turn v0.1 scenarios. Each was run
 | 20-point semantic rubric | **98.3%** | 38.3% | +0.60 |
 | Runs passing the full semantic gate | **3/3** | 0/3 | — |
 
-Exact transcripts, per-assertion evidence, rubric evidence, SHA-256 bindings, and aggregate JSON are in [`benchmarks/behavior-v0.1/`](benchmarks/behavior-v0.1/). The [SaaS validation](skills/think-it-through/examples/saas-validation.md) and [partnership-boundary](skills/think-it-through/examples/partnership-boundary.md) files preserve the same v0.1 outputs verbatim; their transcript bodies were not rewritten into v0.1.4 examples.
+Exact transcripts, per-assertion evidence, rubric evidence, SHA-256 bindings, and aggregate JSON are in [`benchmarks/behavior-v0.1/`](benchmarks/behavior-v0.1/). The [SaaS validation](skills/think-it-through/examples/saas-validation.md) and [partnership-boundary](skills/think-it-through/examples/partnership-boundary.md) files preserve the same v0.1 outputs verbatim; their transcript bodies were not rewritten into v0.1.5 examples.
 
 > [!CAUTION]
 > This is a contract-regression snapshot, not a general answer-quality ranking or evidence of statistical significance. There is one run per scenario/configuration. The runtime-reported model name was not independently verified through API metadata, and comparable token and timing data were unavailable.
 
-### v0.1.4 static contract and UX scenarios
+### v0.1.5 static contract and UX scenarios
 
-v0.1.4 includes a mechanical grader, versioned fixtures, and an independent ten-dimension, 20-point UX rubric. New scenarios cover merging compatible objectives, a real exclusive single-select, an open R answer, and cross-stage terminal readability. These define and regress the contract; they are not model outputs, native-UI observations, or real-user results. UX status is explicitly `not_run`:
+v0.1.5 includes a mechanical grader, versioned fixtures, and an independent ten-dimension, 20-point UX rubric. New scenarios cover merging compatible objectives, a real exclusive single-select, an open R answer, cross-stage terminal readability, and stage B's four-option feedback single-select, native-note / follow-up-message / inline-text capability matrix, free-text precedence, and non-authorization boundary. These define and regress the contract; they are not model outputs or real UI evidence. Model experience, native feedback single-select UI, separate-note rendering, and real-user UX are all explicitly `not_run`:
 
 - [`ux-evals.json`](skills/think-it-through/evals/ux-evals.json)
 - [`ux-rubric.md`](skills/think-it-through/evals/ux-rubric.md)

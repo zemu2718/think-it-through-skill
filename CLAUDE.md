@@ -79,7 +79,7 @@ diff -qr skills/think-it-through .claude/skills/think-it-through
 
 不要先在 `.claude/skills/` 修改再回抄；也不要把本地设置或该副本加入版本控制。
 
-### 当前 v0.1.4 交互合同
+### 当前 v0.1.5 交互合同
 
 宿主提供 `AskUserQuestion` 或等价工具时必须优先实际调用，Markdown 不能冒充工具调用。控件由答案形态决定，而不是由阶段名固定：
 
@@ -88,11 +88,12 @@ diff -qr skills/think-it-through .claude/skills/think-it-through
 - `open`：直接自由回答，不调用选择控件；A 不允许 `compatible-set`。
 - R-align 用户回答后先合并可并存目的、不默认排序；只有用户提供的真实排他约束会改变当前决定时才继续澄清。
 - R-method 方法调整仍留在 R-method，提交唯一最终组合后才进入 A。
-- B 使用陈述式反馈，不调用问题型控件，不含问号。
-- 只有控件不可用、失败或被拒绝时才文本降级；产品不得自建“其他/Other”，宿主 `Other` 是自由输入；自由文字与选择冲突时以文字为准。
+- B 先完成判断与一个现实实验，再调用四项原生单选；该问题只收集反馈方向，不索取新的决策信息。
+- B 只有在实际观察到与选择并存的宿主附注时才使用 `native-note`；否则原生单选使用 `follow-up-message`，文本降级使用 `inline-text`。宿主 `Other` 不是独立备注。
+- 只有控件不可用、失败或被拒绝时才文本降级；B 使用普通编号，不用方括号或伪 radio。产品不得自建“其他/Other”；自由文字与选择冲突时以文字为准。
 - 用户可见输出一意一段；承接、解释、操作提示和正式问题用空行分开，正式问题独立位于最后；选项短、平行、同层级，B 的动作、观察、复判分别成段。
 
-`scripts/grade_contracts.py` 是当前合同评分器。其 `InteractionEvidence` 把宿主状态、交互表面、实际工具调用、single/multi/none、产品选项、宿主自由输入和原生问题正文作为可观察证据。当前行为修改应同时更新：
+`scripts/grade_contracts.py` 是当前合同评分器。其 `InteractionEvidence` 把宿主状态、交互表面、实际工具调用、single/multi/none、产品选项、宿主自由输入、原生问题正文和 `supplement_mode` 作为可观察证据；failed/rejected 记录已发生的调用 trace，而 surface 记录最终呈现。当前行为修改应同时更新：
 
 1. `SKILL.md` 和相关 reference；
 2. `REQUIREMENTS.md`，必要时 `PRODUCT.md`；
@@ -109,7 +110,7 @@ diff -qr skills/think-it-through .claude/skills/think-it-through
 
 不要用当前合同重新评分或改写 v0.1 快照：
 
-- `scripts/grade_contracts.py`：当前 v0.1.4 评分器。
+- `scripts/grade_contracts.py`：当前 v0.1.5 评分器。
 - `scripts/grade_contracts_v0_1.py`：冻结 legacy 评分器。
 - `scripts/grade_behavior_runs.py`：必须显式从 `grade_contracts_v0_1` 导入。
 - `scripts/test_legacy_behavior_grader.py`：保护导入隔离、transcript 哈希和冻结评分重现。
@@ -120,4 +121,4 @@ diff -qr skills/think-it-through .claude/skills/think-it-through
 
 ### 版本与证据声明
 
-合同变化需要同步 `SKILL.md` metadata、方法 registry、current fixtures、UX eval/rubric、评分器输出、validator 以及公开文档中的当前版本。静态 fixtures、单元测试和线框只能证明合同定义，不能证明真实模型调用了原生控件。没有新模型运行或真实用户评审时，真实多轮行为、原生控件呈现和 UX 必须继续标为 `未实测 / not_run`；旧 v0.1 分数不能证明当前版本行为。
+合同变化需要同步 `SKILL.md` metadata、方法 registry、current fixtures、UX eval/rubric、评分器输出、validator 以及公开文档中的当前版本。静态 fixtures、单元测试和线框只能证明合同定义，不能证明真实模型调用了原生控件或宿主呈现了独立附注。没有新模型运行或真实用户评审时，真实多轮行为、原生反馈单选 UI、独立附注呈现和真实用户体验必须继续标为 `未实测 / not_run`；旧 v0.1 分数不能证明当前版本行为。

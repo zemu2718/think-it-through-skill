@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""用合规和违规样本验证 v0.1.4 机械合同评分器。"""
+"""用合规和违规样本验证 v0.1.5 机械合同评分器。"""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ from grade_contracts import (
     grade_b,
     grade_r,
     parse_interaction_evidence,
+    resolve_b_feedback_route,
 )
 
 
@@ -50,7 +51,7 @@ def text_fallback(
     return InteractionEvidence(
         host_control_status=status,
         surface="text-fallback",
-        tool_call_observed=False,
+        tool_call_observed=status in {"failed", "rejected"},
         selection_mode=selection_mode,
     )
 
@@ -64,13 +65,53 @@ def free_answer() -> InteractionEvidence:
     )
 
 
-def declarative_feedback() -> InteractionEvidence:
+FEEDBACK_OPTIONS = (
+    "方向符合我",
+    "调整下一步",
+    "不同意这个判断",
+    "暂时先放一放",
+)
+
+
+def native_b_feedback(supplement_mode: str = "follow-up-message") -> InteractionEvidence:
+    question = (
+        "补充说明可选。\n\n这份判断更接近你的哪种反馈？"
+        if supplement_mode == "native-note"
+        else "选中后，你仍可以再发一条普通消息补充、纠正或提供新事实。\n\n这份判断更接近你的哪种反馈？"
+    )
     return InteractionEvidence(
         host_control_status="available",
-        surface="declarative-feedback",
-        tool_call_observed=False,
-        selection_mode="none",
+        surface="native-control",
+        tool_call_observed=True,
+        selection_mode="single",
+        options=FEEDBACK_OPTIONS,
+        host_free_text_available=True,
+        question_text=question,
+        supplement_mode=supplement_mode,
     )
+
+
+def b_text_fallback(status: str = "unavailable") -> InteractionEvidence:
+    return InteractionEvidence(
+        host_control_status=status,
+        surface="text-fallback",
+        tool_call_observed=status in {"failed", "rejected"},
+        selection_mode="single",
+        supplement_mode="inline-text",
+    )
+
+
+def with_feedback_fallback(text: str) -> str:
+    return text.rstrip() + """
+
+### 反馈
+
+当前无法显示原生单选。请回复一个编号或方向，也可以在同一条消息补充说明。
+
+1. 方向符合我
+2. 调整下一步
+3. 不同意这个判断
+4. 暂时先放一放"""
 
 
 class ContractGraderTests(unittest.TestCase):
@@ -375,10 +416,12 @@ class ContractGraderTests(unittest.TestCase):
                 "options": ["获得收入", "做成作品"],
                 "host_free_text_available": True,
                 "question_text": "可多选，也可以直接补充或纠正。\n\n你希望获得哪些结果？",
+                "supplement_mode": "none",
             }
         )
         self.assertEqual(("获得收入", "做成作品"), evidence.options)
         self.assertTrue(evidence.tool_call_observed)
+        self.assertEqual("none", evidence.supplement_mode)
 
     def test_interaction_evidence_rejects_invalid_types(self) -> None:
         invalid_cases = (
@@ -387,6 +430,7 @@ class ContractGraderTests(unittest.TestCase):
             {"host_control_status": "unknown"},
             {"surface": "markdown"},
             {"selection_mode": "checkbox"},
+            {"supplement_mode": "sidecar-note"},
             {"tool_call_observed": "yes"},
             {"host_free_text_available": "yes"},
             {"question_text": ["问题"]},
@@ -611,19 +655,12 @@ class ContractGraderTests(unittest.TestCase):
 
 **观察**：记录真实付款、明确拒绝和拒绝理由。
 
-**复判**：出现真实付款就重新判断是否推进；持续只有拒绝就停止本轮开发投入。
-
-[这个方向符合我]
-[方向对，但下一步想改]
-[我不同意]
-[先放一放]
-
-也可以直接说哪里不符合实际。"""
+**复判**：出现真实付款就重新判断是否推进；持续只有拒绝就停止本轮开发投入。"""
         self.assert_all_pass(
             grade_b(
                 text,
                 already_executed=False,
-                interaction=declarative_feedback(),
+                interaction=native_b_feedback(),
             )
         )
 
@@ -642,7 +679,7 @@ class ContractGraderTests(unittest.TestCase):
             grade_b(
                 text,
                 already_executed=False,
-                interaction=declarative_feedback(),
+                interaction=native_b_feedback(),
             )
         )
 
@@ -654,13 +691,8 @@ class ContractGraderTests(unittest.TestCase):
 
 **观察**：看双方是否按新边界行动。
 
-**复判**：边界被履行则继续，否则暂停。
-[这个方向符合我]
-[方向对，但下一步想改]
-[我不同意]
-[先放一放]
-也可以直接说哪里不符合实际。"""
-        self.assert_all_pass(grade_b(text, already_executed=True, interaction=declarative_feedback()))
+**复判**：边界被履行则继续，否则暂停。"""
+        self.assert_all_pass(grade_b(text, already_executed=True, interaction=native_b_feedback()))
 
     def test_b_components_without_blank_lines_fail_layout(self) -> None:
         text = """按目前信息，我更建议：小步验证。
@@ -672,7 +704,7 @@ class ContractGraderTests(unittest.TestCase):
 **动作**：验证真实付款。
 **观察**：记录付款或明确拒绝。
 **复判**：有付款就推进，否则停止。"""
-        checks = grade_b(text, already_executed=False, interaction=declarative_feedback())
+        checks = grade_b(text, already_executed=False, interaction=native_b_feedback())
         self.assert_has_failure(checks, "阶段 B 的动作、观察和复判分别成段")
 
     def test_b_with_question_fails(self) -> None:
@@ -685,8 +717,8 @@ class ContractGraderTests(unittest.TestCase):
 
 **复判**：结果改善则继续，否则停止。
 你还想继续吗？"""
-        checks = grade_b(text, already_executed=True, interaction=declarative_feedback())
-        self.assert_has_failure(checks, "阶段 B 不再提出信息问题")
+        checks = grade_b(text, already_executed=True, interaction=native_b_feedback())
+        self.assert_has_failure(checks, "阶段 B 只提出一个反馈问题，不追加决策信息问题")
 
     def test_b_unexplained_precise_numbers_fail(self) -> None:
         text = """按目前信息，我更建议：小步验证。
@@ -697,7 +729,7 @@ class ContractGraderTests(unittest.TestCase):
 **观察**：记录 15 人中是否有人付款。
 
 **复判**：至少 3 人付款才推进，否则停止。"""
-        checks = grade_b(text, already_executed=False, interaction=declarative_feedback())
+        checks = grade_b(text, already_executed=False, interaction=native_b_feedback())
         self.assert_has_failure(checks, "阶段 B 的每个系统新增数字都有局部来源或建议性质")
 
     def test_b_one_global_disclaimer_does_not_cover_other_numbers(self) -> None:
@@ -709,7 +741,7 @@ class ContractGraderTests(unittest.TestCase):
 **观察**：记录 15 人中是否有人付款。
 
 **复判**：至少 3 人付款才推进，否则停止。"""
-        checks = grade_b(text, already_executed=False, interaction=declarative_feedback())
+        checks = grade_b(text, already_executed=False, interaction=native_b_feedback())
         self.assert_has_failure(checks, "阶段 B 的每个系统新增数字都有局部来源或建议性质")
 
     def test_b_reuses_user_provided_numbers(self) -> None:
@@ -726,7 +758,7 @@ class ContractGraderTests(unittest.TestCase):
                 text,
                 already_executed=False,
                 user_numbers=["500 元", "十个人", "百分之十"],
-                interaction=declarative_feedback(),
+                interaction=native_b_feedback(),
             )
         )
 
@@ -740,7 +772,7 @@ class ContractGraderTests(unittest.TestCase):
 **观察**：记录结果。
 
 **复判**：有付款就推进，否则停止。"""
-        checks = grade_b(text, already_executed=False, interaction=declarative_feedback())
+        checks = grade_b(text, already_executed=False, interaction=native_b_feedback())
         self.assert_has_failure(checks, "阶段 B 不含重复标题")
 
     def test_b_external_before_experiment_fails(self) -> None:
@@ -753,7 +785,7 @@ class ContractGraderTests(unittest.TestCase):
 **观察**：记录结果。
 
 **复判**：有付款就推进，否则停止。"""
-        checks = grade_b(text, already_executed=False, interaction=declarative_feedback())
+        checks = grade_b(text, already_executed=False, interaction=native_b_feedback())
         self.assert_has_failure(checks, "可选外部验证位于完整判断和现实实验之后")
 
     def test_b_with_parallel_actions_fails(self) -> None:
@@ -765,7 +797,7 @@ class ContractGraderTests(unittest.TestCase):
 3. 发起预售。
 **观察**：记录结果。
 **复判**：有付款就继续，否则停止。"""
-        checks = grade_b(text, already_executed=True, interaction=declarative_feedback())
+        checks = grade_b(text, already_executed=True, interaction=native_b_feedback())
         self.assert_has_failure(checks, "阶段 B 只有一个现实实验")
 
     def test_b_action_observe_review_are_not_three_actions(self) -> None:
@@ -777,7 +809,7 @@ class ContractGraderTests(unittest.TestCase):
 - **观察**：记录是否履行。
 
 - **复判**：履行就继续，否则暂停。"""
-        self.assert_all_pass(grade_b(text, already_executed=True, interaction=declarative_feedback()))
+        self.assert_all_pass(grade_b(text, already_executed=True, interaction=native_b_feedback()))
 
     def test_b_that_infers_authorization_fails(self) -> None:
         text = """按目前信息，我更建议：小步验证。
@@ -788,8 +820,219 @@ class ContractGraderTests(unittest.TestCase):
 **观察**：记录回复。
 
 **复判**：有需求就继续，否则停止。"""
-        checks = grade_b(text, already_executed=False, interaction=declarative_feedback())
+        checks = grade_b(text, already_executed=False, interaction=native_b_feedback())
         self.assert_has_failure(checks, "阶段 B 不把一种授权推定为另一种")
+
+    def test_valid_b_with_native_note(self) -> None:
+        text = """按目前信息，我更建议：小步验证。
+真实付款会改变判断，没有付款就停止。
+
+### 先做这一件事
+
+**动作**：展示现有版本并邀请真实付款。
+
+**观察**：记录付款或明确拒绝。
+
+**复判**：有付款就重新判断是否推进，否则停止。"""
+        self.assert_all_pass(
+            grade_b(text, already_executed=False, interaction=native_b_feedback("native-note"))
+        )
+
+    def test_valid_b_text_fallback_matrix(self) -> None:
+        base = """按目前信息，我更建议：小步验证。
+真实付款会改变判断，没有付款就停止。
+
+### 先做这一件事
+
+**动作**：展示现有版本并邀请真实付款。
+
+**观察**：记录付款或明确拒绝。
+
+**复判**：有付款就重新判断是否推进，否则停止。"""
+        text = with_feedback_fallback(base)
+        for status in ("unavailable", "failed", "rejected"):
+            with self.subTest(status=status):
+                self.assert_all_pass(
+                    grade_b(text, already_executed=False, interaction=b_text_fallback(status))
+                )
+
+    def test_b_available_host_cannot_use_text_fallback(self) -> None:
+        text = with_feedback_fallback("""按目前信息，我更建议：小步验证。
+真实付款会改变判断，没有付款就停止。
+### 先做这一件事
+**动作**：展示现有版本并邀请真实付款。
+
+**观察**：记录付款或明确拒绝。
+
+**复判**：有付款就重新判断是否推进，否则停止。""")
+        interaction = InteractionEvidence(
+            host_control_status="available",
+            surface="text-fallback",
+            tool_call_observed=False,
+            selection_mode="single",
+            supplement_mode="inline-text",
+        )
+        checks = grade_b(text, already_executed=False, interaction=interaction)
+        self.assert_has_failure(checks, "阶段 B 按宿主能力使用原生反馈单选或明确文本降级")
+
+    def test_b_native_feedback_requires_single(self) -> None:
+        interaction = InteractionEvidence(
+            host_control_status="available",
+            surface="native-control",
+            tool_call_observed=True,
+            selection_mode="multi",
+            options=FEEDBACK_OPTIONS,
+            question_text=native_b_feedback().question_text,
+            supplement_mode="follow-up-message",
+        )
+        text = """按目前信息，我更建议：小步验证。
+真实付款会改变判断，没有付款就停止。
+### 先做这一件事
+**动作**：展示现有版本。
+
+**观察**：记录结果。
+
+**复判**：有付款就推进，否则停止。"""
+        checks = grade_b(text, already_executed=False, interaction=interaction)
+        self.assert_has_failure(checks, "阶段 B 按宿主能力使用原生反馈单选或明确文本降级")
+
+    def test_b_feedback_options_must_be_exact_and_ordered(self) -> None:
+        interaction = InteractionEvidence(
+            host_control_status="available",
+            surface="native-control",
+            tool_call_observed=True,
+            selection_mode="single",
+            options=("调整下一步", "方向符合我", "不同意这个判断", "Other"),
+            question_text=native_b_feedback().question_text,
+            supplement_mode="follow-up-message",
+        )
+        text = """按目前信息，我更建议：小步验证。
+真实付款会改变判断，没有付款就停止。
+### 先做这一件事
+**动作**：展示现有版本。
+
+**观察**：记录结果。
+
+**复判**：有付款就推进，否则停止。"""
+        checks = grade_b(text, already_executed=False, interaction=interaction)
+        self.assert_has_failure(checks, "阶段 B 恰好提供四个稳定反馈方向")
+
+    def test_b_native_feedback_cannot_repeat_pseudo_buttons(self) -> None:
+        text = """按目前信息，我更建议：小步验证。
+真实付款会改变判断，没有付款就停止。
+### 先做这一件事
+**动作**：展示现有版本。
+
+**观察**：记录结果。
+
+**复判**：有付款就推进，否则停止。
+
+[方向符合我]
+[调整下一步]
+[不同意这个判断]
+[暂时先放一放]"""
+        checks = grade_b(text, already_executed=False, interaction=native_b_feedback())
+        self.assert_has_failure(checks, "阶段 B 清楚区分原生反馈与文本降级并诚实说明补充通道")
+
+    def test_b_fallback_rejects_pseudo_radio(self) -> None:
+        text = with_feedback_fallback("""按目前信息，我更建议：小步验证。
+真实付款会改变判断，没有付款就停止。
+### 先做这一件事
+**动作**：展示现有版本。
+
+**观察**：记录结果。
+
+**复判**：有付款就推进，否则停止。""").replace("1. 方向符合我", "○ 方向符合我")
+        checks = grade_b(text, already_executed=False, interaction=b_text_fallback())
+        self.assert_has_failure(checks, "阶段 B 恰好提供四个稳定反馈方向")
+        self.assert_has_failure(checks, "阶段 B 清楚区分原生反馈与文本降级并诚实说明补充通道")
+
+    def test_b_other_cannot_claim_native_note(self) -> None:
+        interaction = InteractionEvidence(
+            host_control_status="available",
+            surface="native-control",
+            tool_call_observed=True,
+            selection_mode="single",
+            options=FEEDBACK_OPTIONS,
+            host_free_text_available=True,
+            question_text=native_b_feedback().question_text,
+            supplement_mode="native-note",
+        )
+        text = """按目前信息，我更建议：小步验证。
+真实付款会改变判断，没有付款就停止。
+### 先做这一件事
+**动作**：展示现有版本。
+
+**观察**：记录结果。
+
+**复判**：有付款就推进，否则停止。"""
+        checks = grade_b(text, already_executed=False, interaction=interaction)
+        self.assert_has_failure(checks, "阶段 B 清楚区分原生反馈与文本降级并诚实说明补充通道")
+
+    def test_b_feedback_selection_does_not_authorize_execution(self) -> None:
+        text = """按目前信息，我更建议：小步验证。
+真实付款会改变判断，没有付款就停止。
+### 先做这一件事
+**动作**：你选择方向符合我，因此我会立即执行实验并联系客户。
+
+**观察**：记录结果。
+
+**复判**：有付款就推进，否则停止。"""
+        checks = grade_b(text, already_executed=False, interaction=native_b_feedback())
+        self.assert_has_failure(checks, "阶段 B 不把一种授权推定为另一种")
+
+    def test_fixture_12_b_cases_execute_current_grader(self) -> None:
+        fixture_path = (
+            Path(__file__).resolve().parents[1]
+            / "skills"
+            / "think-it-through"
+            / "evals"
+            / "fixtures"
+            / "12-native-control-and-fallback.json"
+        )
+        fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+        b_cases = [
+            case
+            for case in fixture["cases"]
+            if case.get("expected_stage") == "B"
+        ]
+        self.assertEqual(8, len(b_cases))
+
+        for case in b_cases:
+            with self.subTest(case=case["id"]):
+                text = "\n\n".join(case["assistant_shape"])
+                interaction = InteractionEvidence.from_dict(case["observed_interaction"])
+                checks = grade_b(text, already_executed=False, interaction=interaction)
+                failed = [check.text for check in checks if not check.passed]
+                if case.get("must_pass"):
+                    self.assertEqual([], failed)
+                else:
+                    self.assertTrue(case.get("must_fail"))
+                    self.assertTrue(failed, "负例必须由 current grader 拒绝")
+
+    def test_b_feedback_routes(self) -> None:
+        cases = (
+            ("accept", "none", "end", True, False),
+            ("set-aside", "none", "end", True, False),
+            ("adjust-next-step", "none", "R-method", True, False),
+            ("disagree", "none", "R-method", False, False),
+            ("accept", "consistent", "end", True, False),
+            ("accept", "experiment-adjustment", "R-method", True, True),
+            ("accept", "new-fact", "R-method", False, True),
+            ("accept", "purpose-change", "R-align", False, True),
+        )
+        for direction, supplement, stage, preserve, overridden in cases:
+            with self.subTest(direction=direction, supplement=supplement):
+                route = resolve_b_feedback_route(direction, supplement)
+                self.assertEqual(stage, route.next_stage)
+                self.assertEqual(preserve, route.preserve_judgment)
+                self.assertEqual(overridden, route.text_overrode_selection)
+
+    def test_b_feedback_routes_reject_unknown_values(self) -> None:
+        with self.assertRaises(ValueError):
+            resolve_b_feedback_route("unknown")
+        with self.assertRaises(ValueError):
+            resolve_b_feedback_route("accept", "unknown")
 
 
 if __name__ == "__main__":
