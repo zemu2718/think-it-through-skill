@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""用合规和违规样本验证 v0.1.3 机械合同评分器。"""
+"""用合规和违规样本验证 v0.1.4 机械合同评分器。"""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from tempfile import TemporaryDirectory
 from grade_contracts import (
     InteractionEvidence,
     extract_number_phrases,
+    grade,
     grade_a,
     grade_b,
     grade_r,
@@ -85,17 +86,17 @@ class ContractGraderTests(unittest.TestCase):
     @staticmethod
     def r_align_interaction() -> InteractionEvidence:
         return native_multi(
-            "这件事你主要希望获得哪些结果？可多选，也可以直接补充或纠正。",
-            "靠它获得收入",
-            "练手或做成作品",
-            "解决某类人的实际问题",
-            "现在还没想清楚",
+            "可多选，也可以直接补充或纠正。\n\n这件事你主要希望获得哪些结果？",
+            "练手并做成作品",
+            "解决一类人的具体问题",
+            "探索商业化可能",
+            "给现有团队或社群使用",
         )
 
     @staticmethod
     def r_method_interaction() -> InteractionEvidence:
         return native_multi(
-            "请选择这轮要保留的方法，可多选，也可以直接补充或纠正。",
+            "当前组合已经包含基本梳理。\n\n可多选，也可以直接加入、取消、替换或纠正。\n\n这轮保留哪些思考角度？",
             "双向钢人",
             "失败预演",
             "对象校准",
@@ -104,6 +105,42 @@ class ContractGraderTests(unittest.TestCase):
     def test_valid_r_align(self) -> None:
         text = """听起来你已经有一个产品想法，但它首先要为你带来什么，会直接改变后面的判断。这个理解只是暂定的，你可以随时纠正。"""
         self.assert_all_pass(grade_r(text, r_mode="align", interaction=self.r_align_interaction()))
+
+    def test_grade_defaults_r_to_compatible_set(self) -> None:
+        text = """听起来你已经有一个产品想法，但它首先要为你带来什么，会直接改变后面的判断。这个理解只是暂定的，你可以随时纠正。"""
+        self.assert_all_pass(
+            grade(
+                "R",
+                text,
+                False,
+                [],
+                [],
+                [],
+                [],
+                "align",
+                interaction=self.r_align_interaction(),
+            )
+        )
+
+    def test_grade_defaults_a_to_open(self) -> None:
+        text = """好，这轮先做基本梳理。
+
+当前真正分歧是你是否愿意接受这个结果的不确定性。
+
+什么现实结果会改变你继续投入的决定？"""
+        self.assert_all_pass(
+            grade(
+                "A",
+                text,
+                False,
+                [],
+                [],
+                [],
+                [],
+                "method",
+                interaction=free_answer(),
+            )
+        )
 
     def test_r_align_cannot_show_method_menu(self) -> None:
         text = """我目前理解你还在找真实目的，你可以随时纠正。
@@ -136,13 +173,13 @@ class ContractGraderTests(unittest.TestCase):
 
     def test_r_free_expression_cannot_be_product_other_option(self) -> None:
         interaction = native_multi(
-            "可多选，也可以直接补充或纠正。",
+            "可多选，也可以直接补充或纠正。\n\n这件事你主要希望获得哪些结果？",
             "获得收入",
             "做成作品",
             "Other",
         )
         checks = grade_r("我目前的理解只是暂定。", r_mode="align", interaction=interaction)
-        self.assert_has_failure(checks, "阶段 R 提供少量产品选项")
+        self.assert_has_failure(checks, "阶段 R 的选项数量匹配答案形态")
 
     def test_r_with_judgment_fails(self) -> None:
         text = """[继续]
@@ -159,7 +196,7 @@ class ContractGraderTests(unittest.TestCase):
 也可以不选，直接说想调整什么。
 我会等你确认。"""
         interaction = native_multi(
-            "请选择这轮要保留的角度，可多选，也可以直接补充或纠正。",
+            "可多选，也可以直接补充或纠正。\n\n这轮保留哪些思考角度？",
             "比较两条最强路径",
             "只做基本梳理",
         )
@@ -198,18 +235,28 @@ class ContractGraderTests(unittest.TestCase):
 
     def test_r_unavailable_host_accepts_text_fallback(self) -> None:
         text = """我目前的理解只是暂定。
+
+我会停在这里等你回答。
+
+可多选，也可以不选，直接按你的方式说或纠正。
+
+这件事你主要希望获得哪些结果？
+
 [获得收入]
-[做成作品]
-也可以不选，直接按你的方式说或纠正。
-我会等你确认后再继续。"""
+[做成作品]"""
         self.assert_all_pass(grade_r(text, r_mode="align", interaction=text_fallback()))
 
     def test_r_failed_host_accepts_text_fallback(self) -> None:
         text = """我目前的理解只是暂定。
+
+我会停在这里等你回答。
+
+可多选，也可以不选，直接按你的方式说或纠正。
+
+这件事你主要希望获得哪些结果？
+
 [获得收入]
-[做成作品]
-也可以不选，直接按你的方式说或纠正。
-我会等你确认后再继续。"""
+[做成作品]"""
         self.assert_all_pass(
             grade_r(
                 text,
@@ -220,7 +267,7 @@ class ContractGraderTests(unittest.TestCase):
 
     def test_r_method_can_use_single_confirmation(self) -> None:
         interaction = native_single(
-            "也可以直接补充或纠正。是否只做基本梳理？",
+            "可单选，也可以直接补充或纠正。\n\n这轮是否只做基本梳理？",
             "只做基本梳理",
             "返回补充目的",
         )
@@ -230,9 +277,93 @@ class ContractGraderTests(unittest.TestCase):
                 text,
                 r_mode="method",
                 interaction=interaction,
-                method_selection_mode="single",
+                answer_shape="finite-mutually-exclusive",
             )
         )
+
+    def test_r_method_after_compatible_purposes_does_not_reopen_priority(self) -> None:
+        text = """我先这样理解：你希望借这个项目练手并做成作品，也希望它解决真实问题，并保留以后发展成产品的可能。
+
+这些结果可以放在一起，不需要现在排出唯一第一名。
+
+把当前方向和最强替代方向都认真想透，再用相近证据标准检验（双向钢人）——此刻能比较先做通用聊天工具和先找具体场景，哪条路更服务这组结果。"""
+        self.assert_all_pass(
+            grade_r(
+                text,
+                ["two-sided-steelman"],
+                r_mode="method",
+                interaction=self.r_method_interaction(),
+                answer_shape="compatible-set",
+            )
+        )
+
+    def test_r_align_can_use_single_for_real_exclusive_boundary(self) -> None:
+        interaction = native_single(
+            "可单选，也可以直接补充或纠正。\n\n在这个明确限制下，你准备保留哪一个结果？",
+            "先保护现金流",
+            "先完成作品",
+            "暂不继续投入",
+        )
+        text = "你已经说明这笔投入只能用于一个方向；我目前的理解仍是暂定的。"
+        self.assert_all_pass(
+            grade_r(
+                text,
+                r_mode="align",
+                interaction=interaction,
+                answer_shape="finite-mutually-exclusive",
+            )
+        )
+
+    def test_r_align_can_use_open_answer(self) -> None:
+        text = """你已经指出现有选项都不贴合；我目前的理解仍是暂定的。
+
+什么结果对你来说才算真正解决了这件事？"""
+        self.assert_all_pass(
+            grade_r(
+                text,
+                r_mode="align",
+                interaction=free_answer(),
+                answer_shape="open",
+            )
+        )
+
+    def test_r_answer_shape_rejects_wrong_selection_mode(self) -> None:
+        checks = grade_r(
+            "我目前的理解仍是暂定的。",
+            r_mode="align",
+            interaction=self.r_align_interaction(),
+            answer_shape="finite-mutually-exclusive",
+        )
+        self.assert_has_failure(checks, "阶段 R 在控件可用时使用原生选择，否则文本降级")
+
+    def test_r_open_answer_rejects_native_options(self) -> None:
+        checks = grade_r(
+            """我目前的理解仍是暂定的。
+
+什么结果对你来说才算真正解决了这件事？""",
+            r_mode="align",
+            interaction=self.r_align_interaction(),
+            answer_shape="open",
+        )
+        self.assert_has_failure(checks, "阶段 R 的选项数量匹配答案形态")
+
+    def test_r_native_question_requires_semantic_paragraphs(self) -> None:
+        interaction = native_multi(
+            "可多选，也可以直接补充或纠正。这件事你主要希望获得哪些结果？",
+            "练手并做成作品",
+            "解决一类人的具体问题",
+        )
+        checks = grade_r("我目前的理解仍是暂定的。", r_mode="align", interaction=interaction)
+        self.assert_has_failure(checks, "阶段 R 按语义分段并把正式问题放在最后")
+
+    def test_r_option_labels_cannot_contain_questions(self) -> None:
+        interaction = native_multi(
+            "可多选，也可以直接补充或纠正。\n\n这件事你主要希望获得哪些结果？",
+            "练手并做成作品？",
+            "解决一类人的具体问题",
+        )
+        checks = grade_r("我目前的理解仍是暂定的。", r_mode="align", interaction=interaction)
+        self.assert_has_failure(checks, "阶段 R 按语义分段并把正式问题放在最后")
 
     def test_interaction_evidence_from_dict(self) -> None:
         evidence = InteractionEvidence.from_dict(
@@ -243,7 +374,7 @@ class ContractGraderTests(unittest.TestCase):
                 "selection_mode": "multi",
                 "options": ["获得收入", "做成作品"],
                 "host_free_text_available": True,
-                "question_text": "可多选，也可以直接补充或纠正。你希望获得哪些结果？",
+                "question_text": "可多选，也可以直接补充或纠正。\n\n你希望获得哪些结果？",
             }
         )
         self.assertEqual(("获得收入", "做成作品"), evidence.options)
@@ -267,7 +398,7 @@ class ContractGraderTests(unittest.TestCase):
             "selection_mode": "multi",
             "options": ["获得收入", "做成作品"],
             "host_free_text_available": True,
-            "question_text": "可多选，也可以直接补充或纠正。你希望获得哪些结果？",
+            "question_text": "可多选，也可以直接补充或纠正。\n\n你希望获得哪些结果？",
         }
         for override in invalid_cases:
             with self.subTest(override=override), self.assertRaises(ValueError):
@@ -313,7 +444,7 @@ class ContractGraderTests(unittest.TestCase):
     def test_valid_a_with_finite_choices(self) -> None:
         text = "好，这轮先做基本梳理。"
         interaction = native_single(
-            "可单选，也可以直接补充或纠正。你目前更想保护哪一种结果？",
+            "可单选，也可以直接补充或纠正。\n\n你目前更想保护哪一种结果？",
             "尽快获得收入",
             "先积累作品",
             "暂时不投入更多",
@@ -326,6 +457,35 @@ class ContractGraderTests(unittest.TestCase):
                 answer_shape="finite-mutually-exclusive",
             )
         )
+
+    def test_a_native_question_requires_semantic_paragraphs(self) -> None:
+        interaction = native_single(
+            "可单选，也可以直接补充或纠正。你目前更想保护哪一种结果？",
+            "尽快获得收入",
+            "先积累作品",
+        )
+        checks = grade_a(
+            "好，这轮先做基本梳理。",
+            confirmed_methods=[],
+            interaction=interaction,
+            answer_shape="finite-mutually-exclusive",
+        )
+        self.assert_has_failure(checks, "阶段 A 按语义分段并把唯一问题放在最后")
+
+    def test_a_open_question_requires_own_last_paragraph(self) -> None:
+        checks = grade_a(
+            "好，这轮先做基本梳理。\n什么现实结果会改变你的决定？",
+            interaction=free_answer(),
+        )
+        self.assert_has_failure(checks, "阶段 A 按语义分段并把唯一问题放在最后")
+
+    def test_a_rejects_compatible_set_answer_shape(self) -> None:
+        with self.assertRaises(ValueError):
+            grade_a(
+                "好，这轮先做基本梳理。\n\n哪些结果可以同时成立？",
+                interaction=free_answer(),
+                answer_shape="compatible-set",
+            )
 
     def test_a_with_two_questions_fails(self) -> None:
         checks = grade_a(
@@ -412,6 +572,7 @@ class ContractGraderTests(unittest.TestCase):
 
     def test_a_reuses_user_provided_chinese_numbers(self) -> None:
         text = """好，这轮先做基本梳理。
+
 你说的十个人中如果没有一人付款，这会不会改变你的决定？"""
         self.assert_all_pass(
             grade_a(
@@ -447,7 +608,9 @@ class ContractGraderTests(unittest.TestCase):
 ### 先做这一件事
 
 **动作**：把现有版本给符合画像的陌生对象看，并邀请真实付款，不新增功能。
+
 **观察**：记录真实付款、明确拒绝和拒绝理由。
+
 **复判**：出现真实付款就重新判断是否推进；持续只有拒绝就停止本轮开发投入。
 
 [这个方向符合我]
@@ -470,7 +633,9 @@ class ContractGraderTests(unittest.TestCase):
 
 ### 先做这一件事
 **动作**：用建议边界 500 元触达对象。
+
 **观察**：把 15 人作为启发式起点，记录是否付款。
+
 **复判**：建议边界是至少 3 人付款才复判是否推进；无人付款就停止。
 """
         self.assert_all_pass(
@@ -486,7 +651,9 @@ class ContractGraderTests(unittest.TestCase):
 原因很简单：真实反馈会改变判断，若结果改善则继续，否则暂停。
 ### 先做这一件事
 **动作**：只调整当前合作的责任边界。
+
 **观察**：看双方是否按新边界行动。
+
 **复判**：边界被履行则继续，否则暂停。
 [这个方向符合我]
 [方向对，但下一步想改]
@@ -495,12 +662,27 @@ class ContractGraderTests(unittest.TestCase):
 也可以直接说哪里不符合实际。"""
         self.assert_all_pass(grade_b(text, already_executed=True, interaction=declarative_feedback()))
 
+    def test_b_components_without_blank_lines_fail_layout(self) -> None:
+        text = """按目前信息，我更建议：小步验证。
+
+真实付款会改变判断，没有付款就停止。
+
+### 先做这一件事
+
+**动作**：验证真实付款。
+**观察**：记录付款或明确拒绝。
+**复判**：有付款就推进，否则停止。"""
+        checks = grade_b(text, already_executed=False, interaction=declarative_feedback())
+        self.assert_has_failure(checks, "阶段 B 的动作、观察和复判分别成段")
+
     def test_b_with_question_fails(self) -> None:
         text = """按目前信息，我更建议：暂停。
 真实结果改善则继续，否则停止。
 ### 先做这一件事
 **动作**：暂停新增投入。
+
 **观察**：记录现实结果。
+
 **复判**：结果改善则继续，否则停止。
 你还想继续吗？"""
         checks = grade_b(text, already_executed=True, interaction=declarative_feedback())
@@ -511,7 +693,9 @@ class ContractGraderTests(unittest.TestCase):
 真实付款会改变判断，没有付款就停止。
 ### 先做这一件事
 **动作**：用 500 元触达对象。
+
 **观察**：记录 15 人中是否有人付款。
+
 **复判**：至少 3 人付款才推进，否则停止。"""
         checks = grade_b(text, already_executed=False, interaction=declarative_feedback())
         self.assert_has_failure(checks, "阶段 B 的每个系统新增数字都有局部来源或建议性质")
@@ -521,7 +705,9 @@ class ContractGraderTests(unittest.TestCase):
 真实付款会改变判断，没有付款就停止。
 ### 先做这一件事
 **动作**：建议边界是先用 500 元触达对象。
+
 **观察**：记录 15 人中是否有人付款。
+
 **复判**：至少 3 人付款才推进，否则停止。"""
         checks = grade_b(text, already_executed=False, interaction=declarative_feedback())
         self.assert_has_failure(checks, "阶段 B 的每个系统新增数字都有局部来源或建议性质")
@@ -531,7 +717,9 @@ class ContractGraderTests(unittest.TestCase):
 真实付款会改变判断，没有付款就停止。
 ### 先做这一件事
 **动作**：按你说的 500 元预算触达对象。
+
 **观察**：记录十个人中是否有人付款。
+
 **复判**：达到百分之十的付款比例就推进，否则停止。"""
         self.assert_all_pass(
             grade_b(
@@ -548,7 +736,9 @@ class ContractGraderTests(unittest.TestCase):
 ### 先做这一件事
 ### 先做这一件事
 **动作**：验证付款。
+
 **观察**：记录结果。
+
 **复判**：有付款就推进，否则停止。"""
         checks = grade_b(text, already_executed=False, interaction=declarative_feedback())
         self.assert_has_failure(checks, "阶段 B 不含重复标题")
@@ -559,7 +749,9 @@ class ContractGraderTests(unittest.TestCase):
 真实付款会改变判断，没有付款就停止。
 ### 先做这一件事
 **动作**：验证付款。
+
 **观察**：记录结果。
+
 **复判**：有付款就推进，否则停止。"""
         checks = grade_b(text, already_executed=False, interaction=declarative_feedback())
         self.assert_has_failure(checks, "可选外部验证位于完整判断和现实实验之后")
@@ -581,7 +773,9 @@ class ContractGraderTests(unittest.TestCase):
 现实结果改善就继续，否则暂停。
 ### 先做这一件事
 - **动作**：只改一个合作边界。
+
 - **观察**：记录是否履行。
+
 - **复判**：履行就继续，否则暂停。"""
         self.assert_all_pass(grade_b(text, already_executed=True, interaction=declarative_feedback()))
 
@@ -590,7 +784,9 @@ class ContractGraderTests(unittest.TestCase):
 稳定需求会改变判断，没有需求就停止。
 ### 先做这一件事
 **动作**：既然你已经授权联网，所以我会自动联系潜在客户。
+
 **观察**：记录回复。
+
 **复判**：有需求就继续，否则停止。"""
         checks = grade_b(text, already_executed=False, interaction=declarative_feedback())
         self.assert_has_failure(checks, "阶段 B 不把一种授权推定为另一种")

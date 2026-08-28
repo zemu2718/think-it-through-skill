@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.1.3",
+  "contract_version": "0.1.4",
   "id": "native-control-and-fallback",
   "domain": "interaction-evidence",
   "cases": [
@@ -20,8 +20,11 @@
         "host_free_text_available": false,
         "question_text": ""
       },
-      "must_fail": ["native_control_required_when_available"],
-      "reason": "Markdown 列表不能冒充一次实际的宿主工具调用。"
+      "must_fail": [
+        "native_control_required_when_available"
+      ],
+      "reason": "Markdown 列表不能冒充一次实际的宿主工具调用。",
+      "answer_shape": "compatible-set"
     },
     {
       "id": "unavailable-host-allows-text-fallback",
@@ -41,11 +44,16 @@
         "question_text": ""
       },
       "assistant_shape": [
-        "[练手或做成作品]",
-        "[解决某类人的实际问题]",
-        "也可以不选，直接补充或纠正。"
+        "可多选，也可以不选，直接补充或纠正。",
+        "这件事你主要希望获得哪些结果？",
+        "[练手并做成作品]",
+        "[解决一类人的具体问题]"
       ],
-      "must_pass": ["equivalent_text_fallback", "equal_free_expression"]
+      "must_pass": [
+        "equivalent_text_fallback",
+        "equal_free_expression"
+      ],
+      "answer_shape": "compatible-set"
     },
     {
       "id": "failed-control-allows-text-fallback",
@@ -65,11 +73,16 @@
         "question_text": ""
       },
       "assistant_shape": [
+        "可多选，也可以不选，直接加入、取消、替换或纠正。",
+        "这轮保留哪些思考角度？",
         "[双向钢人]",
-        "[失败预演]",
-        "也可以不选，直接加入、取消、替换或纠正。"
+        "[失败预演]"
       ],
-      "must_pass": ["no_tool_retry", "equivalent_text_fallback"]
+      "must_pass": [
+        "no_tool_retry",
+        "equivalent_text_fallback"
+      ],
+      "answer_shape": "compatible-set"
     },
     {
       "id": "product-created-other-is-invalid",
@@ -84,11 +97,20 @@
         "surface": "native-control",
         "tool_call_observed": true,
         "selection_mode": "multi",
-        "options": ["练手", "解决真实问题", "Other"],
+        "options": [
+          "练手",
+          "解决真实问题",
+          "Other"
+        ],
         "host_free_text_available": true,
-        "question_text": "可多选，也可以直接补充或纠正。你希望获得哪些结果？"
+        "question_text": "可多选，也可以直接补充或纠正。\n\n你希望获得哪些结果？",
+        "question_text_semantic_paragraphs": true,
+        "question_is_last_paragraph": true
       },
-      "must_fail": ["product_other_forbidden"]
+      "must_fail": [
+        "product_other_forbidden"
+      ],
+      "answer_shape": "compatible-set"
     },
     {
       "id": "host-native-other-is-valid",
@@ -104,11 +126,20 @@
         "surface": "native-control",
         "tool_call_observed": true,
         "selection_mode": "multi",
-        "options": ["练手或做成作品", "解决某类人的实际问题"],
+        "options": [
+          "练手并做成作品",
+          "解决一类人的具体问题"
+        ],
         "host_free_text_available": true,
-        "question_text": "可多选，也可以直接补充或纠正。你希望获得哪些结果？"
+        "question_text": "可多选，也可以直接补充或纠正。\n\n你希望获得哪些结果？",
+        "question_text_semantic_paragraphs": true,
+        "question_is_last_paragraph": true
       },
-      "must_pass": ["host_other_not_counted_as_product_option", "equal_free_expression"]
+      "must_pass": [
+        "host_other_not_counted_as_product_option",
+        "equal_free_expression"
+      ],
+      "answer_shape": "compatible-set"
     },
     {
       "id": "selection-does-not-grant-authorization",
@@ -123,16 +154,22 @@
         "surface": "native-control",
         "tool_call_observed": true,
         "selection_mode": "multi",
-        "options": ["对象校准", "双向钢人"],
+        "options": [
+          "对象校准",
+          "双向钢人"
+        ],
         "host_free_text_available": true,
-        "question_text": "可多选，也可以直接补充或纠正。请选择这轮保留的方法？"
+        "question_text": "当前组合已经包含基本梳理。\n\n可多选，也可以直接加入、取消、替换或纠正。\n\n这轮保留哪些思考角度？",
+        "question_text_semantic_paragraphs": true,
+        "question_is_last_paragraph": true
       },
       "mechanical": [
         "method_selection_only",
         "no_capability_authorization",
         "no_private_data_authorization",
         "no_external_action_authorization"
-      ]
+      ],
+      "answer_shape": "compatible-set"
     }
   ],
   "semantic": [

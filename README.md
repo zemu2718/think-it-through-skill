@@ -12,7 +12,7 @@ An open Agent Skill that first understands what you truly want to achieve or pro
 </div>
 
 > [!IMPORTANT]
-> The current source contract is **v0.1.3**. Its real multi-turn model behavior, native-control rendering, and real-user UX evaluation have not been run; their status is `not_run`. A wireframe, Markdown, unit tests, and old scores are not substitutes for observed tool-call evidence. The published model-behavior evidence remains the frozen v0.1 snapshot. Automatic discovery also missed its frozen holdout gate (1/8 positive recall; 8/8 negative specificity), so invoke `/think-it-through` explicitly and do not present natural-language auto-loading or other-client compatibility as established.
+> The current source contract is **v0.1.4**. Its real multi-turn model behavior, native-control rendering, and real-user UX evaluation have not been run; their status is `not_run`. A wireframe, Markdown, unit tests, and old scores are not substitutes for observed tool-call evidence. The published model-behavior evidence remains the frozen v0.1 snapshot. Automatic discovery also missed its frozen holdout gate (1/8 positive recall; 8/8 negative specificity), so invoke `/think-it-through` explicitly and do not present natural-language auto-loading or other-client compatibility as established.
 
 ## The problem
 
@@ -46,21 +46,24 @@ Hear me first
 
 ### 1. First, help you say what you really want
 
-The Skill does not see a product idea and immediately assume revenue, growth, or a startup. When the objective is unclear, it handles only the largest current unknown. If the host provides `AskUserQuestion` or an equivalent selection tool, the Skill prioritizes an actual native multi-select and lets you use host free text to add or correct the objective.
+The Skill does not see a product idea and immediately assume revenue, growth, or a startup. When the objective is unclear, it handles only the largest current unknown with natural, parallel choices and equal free expression. If the host provides `AskUserQuestion` or an equivalent tool, the answer shape selects the surface: compatible directions use native multi-select, genuinely finite mutually exclusive boundaries use native single-select, and open answers stay free-form.
 
 ```text
 You: I want to build a chat app like QQ. What do you think?
 
-Think It Through: You already have a product direction, but what you most want it
-for will change the rest of the judgment. I will not assume that objective yet.
+Think It Through: You already have a product direction, but what you want it to achieve will change the rest of the judgment.
+
+I will not assume that objective yet.
 
 Native multi-select:
-Select any that apply, or use host free text to add or correct. Which outcomes matter here?
+Select any that apply, or add or correct in your own words.
 
-☐ Practice and create a portfolio piece
-☐ Solve a real problem for a particular group
-☐ Try to turn it into income
-☐ I have not worked that out yet
+Which outcomes do you mainly want from this?
+
+☐ Practice and turn it into a portfolio piece
+☐ Solve a specific problem for a group
+☐ Explore commercial potential
+☐ Build it for an existing team or community
 ```
 
 The checkboxes are a readable wireframe of native-control semantics, not Markdown the model should emit. When the control is available, the Skill must actually call it. Equivalent text choices appear only when the tool is unavailable, fails, or is declined. This is not a fixed button template; choices change with the issue and serve only the largest current unknown:
@@ -70,6 +73,8 @@ The checkboxes are a readable wireframe of native-control semantics, not Markdow
 - when choice and text conflict, free text wins;
 - rejecting the offered choices is accepted directly—no re-clicking;
 - the product never creates its own “Other” option; host-provided `Other` is equal free-text input and is not counted as a product choice.
+
+When several objectives can coexist, the Skill first merges them in your language. Once it can state the desired result and current decision clearly enough, it moves to thinking-angle selection—without forcing one top objective or inventing a constraint such as “the first phase can prove only one thing.” It asks one more alignment question only when you supplied a real exclusive constraint that would change the current decision.
 
 ### 2. Only after the objective is clear, recommend how to think
 
@@ -87,8 +92,11 @@ What you see is “plain language (stable method name) + why it helps now”:
   too late that the validation order was wrong.
 
 Native multi-select:
-Basic analysis is always included. Select any methods to keep, or use host free
-text to add, remove, replace, or correct.
+Basic analysis is always included.
+
+Select any that apply, or add, remove, replace, or correct in your own words.
+
+Which thinking angles should this round keep?
 
 ☐ Two-sided steelmanning
 ☐ Pre-mortem
@@ -136,7 +144,9 @@ The simple reason: …
 ### Do this one thing first
 
 Action: …
+
 Observe: …
+
 Reassess: …
 
 [This direction fits]
@@ -147,12 +157,12 @@ Reassess: …
 You can also say what does not fit reality.
 ```
 
-Action, observation, and reassessment test one hypothesis; they are not three tasks. Boundaries first reuse numbers you supplied. Every decision-relevant number introduced by the Skill must be labeled locally as a **suggested boundary**, **heuristic starting point**, or supported by a reliable source.
+Action, observation, and reassessment are separate paragraphs for terminal scanning, but they still test one hypothesis rather than forming three tasks. Every stage uses semantic paragraphs: acknowledgment, explanation, interaction guidance, and the formal question are separated by blank lines, with the question alone at the end. The Skill does not hard-wrap by a fixed character count. Boundaries first reuse numbers you supplied. Every decision-relevant number introduced by the Skill must be labeled locally as a **suggested boundary**, **heuristic starting point**, or supported by a reliable source.
 
 Feedback after the judgment is declarative. Stage B does not call `AskUserQuestion` or any equivalent question control and contains no question mark. It does not request more information or authorize a tool, private data access, or external action. A correction, new fact, or disagreement starts a new round; agreement or setting it aside ends the round and waits.
 
 > [!NOTE]
-> The interaction above is a **v0.1.3 specification wireframe**, not a model-generated transcript. Checkboxes and radio buttons represent expected native-control semantics; square brackets represent text fallback or declarative B feedback. Static content cannot prove that a tool was actually called or that real-model behavior or UX has passed.
+> The interaction above is a **v0.1.4 specification wireframe**, not a model-generated transcript. Checkboxes and radio buttons represent expected native-control semantics; square brackets represent text fallback or declarative B feedback. Static content cannot prove that a tool was actually called or that real-model behavior or UX has passed.
 
 ## Methods stay transparent without becoming homework
 
@@ -174,7 +184,7 @@ R, A, B, and method routing stay backstage. They constrain the Skill rather than
 
 | Internal state | Required work | Waiting boundary |
 | --- | --- | --- |
-| **R-align** | Help express the real objective; use native multi-select when available, with host free text. | Wait for the user to add or correct the objective. |
+| **R-align** | Help express the real objective; use multi-select for compatible directions, single-select for real exclusive boundaries, and free answer for open ones. Merge compatible objectives without forcing a ranking. | Wait for the user to add or correct the objective. |
 | **R-method** | Recommend only after the objective is clear; use native multi-select for composable methods. | Wait for explicit adoption, adjustment, or basic-only choice. |
 | **A** | Run confirmed angles; use single-select for finite mutually exclusive answers and free answer for open ones. | End with the single final question mark. |
 | **B** | Absorb the answer; give one judgment and one experiment without a question control. | End the round; never execute automatically. |
@@ -249,7 +259,7 @@ The repository separates three questions:
 
 ### Frozen v0.1 behavior snapshot
 
-The results below bind only three fixed, three-turn v0.1 scenarios. Each was run once with the Skill and once against an independent no-Skill baseline. They do not establish v0.1.3 behavior.
+The results below bind only three fixed, three-turn v0.1 scenarios. Each was run once with the Skill and once against an independent no-Skill baseline. They do not establish v0.1.4 behavior.
 
 | Metric | With Skill | Without Skill | Delta |
 | --- | ---: | ---: | ---: |
@@ -257,14 +267,14 @@ The results below bind only three fixed, three-turn v0.1 scenarios. Each was run
 | 20-point semantic rubric | **98.3%** | 38.3% | +0.60 |
 | Runs passing the full semantic gate | **3/3** | 0/3 | — |
 
-Exact transcripts, per-assertion evidence, rubric evidence, SHA-256 bindings, and aggregate JSON are in [`benchmarks/behavior-v0.1/`](benchmarks/behavior-v0.1/). The [SaaS validation](skills/think-it-through/examples/saas-validation.md) and [partnership-boundary](skills/think-it-through/examples/partnership-boundary.md) files preserve the same v0.1 outputs verbatim; their transcript bodies were not rewritten into v0.1.3 examples.
+Exact transcripts, per-assertion evidence, rubric evidence, SHA-256 bindings, and aggregate JSON are in [`benchmarks/behavior-v0.1/`](benchmarks/behavior-v0.1/). The [SaaS validation](skills/think-it-through/examples/saas-validation.md) and [partnership-boundary](skills/think-it-through/examples/partnership-boundary.md) files preserve the same v0.1 outputs verbatim; their transcript bodies were not rewritten into v0.1.4 examples.
 
 > [!CAUTION]
 > This is a contract-regression snapshot, not a general answer-quality ranking or evidence of statistical significance. There is one run per scenario/configuration. The runtime-reported model name was not independently verified through API metadata, and comparable token and timing data were unavailable.
 
-### v0.1.3 static contract and UX scenarios
+### v0.1.4 static contract and UX scenarios
 
-v0.1.3 includes a mechanical grader, versioned fixtures, and an independent nine-dimension UX rubric. These define and regress the contract; they are not model outputs or real-user results. UX status is explicitly `not_run`:
+v0.1.4 includes a mechanical grader, versioned fixtures, and an independent ten-dimension, 20-point UX rubric. New scenarios cover merging compatible objectives, a real exclusive single-select, an open R answer, and cross-stage terminal readability. These define and regress the contract; they are not model outputs, native-UI observations, or real-user results. UX status is explicitly `not_run`:
 
 - [`ux-evals.json`](skills/think-it-through/evals/ux-evals.json)
 - [`ux-rubric.md`](skills/think-it-through/evals/ux-rubric.md)

@@ -1,0 +1,116 @@
+{
+  "contract_version": "0.1.4",
+  "id": "purpose-coexistence-and-priority",
+  "domain": "purpose-sufficiency",
+  "cases": [
+    {
+      "id": "compatible-purposes-enter-method-selection",
+      "user": "我选了练手并做成作品、解决一类人的具体问题，也想保留以后商业化的可能。",
+      "expected_stage": "R",
+      "r_mode": "method",
+      "answer_shape": "compatible-set",
+      "resolved_purpose": "借项目练手并形成作品，解决真实问题，同时保留未来产品化可能",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "expected_interaction": {
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "multi",
+        "product_option_count": {"min": 2, "max": 4},
+        "host_free_text_available": true,
+        "product_other_forbidden": true,
+        "semantic_paragraphs": true,
+        "question_is_last_paragraph": true,
+        "option_labels_parallel": true
+      },
+      "mechanical": [
+        "compatible_purposes_merged",
+        "enters_r_method_without_priority_question",
+        "formal_method_names_visible",
+        "has_equal_free_expression",
+        "waits_for_confirmation"
+      ],
+      "must_not": [
+        "invent_exclusive_constraint",
+        "ask_for_unique_top_purpose",
+        "equate_purpose_with_first_version_scope",
+        "equate_validation_order_with_sacrifice"
+      ]
+    },
+    {
+      "id": "observed-forced-priority-regression",
+      "user": "这四个目标我都希望保留，没有说第一阶段只能证明一件事。",
+      "expected_stage": "R",
+      "r_mode": "method",
+      "answer_shape": "compatible-set",
+      "invalid_assistant_shape": "这四个目标可以并存，但会导向完全不同的第一版。假如第一阶段只能优先证明一件事，你最不愿意牺牲哪一个？",
+      "must_fail": [
+        "purpose_sufficiency_transition",
+        "no_invented_scarcity",
+        "concepts_remain_same_level"
+      ],
+      "reason": "可并存目的已经足以进入方法选择，不能自行制造稀缺并把验证顺序改写成价值牺牲。"
+    },
+    {
+      "id": "real-exclusive-boundary-allows-single",
+      "user": "我现在只有一笔已经锁定用途的预算，只能在保住本月现金流和完成作品之间选一个；不同选择会决定我是否继续。",
+      "expected_stage": "R",
+      "r_mode": "align",
+      "answer_shape": "finite-mutually-exclusive",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "expected_interaction": {
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "single",
+        "product_option_count": {"min": 2, "max": 4},
+        "host_free_text_available": true,
+        "product_other_forbidden": true,
+        "semantic_paragraphs": true,
+        "question_is_last_paragraph": true,
+        "option_labels_parallel": true
+      },
+      "mechanical": [
+        "uses_user_provided_exclusive_constraint",
+        "one_neutral_priority_clarification",
+        "has_equal_free_expression",
+        "waits_for_expression"
+      ]
+    },
+    {
+      "id": "open-purpose-boundary-uses-free-answer",
+      "user": "这些选项都不贴合，我说的成功有自己的条件，没法先列成几项。",
+      "expected_stage": "R",
+      "r_mode": "align",
+      "answer_shape": "open",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "expected_interaction": {
+        "surface": "free-answer",
+        "tool_call_observed": false,
+        "selection_mode": "none",
+        "product_option_count": 0,
+        "semantic_paragraphs": true,
+        "question_is_last_paragraph": true
+      },
+      "mechanical": [
+        "does_not_invent_answer_choices",
+        "one_question_mark",
+        "one_answer_slot",
+        "question_at_end"
+      ]
+    }
+  ],
+  "semantic": [
+    "merge-compatible-purposes-before-prioritizing",
+    "clarify-priority-only-under-real-exclusive-constraint",
+    "purpose-scope-hypothesis-and-evidence-order-remain-distinct",
+    "answer-shape-determines-control"
+  ]
+}

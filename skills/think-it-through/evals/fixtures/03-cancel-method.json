@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.1.3",
+  "contract_version": "0.1.4",
   "id": "cancel-method",
   "domain": "executed-project",
   "already_executed": true,
@@ -9,7 +9,11 @@
       "expected_stage": "R",
       "confirmed_methods": [],
       "r_mode": "method",
-      "recommended_methods": ["evidence-loop", "two-sided-steelman", "pre-mortem"],
+      "recommended_methods": [
+        "evidence-loop",
+        "two-sided-steelman",
+        "pre-mortem"
+      ],
       "host_capabilities": {
         "selection_control": "available",
         "host_free_text": true
@@ -18,19 +22,37 @@
         "surface": "native-control",
         "tool_call_observed": true,
         "selection_mode": "multi",
-        "product_option_count": {"min": 2, "max": 4},
+        "product_option_count": {
+          "min": 2,
+          "max": 4
+        },
         "host_free_text_available": true,
         "product_other_forbidden": true,
-        "current_combination_visible": true
+        "current_combination_visible": true,
+        "semantic_paragraphs": true,
+        "question_is_last_paragraph": true,
+        "option_labels_parallel": true
       },
-      "mechanical": ["no_judgment", "has_relevant_choices", "has_equal_free_expression", "formal_method_names_visible"]
+      "mechanical": [
+        "no_judgment",
+        "has_relevant_choices",
+        "has_equal_free_expression",
+        "formal_method_names_visible"
+      ],
+      "answer_shape": "compatible-set"
     },
     {
       "user": "保留双向钢人，不做失败预演。",
       "expected_stage": "A",
-      "confirmed_methods": ["two-sided-steelman"],
-      "cancelled_methods": ["pre-mortem"],
-      "user_numbers": ["八个月"],
+      "confirmed_methods": [
+        "two-sided-steelman"
+      ],
+      "cancelled_methods": [
+        "pre-mortem"
+      ],
+      "user_numbers": [
+        "八个月"
+      ],
       "answer_shape": "open",
       "host_capabilities": {
         "selection_control": "available",
@@ -40,15 +62,30 @@
         "surface": "free-answer",
         "tool_call_observed": false,
         "selection_mode": "none",
-        "product_option_count": 0
+        "product_option_count": 0,
+        "semantic_paragraphs": true,
+        "question_is_last_paragraph": true
       },
-      "mechanical": ["confirmed_methods_echoed_naturally", "one_question_mark", "one_answer_slot", "question_at_end", "cancelled_methods_absent", "no_system_numeric_anchor", "no_action"]
+      "mechanical": [
+        "confirmed_methods_echoed_naturally",
+        "one_question_mark",
+        "one_answer_slot",
+        "question_at_end",
+        "cancelled_methods_absent",
+        "no_system_numeric_anchor",
+        "no_action"
+      ]
     },
     {
       "user": "如果未来四周仍没有一个陌生人愿意付费，我会接受停止。",
       "expected_stage": "B",
-      "confirmed_methods": ["two-sided-steelman"],
-      "user_numbers": ["未来四周", "一个陌生人"],
+      "confirmed_methods": [
+        "two-sided-steelman"
+      ],
+      "user_numbers": [
+        "未来四周",
+        "一个陌生人"
+      ],
       "host_capabilities": {
         "selection_control": "available",
         "host_free_text": true
@@ -58,10 +95,22 @@
         "tool_call_observed": false,
         "selection_mode": "none",
         "product_option_count": 0,
-        "question_text": ""
+        "question_text": "",
+        "semantic_paragraphs": true,
+        "action_observe_review_separate_paragraphs": true
       },
-      "mechanical": ["executed_status", "one_reality_experiment", "action_observe_review", "local_numeric_provenance", "no_information_question"]
+      "mechanical": [
+        "executed_status",
+        "one_reality_experiment",
+        "action_observe_review",
+        "local_numeric_provenance",
+        "no_information_question"
+      ]
     }
   ],
-  "semantic": ["steelman-symmetric", "no-premortem-in-disguise", "sunk-cost-not-authority"]
+  "semantic": [
+    "steelman-symmetric",
+    "no-premortem-in-disguise",
+    "sunk-cost-not-authority"
+  ]
 }

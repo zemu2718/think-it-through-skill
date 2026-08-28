@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.1.3",
+  "contract_version": "0.1.4",
   "id": "background-not-confirmation",
   "domain": "career",
   "already_executed": false,
@@ -17,18 +17,32 @@
         "surface": "native-control",
         "tool_call_observed": true,
         "selection_mode": "multi",
-        "product_option_count": {"min": 2, "max": 4},
+        "product_option_count": {
+          "min": 2,
+          "max": 4
+        },
         "host_free_text_available": true,
-        "product_other_forbidden": true
+        "product_other_forbidden": true,
+        "semantic_paragraphs": true,
+        "question_is_last_paragraph": true,
+        "option_labels_parallel": true
       },
-      "mechanical": ["has_relevant_purpose_choices", "has_equal_free_expression", "no_method_menu", "waits_for_expression"]
+      "mechanical": [
+        "has_relevant_purpose_choices",
+        "has_equal_free_expression",
+        "no_method_menu",
+        "waits_for_expression"
+      ],
+      "answer_shape": "compatible-set"
     },
     {
       "user": "补充背景：我有十二个月储蓄，没有负债，产品还没有用户。",
       "expected_stage": "R",
       "confirmed_methods": [],
       "r_mode": "align",
-      "user_numbers": ["十二个月"],
+      "user_numbers": [
+        "十二个月"
+      ],
       "host_capabilities": {
         "selection_control": "available",
         "host_free_text": true
@@ -37,18 +51,39 @@
         "surface": "native-control",
         "tool_call_observed": true,
         "selection_mode": "multi",
-        "product_option_count": {"min": 2, "max": 4},
+        "product_option_count": {
+          "min": 2,
+          "max": 4
+        },
         "host_free_text_available": true,
-        "product_other_forbidden": true
+        "product_other_forbidden": true,
+        "semantic_paragraphs": true,
+        "question_is_last_paragraph": true,
+        "option_labels_parallel": true
       },
-      "mechanical": ["still_in_r", "background_is_not_confirmation", "has_equal_free_expression", "no_formal_method_execution", "no_judgment", "waits_for_expression"]
+      "mechanical": [
+        "still_in_r",
+        "background_is_not_confirmation",
+        "has_equal_free_expression",
+        "no_formal_method_execution",
+        "no_judgment",
+        "waits_for_expression"
+      ],
+      "answer_shape": "compatible-set"
     },
     {
       "user": "只做基础分析。",
       "expected_stage": "A",
-      "confirmed_methods": ["basic-analysis"],
-      "cancelled_methods": ["two-sided-steelman", "pre-mortem"],
-      "user_numbers": ["十二个月"],
+      "confirmed_methods": [
+        "basic-analysis"
+      ],
+      "cancelled_methods": [
+        "two-sided-steelman",
+        "pre-mortem"
+      ],
+      "user_numbers": [
+        "十二个月"
+      ],
       "answer_shape": "open",
       "host_capabilities": {
         "selection_control": "available",
@@ -58,14 +93,26 @@
         "surface": "free-answer",
         "tool_call_observed": false,
         "selection_mode": "none",
-        "product_option_count": 0
+        "product_option_count": 0,
+        "semantic_paragraphs": true,
+        "question_is_last_paragraph": true
       },
-      "mechanical": ["basic_analysis_echoed_naturally", "one_question_mark", "one_answer_slot", "question_at_end", "cancelled_methods_absent", "no_system_numeric_anchor", "no_external_calls"]
+      "mechanical": [
+        "basic_analysis_echoed_naturally",
+        "one_question_mark",
+        "one_answer_slot",
+        "question_at_end",
+        "cancelled_methods_absent",
+        "no_system_numeric_anchor",
+        "no_external_calls"
+      ]
     },
     {
       "user": "不知道，我现在没有任何陌生用户使用数据。",
       "expected_stage": "B",
-      "confirmed_methods": ["basic-analysis"],
+      "confirmed_methods": [
+        "basic-analysis"
+      ],
       "host_capabilities": {
         "selection_control": "available",
         "host_free_text": true
@@ -75,10 +122,21 @@
         "tool_call_observed": false,
         "selection_mode": "none",
         "product_option_count": 0,
-        "question_text": ""
+        "question_text": "",
+        "semantic_paragraphs": true,
+        "action_observe_review_separate_paragraphs": true
       },
-      "mechanical": ["no_information_question", "unexecuted_status", "one_reality_experiment", "action_observe_review"]
+      "mechanical": [
+        "no_information_question",
+        "unexecuted_status",
+        "one_reality_experiment",
+        "action_observe_review"
+      ]
     }
   ],
-  "semantic": ["background-updates-model-not-confirmation", "unknown-answer-becomes-judgment", "basic-analysis-retains-quality"]
+  "semantic": [
+    "background-updates-model-not-confirmation",
+    "unknown-answer-becomes-judgment",
+    "basic-analysis-retains-quality"
+  ]
 }

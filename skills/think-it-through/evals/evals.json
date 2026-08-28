@@ -1,7 +1,7 @@
 {
   "skill_name": "think-it-through",
   "benchmark_profile": "legacy-v0.1",
-  "notice": "本文件保留冻结的 v0.1 行为评测定义；v0.1.3 体验场景见 ux-evals.json，不得用当前合同证明或重解释旧 benchmark，也不能用旧 benchmark 证明 v0.1.3 的原生交互行为。",
+  "notice": "本文件保留冻结的 v0.1 行为评测定义；v0.1.4 体验场景见 ux-evals.json，不得用当前合同证明或重解释旧 benchmark，也不能用旧 benchmark 证明 v0.1.4 的原生交互、目的合并或终端布局行为。",
   "evals": [
     {
       "id": 1,

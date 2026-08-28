@@ -1,6 +1,6 @@
 {
   "skill_name": "think-it-through",
-  "contract_version": "0.1.3",
+  "contract_version": "0.1.4",
   "status": "not_run",
   "rubric": "ux-rubric.md",
   "notice": "这些是待执行的体验场景，不是模型输出或用户测试结果。",
@@ -8,9 +8,23 @@
     {
       "id": "ux-purpose-alignment",
       "prompt": "我想做一个像 QQ 一样的聊天软件，你觉得怎么样？",
-      "expected_experience": "先自然承接，只帮助用户表达这个想法主要想带来什么；宿主控件可用时实际调用原生多选，并说明可通过宿主自由输入补充或纠正；不先猜成商业项目，也不提前展示方法。",
+      "expected_experience": "先自然承接，只帮助用户表达这个想法主要想带来什么；宿主控件可用时实际调用原生多选，选项使用平行、自然的结果短语，并说明可通过宿主自由输入补充或纠正；操作提示与正式问题分段，不先猜成商业项目，也不提前展示方法。",
       "expected_interaction": "native-control:multi",
       "fixture": "fixtures/09-purpose-text-overrides-choice.json"
+    },
+    {
+      "id": "ux-compatible-purposes",
+      "prompt": "我既想拿它练手做成作品，也想解决真实问题，还想保留以后商业化的可能。",
+      "expected_experience": "先用用户语言合并能够并存的目的；目的与当前决定已经足够时直接进入方法选择，不要求排出唯一第一名，不虚构第一阶段只能证明一件事，也不把先验证什么改写成最不愿牺牲什么。",
+      "expected_interaction": "native-control:multi -> native-control:multi",
+      "fixture": "fixtures/13-purpose-coexistence-and-priority.json"
+    },
+    {
+      "id": "ux-exclusive-and-open-purpose",
+      "prompt": "如果我确实给出只能保留一个结果的限制，或者这些选项都不贴合，你会怎么问？",
+      "expected_experience": "只有真实排他边界会改变当前决定时才用中性单选再澄清一次；无法预造有限答案时直接开放回答，不调用选择工具。两种问题都按语义分段，正式问题位于最后。",
+      "expected_interaction": "native-control:single | free-answer:none",
+      "fixture": "fixtures/13-purpose-coexistence-and-priority.json"
     },
     {
       "id": "ux-purpose-correction",
@@ -22,28 +36,35 @@
     {
       "id": "ux-method-adjustment",
       "prompt": "调整方法：在当前推荐上加入失败预演。",
-      "expected_experience": "保留原组合并加入失败预演；调整组合时仍停在 R-method 并实际调用原生多选，等用户提交唯一最终组合后才自然回显并进入 A；每个方法产生独特价值，A 只问一个不带系统数字锚点的问题。",
+      "expected_experience": "保留原组合并加入失败预演；调整组合时仍停在 R-method 并实际调用原生多选，等用户提交唯一最终组合后才自然回显并进入 A；当前组合、操作提示和正式问题分别成段。",
       "expected_interaction": "native-control:multi -> native-control:multi -> free-answer:none",
       "fixture": "fixtures/08-interactive-method-adjustment.json"
     },
     {
       "id": "ux-answer-shape",
       "prompt": "我已经确认分析角度，现在帮我找出什么会改变决定。",
-      "expected_experience": "答案有限且互斥时实际调用原生单选并保留宿主自由输入；答案开放时不调用选择工具、不预造具体答案；始终只有一个答案槽。",
+      "expected_experience": "答案有限且互斥时实际调用原生单选并保留宿主自由输入；答案开放时不调用选择工具、不预造具体答案；始终只有一个答案槽，正式问题独立位于最后。",
       "expected_interaction": "native-control:single | free-answer:none",
       "fixture": "fixtures/10-a-answer-shapes.json"
     },
     {
       "id": "ux-native-control-fallback",
       "prompt": "我想做一个聊天软件，你觉得怎么样？",
-      "expected_experience": "宿主控件可用时实际调用原生多选，不能只输出 Markdown；只有控件不可用或调用失败时才显示等价文本，宿主 Other 作为自由输入且不算产品选项。",
+      "expected_experience": "宿主控件可用时实际调用原生多选，不能只输出 Markdown；只有控件不可用或调用失败时才显示等价文本；文本路径把操作提示、正式问题和选项分开，选项后不追加说明尾巴。",
       "expected_interaction": "native-control:multi | text-fallback:multi",
       "fixture": "fixtures/12-native-control-and-fallback.json"
     },
     {
+      "id": "ux-cross-stage-terminal-readability",
+      "prompt": "请完整走一遍目的对齐、方法确认、关键问题和判断，让我检查终端阅读体验。",
+      "expected_experience": "R-align、R-method、A、B 都按语义短段呈现；承接、解释、操作提示和正式问题之间留空行；B 的动作、观察、复判各自成段但仍属于同一个现实实验。",
+      "expected_interaction": "native-control:multi -> native-control:multi -> free-answer:none -> declarative-feedback:none",
+      "fixture": "fixtures/11-b-experiment-and-feedback.json"
+    },
+    {
       "id": "ux-judgment-experiment-feedback",
       "prompt": "如果没有真实付款，我就不继续投入。",
-      "expected_experience": "给明确但可调整的判断，以及动作、观察、复判组成的一个现实实验；不调用问题型控件，陈述式反馈与自由纠正不构成追问或授权。",
+      "expected_experience": "给明确但可调整的判断，以及分段清晰的动作、观察、复判组成的一个现实实验；不调用问题型控件，陈述式反馈与自由纠正不构成追问或授权。",
       "expected_interaction": "declarative-feedback:none",
       "fixture": "fixtures/11-b-experiment-and-feedback.json"
     }

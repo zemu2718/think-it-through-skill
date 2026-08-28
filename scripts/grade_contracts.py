@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""对“想清楚”v0.1.3 的阶段输出执行确定性合同检查。"""
+"""对“想清楚”v0.1.5 的阶段输出执行确定性合同检查。"""
 
 from __future__ import annotations
 
@@ -80,11 +80,11 @@ MULTI_ACTION_PATTERNS = (
     r"(?:另外|同时|除此之外)还(?:要|需|应该)",
 )
 AUTHORIZATION_INFERENCE_PATTERNS = (
-    r"(?:已经|既然).{0,30}(?:同意|授权).{0,30}(?:所以|因此|就).{0,40}(?:读取|联系|发送|发布|购买|删除|修改)",
-    r"(?:能力调用|联网|搜索|浏览).{0,24}(?:等于|意味着|视为).{0,24}(?:数据访问|读取|联系|发送|发布|外部行动)",
+    r"(?:已经|既然).{0,30}(?:同意|授权|选择|反馈).{0,30}(?:所以|因此|就).{0,40}(?:执行|读取|联系|发送|发布|购买|删除|修改)",
+    r"(?:能力调用|联网|搜索|浏览|方向符合|调整下一步).{0,24}(?:等于|意味着|视为).{0,24}(?:执行|数据访问|读取|联系|发送|发布|外部行动)",
     r"无需(?:另行|再次).{0,12}授权",
-    r"自动(?:读取|联系|发送|发布|购买|删除|修改)",
-    r"(?:我会|我将|现在开始|直接)(?:立即)?(?:读取|联系|发送|发布|购买|删除|修改)(?:私有|你的|外部)?",
+    r"自动(?:执行|读取|联系|发送|发布|购买|删除|修改)",
+    r"(?:我会|我将|现在开始|直接)(?:立即)?(?:执行|读取|联系|发送|发布|购买|删除|修改)(?:实验|私有|你的|外部)?",
 )
 
 CHOICE_LINE_RE = re.compile(r"(?m)^\s*(?:[-*+]\s*)?\[[^\]\n]{1,48}\]\s*$")
@@ -99,7 +99,8 @@ WAIT_RE = re.compile(r"等待|等你|确认.*再继续|选好.*继续|说完.*�
 HOST_CONTROL_STATUSES = {"available", "unavailable", "failed"}
 INTERACTION_SURFACES = {"native-control", "text-fallback", "free-answer", "declarative-feedback"}
 SELECTION_MODES = {"multi", "single", "none"}
-ANSWER_SHAPES = {"finite-mutually-exclusive", "open"}
+ANSWER_SHAPES = {"compatible-set", "finite-mutually-exclusive", "open"}
+A_ANSWER_SHAPES = {"finite-mutually-exclusive", "open"}
 NATURAL_ECHO_RE = re.compile(
     r"(?m)^(?P<line>[^\n]*(?:按刚才选的来|按这些角度|按这个角度|这轮(?:就)?先做基本梳理|这次(?:就)?先做基本梳理|本轮(?:就)?按)[^\n]*)$"
 )
@@ -227,6 +228,75 @@ def _interaction_choices(text: str, interaction: InteractionEvidence | None) -> 
 
 def _has_product_other(options: list[str] | tuple[str, ...]) -> bool:
     return any(PRODUCT_OTHER_RE.fullmatch(option.strip()) is not None for option in options)
+
+
+def _options_have_questions(options: list[str] | tuple[str, ...]) -> bool:
+    return any(QUESTION_MARK_RE.search(option) is not None for option in options)
+
+
+def _semantic_paragraphs(text: str) -> list[str]:
+    return [paragraph.strip() for paragraph in re.split(r"\n[ \t]*\n", text.strip()) if paragraph.strip()]
+
+
+def _last_paragraph_is_only_question(text: str, require_prior_paragraph: bool = False) -> bool:
+    paragraphs = _semantic_paragraphs(text)
+    marks = QUESTION_MARK_RE.findall(text)
+    if not paragraphs or len(marks) != 1:
+        return False
+    if require_prior_paragraph and len(paragraphs) < 2:
+        return False
+    last = paragraphs[-1].rstrip()
+    return QUESTION_MARK_RE.search(last) is not None and last[-1:] in ("?", "？")
+
+
+def _selection_mode_hint(text: str, selection_mode: str) -> bool:
+    patterns = {
+        "multi": r"可多选|可以多选|选择多个|同时选择",
+        "single": r"可单选|可以单选|选择一项|选一个",
+    }
+    return re.search(patterns[selection_mode], text) is not None
+
+
+def _selection_question_layout(question_text: str, selection_mode: str) -> bool:
+    paragraphs = _semantic_paragraphs(question_text)
+    if not _last_paragraph_is_only_question(question_text, require_prior_paragraph=True):
+        return False
+    guidance = "\n\n".join(paragraphs[:-1])
+    return _selection_mode_hint(guidance, selection_mode) and _has_free_expression(guidance)
+
+
+def _text_fallback_layout(text: str, selection_mode: str) -> bool:
+    matches = list(CHOICE_LINE_RE.finditer(text))
+    if not matches:
+        return False
+    prompt = text[:matches[0].start()].rstrip()
+    tail = text[matches[-1].end():].strip()
+    return not tail and _selection_question_layout(prompt, selection_mode)
+
+
+def _selection_layout_valid(
+    text: str,
+    interaction: InteractionEvidence | None,
+    selection_mode: str,
+) -> bool:
+    if interaction is None:
+        return False
+    if interaction.surface == "native-control":
+        return _selection_question_layout(interaction.question_text, selection_mode)
+    if interaction.surface == "text-fallback":
+        return _text_fallback_layout(text, selection_mode)
+    return False
+
+
+def _free_answer_interaction_valid(interaction: InteractionEvidence | None) -> bool:
+    return bool(
+        interaction
+        and interaction.surface == "free-answer"
+        and not interaction.tool_call_observed
+        and interaction.selection_mode == "none"
+        and not interaction.options
+        and not interaction.question_text
+    )
 
 
 def _native_or_fallback_valid(interaction: InteractionEvidence | None) -> bool:
@@ -380,12 +450,12 @@ def grade_r(
     recommended_methods: list[str] | None = None,
     r_mode: str = "method",
     interaction: InteractionEvidence | None = None,
-    method_selection_mode: str = "multi",
+    answer_shape: str = "compatible-set",
 ) -> list[Check]:
     if r_mode not in {"align", "method"}:
         raise ValueError(f"不支持的 R 子状态：{r_mode}")
-    if method_selection_mode not in {"multi", "single"}:
-        raise ValueError(f"不支持的 R-method 选择形态：{method_selection_mode}")
+    if answer_shape not in ANSWER_SHAPES:
+        raise ValueError(f"不支持的 R 答案形态：{answer_shape}")
 
     recommended_methods = recommended_methods or []
     expected_labels, unknown_methods = _method_labels(recommended_methods)
@@ -394,16 +464,33 @@ def grade_r(
     found_labels = [label for label in expected_labels if label in visible_text]
     recommendation_details = {label: _method_detail(visible_text, label) for label in expected_labels}
     choices = _interaction_choices(text, interaction)
-    expected_selection_mode = "multi" if r_mode == "align" else method_selection_mode
+    expected_selection_mode = {
+        "compatible-set": "multi",
+        "finite-mutually-exclusive": "single",
+        "open": "none",
+    }[answer_shape]
     judgments = _matches_any(visible_text, JUDGMENT_PATTERNS)
     actions = _matches_any(visible_text, ACTION_PATTERNS)
     external = _matches_any(visible_text, EXTERNAL_PATTERNS)
     duplicates = _duplicate_headings(visible_text)
-    interaction_valid = (
-        _native_or_fallback_valid(interaction)
-        and interaction is not None
-        and interaction.selection_mode == expected_selection_mode
-    )
+    if answer_shape == "open":
+        interaction_valid = _free_answer_interaction_valid(interaction)
+        choices_valid = not choices
+        free_input_valid = interaction_valid
+        layout_valid = _last_paragraph_is_only_question(text, require_prior_paragraph=True)
+    else:
+        interaction_valid = bool(
+            _native_or_fallback_valid(interaction)
+            and interaction
+            and interaction.selection_mode == expected_selection_mode
+        )
+        choices_valid = 2 <= len(choices) <= 4 and not _has_product_other(choices)
+        free_input_valid = _free_input_valid(text, interaction)
+        layout_valid = (
+            _selection_layout_valid(text, interaction, expected_selection_mode)
+            and len(QUESTION_MARK_RE.findall(visible_text)) == 1
+            and not _options_have_questions(choices)
+        )
     checks = [
         _check(
             "阶段 R 有结构化交互证据",
@@ -426,19 +513,23 @@ def grade_r(
             severe=True,
         ),
         _check(
-            "阶段 R 提供少量产品选项",
-            2 <= len(choices) <= 4 and not _has_product_other(choices),
-            f"选择数量：{len(choices)}；选择：{choices}；产品自建 Other={_has_product_other(choices)}",
+            "阶段 R 的选项数量匹配答案形态",
+            choices_valid,
+            (
+                f"answer_shape={answer_shape}；选择数量={len(choices)}；选择={choices}；"
+                f"产品自建 Other={_has_product_other(choices)}"
+            ),
             severe=True,
         ),
         _check(
-            "阶段 R 提供宿主自由输入或等价文本入口",
-            _free_input_valid(text, interaction),
+            "阶段 R 提供宿主自由输入或开放回答入口",
+            free_input_valid,
             (
                 "缺少交互证据"
                 if interaction is None
                 else (
-                    f"surface={interaction.surface}；host_free_text={interaction.host_free_text_available}；"
+                    f"answer_shape={answer_shape}；surface={interaction.surface}；"
+                    f"host_free_text={interaction.host_free_text_available}；"
                     f"问题正文说明={_has_free_expression(interaction.question_text)}；"
                     f"文本自由入口={_has_free_expression(text)}"
                 )
@@ -446,13 +537,34 @@ def grade_r(
             severe=True,
         ),
         _check(
+            "阶段 R 按语义分段并把正式问题放在最后",
+            layout_valid,
+            (
+                f"answer_shape={answer_shape}；mode={expected_selection_mode}；"
+                f"question={interaction.question_text!r}；选项含问号={_options_have_questions(choices)}"
+                if interaction is not None
+                else f"answer_shape={answer_shape}；缺少交互证据"
+            ),
+            severe=True,
+        ),
+        _check(
             "阶段 R 明确等待当前选择或表达",
-            bool(interaction and interaction.surface == "native-control" and interaction.tool_call_observed)
+            bool(
+                interaction
+                and (
+                    (interaction.surface == "native-control" and interaction.tool_call_observed)
+                    or interaction.surface == "free-answer"
+                )
+            )
             or WAIT_RE.search(text) is not None,
             (
                 "原生控件调用后等待"
                 if interaction and interaction.surface == "native-control" and interaction.tool_call_observed
-                else ("找到文本等待表达" if WAIT_RE.search(text) else "未找到等待表达")
+                else (
+                    "开放回答后等待"
+                    if interaction and interaction.surface == "free-answer"
+                    else ("找到文本等待表达" if WAIT_RE.search(text) else "未找到等待表达")
+                )
             ),
             severe=True,
         ),
@@ -472,7 +584,7 @@ def grade_r(
             ),
             _check(
                 "R-align 将理解标为暂定并允许纠正",
-                bool(re.search(r"暂定|目前听起来|我现在听到|可能是|理解", visible_text)) and _free_input_valid(text, interaction),
+                bool(re.search(r"暂定|目前听起来|我现在听到|可能是|理解", visible_text)) and free_input_valid,
                 "找到暂定理解与纠正入口" if re.search(r"暂定|目前听起来|我现在听到|可能是|理解", visible_text) else "未找到暂定理解表达",
             ),
         ])
@@ -501,7 +613,7 @@ def grade_a(
     interaction: InteractionEvidence | None = None,
     answer_shape: str = "open",
 ) -> list[Check]:
-    if answer_shape not in ANSWER_SHAPES:
+    if answer_shape not in A_ANSWER_SHAPES:
         raise ValueError(f"不支持的 A 答案形态：{answer_shape}")
 
     cancelled_methods = cancelled_methods or []
@@ -539,6 +651,7 @@ def grade_a(
     compound_question = _matches_any(question_text, COMPOUND_QUESTION_PATTERNS)
     if interaction is None:
         interaction_passed = False
+        layout_passed = False
     elif answer_shape == "finite-mutually-exclusive":
         interaction_passed = (
             _native_or_fallback_valid(interaction)
@@ -547,13 +660,14 @@ def grade_a(
             and not _has_product_other(choices)
             and _free_input_valid(text, interaction)
         )
-    else:
-        interaction_passed = (
-            interaction.surface == "free-answer"
-            and not interaction.tool_call_observed
-            and interaction.selection_mode == "none"
-            and not interaction.options
+        layout_passed = (
+            _selection_layout_valid(text, interaction, "single")
+            and len(marks) == 1
+            and not _options_have_questions(choices)
         )
+    else:
+        interaction_passed = _free_answer_interaction_valid(interaction)
+        layout_passed = _last_paragraph_is_only_question(text, require_prior_paragraph=True)
 
     cancelled_hits: list[str] = []
     if "pre-mortem" in cancelled_methods:
@@ -588,6 +702,15 @@ def grade_a(
                     f"mode={interaction.selection_mode}；options={list(interaction.options)}；"
                     f"host_free_text={interaction.host_free_text_available}"
                 )
+            ),
+            severe=True,
+        ),
+        _check(
+            "阶段 A 按语义分段并把唯一问题放在最后",
+            layout_passed,
+            (
+                f"answer_shape={answer_shape}；question={question_source!r}；"
+                f"选项含问号={_options_have_questions(choices)}"
             ),
             severe=True,
         ),
@@ -702,6 +825,23 @@ def grade_b(
     labels_valid = all(len(labels) <= 1 for labels in (action_labels, observation_labels, review_labels))
     if any((action_labels, observation_labels, review_labels)):
         labels_valid = labels_valid and all((action_labels, observation_labels, review_labels))
+    experiment_paragraphs = _semantic_paragraphs(experiment_body)
+    component_paragraphs = [
+        next(
+            (
+                index
+                for index, paragraph in enumerate(experiment_paragraphs)
+                if re.match(rf"^(?:[-*+]\s*)?\*{{0,2}}{label}\*{{0,2}}[：:]", paragraph)
+            ),
+            None,
+        )
+        for label in ("动作", "观察", "复判")
+    ]
+    layout_valid = not any((action_labels, observation_labels, review_labels)) or (
+        None not in component_paragraphs
+        and component_paragraphs == sorted(component_paragraphs)
+        and len(set(component_paragraphs)) == 3
+    )
     authorization_inference = _matches_any(text, AUTHORIZATION_INFERENCE_PATTERNS)
     unattributed_numbers = _unattributed_b_numbers(text, user_numbers)
     external_position = min(
@@ -760,6 +900,12 @@ def grade_b(
             ),
             severe=True,
         ),
+        _check(
+            "阶段 B 的动作、观察和复判分别成段",
+            layout_valid,
+            f"动作/观察/复判所在段落：{component_paragraphs}",
+            severe=True,
+        ),
         _check("阶段 B 不把一种授权推定为另一种", not authorization_inference, f"越权推定模式：{authorization_inference}" if authorization_inference else "未发现授权范围推定", severe=True),
         _check("阶段 B 包含会改变判断的现实信号", reversal is not None, "找到改变判断的现实信号" if reversal else "未找到改变判断的现实信号"),
         _check("可选外部验证位于完整判断和现实实验之后", external_after_judgment, f"判断位置={judgment_position}，实验位置={experiment_position}，外部验证位置={external_position}", severe=True),
@@ -787,16 +933,18 @@ def grade(
     user_numbers: list[str],
     r_mode: str,
     interaction: InteractionEvidence | None = None,
-    answer_shape: str = "open",
-    method_selection_mode: str = "multi",
+    answer_shape: str | None = None,
 ) -> list[Check]:
+    resolved_answer_shape = answer_shape or (
+        "compatible-set" if stage == "R" else "open"
+    )
     if stage == "R":
         return grade_r(
             text,
             recommended_methods,
             r_mode=r_mode,
             interaction=interaction,
-            method_selection_mode=method_selection_mode,
+            answer_shape=resolved_answer_shape,
         )
     if stage == "A":
         return grade_a(
@@ -805,7 +953,7 @@ def grade(
             confirmed_methods,
             user_numbers,
             interaction=interaction,
-            answer_shape=answer_shape,
+            answer_shape=resolved_answer_shape,
         )
     if stage == "B":
         return grade_b(text, already_executed, user_numbers, interaction=interaction)
@@ -818,8 +966,12 @@ def main() -> int:
     parser.add_argument("--input", required=True, type=Path, help="待评分的 Markdown 或文本文件")
     parser.add_argument("--already-executed", action="store_true")
     parser.add_argument("--r-mode", choices=("align", "method"), default="method")
-    parser.add_argument("--method-selection-mode", choices=("multi", "single"), default="multi")
-    parser.add_argument("--answer-shape", choices=tuple(sorted(ANSWER_SHAPES)), default="open")
+    parser.add_argument(
+        "--answer-shape",
+        choices=tuple(sorted(ANSWER_SHAPES)),
+        default=None,
+        help="答案形态；未提供时 R 默认 compatible-set，A 默认 open",
+    )
     parser.add_argument("--interaction-json", type=Path, required=True, help="本轮结构化交互证据 JSON")
     parser.add_argument("--cancelled-method", action="append", default=[])
     parser.add_argument("--confirmed-method", action="append", default=[])
@@ -841,11 +993,10 @@ def main() -> int:
         args.r_mode,
         interaction,
         args.answer_shape,
-        args.method_selection_mode,
     )
     passed = sum(check.passed for check in checks)
     result = {
-        "contract_version": "0.1.3",
+        "contract_version": "0.1.4",
         "stage": args.stage,
         "expectations": [
             {key: value for key, value in asdict(check).items() if key != "severe"}

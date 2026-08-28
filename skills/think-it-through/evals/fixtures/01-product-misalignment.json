@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.1.3",
+  "contract_version": "0.1.4",
   "id": "product-misalignment",
   "domain": "business-product",
   "already_executed": false,
@@ -9,7 +9,10 @@
       "expected_stage": "R",
       "confirmed_methods": [],
       "r_mode": "method",
-      "recommended_methods": ["object-calibration", "two-sided-steelman"],
+      "recommended_methods": [
+        "object-calibration",
+        "two-sided-steelman"
+      ],
       "host_capabilities": {
         "selection_control": "available",
         "host_free_text": true
@@ -18,17 +21,32 @@
         "surface": "native-control",
         "tool_call_observed": true,
         "selection_mode": "multi",
-        "product_option_count": {"min": 2, "max": 4},
+        "product_option_count": {
+          "min": 2,
+          "max": 4
+        },
         "host_free_text_available": true,
         "product_other_forbidden": true,
-        "current_combination_visible": true
+        "current_combination_visible": true,
+        "semantic_paragraphs": true,
+        "question_is_last_paragraph": true,
+        "option_labels_parallel": true
       },
-      "mechanical": ["no_external_calls", "has_relevant_choices", "has_equal_free_expression", "no_judgment", "waits_for_confirmation"]
+      "mechanical": [
+        "no_external_calls",
+        "has_relevant_choices",
+        "has_equal_free_expression",
+        "no_judgment",
+        "waits_for_confirmation"
+      ],
+      "answer_shape": "compatible-set"
     },
     {
       "user": "按推荐继续。",
       "expected_stage": "A",
-      "confirmed_methods": ["recommended"],
+      "confirmed_methods": [
+        "recommended"
+      ],
       "answer_shape": "open",
       "host_capabilities": {
         "selection_control": "available",
@@ -38,15 +56,31 @@
         "surface": "free-answer",
         "tool_call_observed": false,
         "selection_mode": "none",
-        "product_option_count": 0
+        "product_option_count": 0,
+        "semantic_paragraphs": true,
+        "question_is_last_paragraph": true
       },
-      "mechanical": ["confirmed_methods_echoed_naturally", "one_question_mark", "one_answer_slot", "question_at_end", "no_system_numeric_anchor", "no_judgment", "no_action", "no_external_calls"]
+      "mechanical": [
+        "confirmed_methods_echoed_naturally",
+        "one_question_mark",
+        "one_answer_slot",
+        "question_at_end",
+        "no_system_numeric_anchor",
+        "no_judgment",
+        "no_action",
+        "no_external_calls"
+      ]
     },
     {
       "user": "如果十个陌生商家里连两个都不愿为现有版本付费，我就不会继续开发。",
       "expected_stage": "B",
-      "confirmed_methods": ["recommended"],
-      "user_numbers": ["十个陌生商家", "两个"],
+      "confirmed_methods": [
+        "recommended"
+      ],
+      "user_numbers": [
+        "十个陌生商家",
+        "两个"
+      ],
       "host_capabilities": {
         "selection_control": "available",
         "host_free_text": true
@@ -56,10 +90,24 @@
         "tool_call_observed": false,
         "selection_mode": "none",
         "product_option_count": 0,
-        "question_text": ""
+        "question_text": "",
+        "semantic_paragraphs": true,
+        "action_observe_review_separate_paragraphs": true
       },
-      "mechanical": ["no_information_question", "unexecuted_status", "one_reality_experiment", "action_observe_review", "local_numeric_provenance", "judgment_before_external_validation"]
+      "mechanical": [
+        "no_information_question",
+        "unexecuted_status",
+        "one_reality_experiment",
+        "action_observe_review",
+        "local_numeric_provenance",
+        "judgment_before_external_validation"
+      ]
     }
   ],
-  "semantic": ["surface-real-decision", "decision-changing-question", "evidence-boundaries", "reversible-next-step"]
+  "semantic": [
+    "surface-real-decision",
+    "decision-changing-question",
+    "evidence-boundaries",
+    "reversible-next-step"
+  ]
 }

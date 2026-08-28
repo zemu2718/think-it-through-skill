@@ -18,16 +18,21 @@ SKILL_MD = SKILL_DIR / "SKILL.md"
 
 TEXT_SUFFIXES = {".md", ".json", ".yaml", ".yml", ".py", ".svg", ".txt"}
 IGNORED_SCAN_PARTS = {".git", ".claude", "dist", "review", "think-it-through-workspace", "__pycache__"}
-CURRENT_CONTRACT_VERSION = "0.1.3"
+CURRENT_CONTRACT_VERSION = "0.1.4"
 LEGACY_BEHAVIOR_PROFILE = "legacy-v0.1"
 EXPECTED_FIXTURE_STAGES = {"R", "A", "B", "direct", "emergency"}
 INTERACTIVE_FIXTURE_STAGES = {"R", "A", "B"}
 EXPECTED_INTERACTION_SURFACES = {
-    "R": {"native-control", "text-fallback"},
+    "R": {"native-control", "text-fallback", "free-answer"},
     "A": {"native-control", "text-fallback", "free-answer"},
     "B": {"declarative-feedback"},
 }
 EXPECTED_SELECTION_MODES = {"multi", "single", "none"}
+EXPECTED_ANSWER_SHAPES = {
+    "compatible-set": ("multi", {"native-control", "text-fallback"}),
+    "finite-mutually-exclusive": ("single", {"native-control", "text-fallback"}),
+    "open": ("none", {"free-answer"}),
+}
 DESCRIPTION_SHA256 = "f89f3d1fca11641e925a6f2e27b487ddd182789a0bea4f7ae3a3d197e4c6f3d3"
 EXPECTED_PACKAGE_FILES = {
     "LICENSE",
@@ -167,7 +172,7 @@ def validate_skill(validation: Validation) -> None:
         "优先实际调用原生控件",
         "不得仅因 Markdown",
         "自由文字为准",
-        "原生控件使用多选",
+        "初次收集可并存目的时使用原生多选",
         "使用原生多选提交最终组合",
         "原生单选",
         "开放答案不得调用选择控件",
@@ -181,8 +186,14 @@ def validate_skill(validation: Validation) -> None:
         "动作 / 观察 / 复判",
         "建议边界",
         "不自称朋友、导师或教练",
+        "先合并能够并存的目的，不默认排序",
+        "真实排他约束",
+        "目的、价值底线、第一版范围和证据顺序保持同层",
+        "一意一段",
+        "不要按固定字符数手工折行",
+        "选项保持短、平行、同层级",
     ):
-        validation.require(phrase in body, f"SKILL.md 缺少 v0.1.3 原生交互合同：{phrase}")
+        validation.require(phrase in body, f"SKILL.md 缺少 v0.1.4 交互合同：{phrase}")
     for forbidden in (
         "本轮确认：基础分析",
         "本轮使用：基础分析",
@@ -198,7 +209,10 @@ def validate_skill(validation: Validation) -> None:
             "一个稳定交互单元",
             "优先实际调用原生控件",
             "不得仅因为 Markdown",
-            "R-align 的目的可能并存，使用多选",
+            "初次收集可并存目的使用多选",
+            "用户回答后先合并，不默认排序",
+            "真实排他约束",
+            "控件由答案形态决定",
             "R-method 的方法天然可组合",
             "A 的答案天然有限且互斥时使用单选",
             "开放答案不调用选择控件",
@@ -206,9 +220,13 @@ def validate_skill(validation: Validation) -> None:
             "产品不得自行创建名为“其他”或 `Other`",
             "宿主自动提供的 `Other` 是自由输入能力",
             "选择和自由文字冲突时，以自由文字为准",
+            "一意一段",
+            "正式问题独立作为最后一个非空段落",
+            "不在固定字符数处切断句子",
+            "保持短、平行、同层级",
             "不形成第四阶段",
         ):
-            validation.require(phrase in interaction, f"interaction-ux.md 缺少 v0.1.3 交互规则：{phrase}")
+            validation.require(phrase in interaction, f"interaction-ux.md 缺少 v0.1.4 交互规则：{phrase}")
 
     method_selection_path = SKILL_DIR / "references" / "method-selection.md"
     validation.require(method_selection_path.exists(), "缺少 references/method-selection.md")
@@ -220,8 +238,11 @@ def validate_skill(validation: Validation) -> None:
             "基础分析是唯一有效路径",
             "工具不可用、调用失败或被拒绝时不重试",
             "宿主自动提供的 `Other` 是自由输入能力",
+            "正式问题分别写成短段落",
+            "正式问题独立位于最后",
+            "短、平行、同层级",
         ):
-            validation.require(phrase in method_selection, f"method-selection.md 缺少 v0.1.3 规则：{phrase}")
+            validation.require(phrase in method_selection, f"method-selection.md 缺少 v0.1.4 规则：{phrase}")
 
 
 def validate_json_yaml(validation: Validation, files: list[Path]) -> None:
@@ -384,6 +405,7 @@ def validate_evals(validation: Validation) -> None:
         (10, "a-answer-shapes.json"),
         (11, "b-experiment-and-feedback.json"),
         (12, "native-control-and-fallback.json"),
+        (13, "purpose-coexistence-and-priority.json"),
     )}
     actual_fixtures = {path.name for path in fixture_paths}
     validation.require(
@@ -410,6 +432,19 @@ def validate_evals(validation: Validation) -> None:
                 "07-method-routing.json",
                 "12-native-control-and-fallback.json",
             }:
+                continue
+
+            if "invalid_assistant_shape" in turn:
+                validation.require(
+                    isinstance(turn.get("invalid_assistant_shape"), str)
+                    and bool(turn["invalid_assistant_shape"].strip()),
+                    f"fixture {path.name} 第 {index} 个负例缺少 invalid_assistant_shape",
+                )
+                validation.require(
+                    isinstance(turn.get("must_fail"), list)
+                    and bool(turn["must_fail"]),
+                    f"fixture {path.name} 第 {index} 个负例缺少 must_fail",
+                )
                 continue
 
             host_capabilities = turn.get("host_capabilities")
@@ -451,6 +486,37 @@ def validate_evals(validation: Validation) -> None:
                 isinstance(tool_call_observed, bool),
                 f"fixture {path.name} 第 {index} 项 tool_call_observed 必须为布尔值",
             )
+
+            if stage in {"R", "A"}:
+                answer_shape = turn.get("answer_shape")
+                allowed_shapes = set(EXPECTED_ANSWER_SHAPES)
+                if stage == "A":
+                    allowed_shapes.remove("compatible-set")
+                validation.require(
+                    answer_shape in allowed_shapes,
+                    f"fixture {path.name} 第 {index} 个 {stage} 项 answer_shape 非法：{answer_shape}",
+                )
+                if answer_shape in EXPECTED_ANSWER_SHAPES:
+                    expected_mode, expected_surfaces = EXPECTED_ANSWER_SHAPES[answer_shape]
+                    validation.require(
+                        selection_mode == expected_mode and surface in expected_surfaces,
+                        f"fixture {path.name} 第 {index} 项答案形态 {answer_shape} 应为 "
+                        f"{sorted(expected_surfaces)}:{expected_mode}，当前为 {surface}:{selection_mode}",
+                    )
+                validation.require(
+                    expected_interaction.get("semantic_paragraphs") is True,
+                    f"fixture {path.name} 第 {index} 个 {stage} 项必须声明 semantic_paragraphs=true",
+                )
+                validation.require(
+                    expected_interaction.get("question_is_last_paragraph") is True,
+                    f"fixture {path.name} 第 {index} 个 {stage} 项必须声明 question_is_last_paragraph=true",
+                )
+                if surface in {"native-control", "text-fallback"}:
+                    validation.require(
+                        expected_interaction.get("option_labels_parallel") is True,
+                        f"fixture {path.name} 第 {index} 个选择项必须声明 option_labels_parallel=true",
+                    )
+
             if surface == "native-control":
                 validation.require(selection_control == "available", f"fixture {path.name} 原生控件必须声明宿主可用")
                 validation.require(tool_call_observed is True, f"fixture {path.name} 原生控件必须观察到工具调用")
@@ -472,24 +538,21 @@ def validate_evals(validation: Validation) -> None:
                 validation.require(tool_call_observed is False, f"fixture {path.name} 文本降级不得声称工具调用成功")
                 validation.require(selection_mode in {"multi", "single"}, f"fixture {path.name} 文本降级必须保留选择语义")
             elif surface == "free-answer":
-                validation.require(stage == "A", f"fixture {path.name} 只有 A 可使用 free-answer")
-                validation.require(tool_call_observed is False and selection_mode == "none", f"fixture {path.name} 开放 A 不得调用选择控件")
+                validation.require(stage in {"R", "A"}, f"fixture {path.name} 只有 R/A 可使用 free-answer")
+                validation.require(tool_call_observed is False and selection_mode == "none", f"fixture {path.name} 开放 R/A 不得调用选择控件")
                 validation.require(turn.get("answer_shape") == "open", f"fixture {path.name} free-answer 必须声明 answer_shape=open")
             elif surface == "declarative-feedback":
                 validation.require(stage == "B", f"fixture {path.name} 只有 B 可使用 declarative-feedback")
                 validation.require(tool_call_observed is False and selection_mode == "none", f"fixture {path.name} B 不得调用问题型控件")
                 validation.require(not expected_interaction.get("question_text", ""), f"fixture {path.name} B 不得包含问题文本")
-
-            if stage == "R":
-                expected_r_mode = "multi" if turn.get("r_mode") == "align" else turn.get("method_selection_mode", "multi")
                 validation.require(
-                    selection_mode == expected_r_mode,
-                    f"fixture {path.name} 的 R 选择形态应为 {expected_r_mode}，当前为 {selection_mode}",
+                    expected_interaction.get("semantic_paragraphs") is True,
+                    f"fixture {path.name} 第 {index} 个 B 项必须声明 semantic_paragraphs=true",
                 )
-            elif stage == "A" and turn.get("answer_shape") == "finite-mutually-exclusive":
-                validation.require(surface in {"native-control", "text-fallback"} and selection_mode == "single", f"fixture {path.name} 有限互斥 A 必须使用单选")
-            elif stage == "B":
-                validation.require(surface == "declarative-feedback" and selection_mode == "none", f"fixture {path.name} 的 B 必须是陈述式反馈")
+                validation.require(
+                    expected_interaction.get("action_observe_review_separate_paragraphs") is True,
+                    f"fixture {path.name} 第 {index} 个 B 项必须声明动作、观察和复判分别成段",
+                )
 
     native_fixture = trigger_dir / "fixtures" / "12-native-control-and-fallback.json"
     if native_fixture.exists():
@@ -569,12 +632,26 @@ def validate_evals(validation: Validation) -> None:
                 required_interaction in ux_interactions,
                 f"ux-evals.json 缺少交互形态：{required_interaction}",
             )
+        ux_experience = "\n".join(
+            str(item.get("expected_experience", ""))
+            for item in ux_evals
+            if isinstance(item, dict)
+        ) if isinstance(ux_evals, list) else ""
+        for phrase in (
+            "合并能够并存的目的",
+            "不要求排出唯一第一名",
+            "真实排他边界",
+            "按语义短段呈现",
+            "动作、观察、复判各自成段",
+        ):
+            validation.require(phrase in ux_experience, f"ux-evals.json 缺少 v0.1.4 体验场景：{phrase}")
     if ux_rubric_path.exists():
         rubric = ux_rubric_path.read_text(encoding="utf-8")
         for dimension in (
             "真实目的对齐",
             "可纠错性",
             "认知负担",
+            "终端可读性",
             "对话自然度",
             "方法透明度",
             "问题可回答性",
@@ -583,15 +660,20 @@ def validate_evals(validation: Validation) -> None:
             "行动转化",
         ):
             validation.require(dimension in rubric, f"UX rubric 缺少维度：{dimension}")
-        validation.require("18" in rubric and "not_run" in rubric, "UX rubric 必须保留 18 分门槛与 not_run 边界")
         for phrase in (
+            "十个维度",
+            "共 20 分",
+            "17/20",
+            "未实测 / not_run",
             "普通 Markdown、线框示意或静态文案不能证明控件已实际调用",
-            "R-align 与可组合的 R-method 使用多选",
-            "有限互斥的 A 使用单选",
-            "开放 A 直接自由回答",
-            "B 给一个阶段匹配的判断和一个现实实验",
+            "先合并可并存目的，不默认排序",
+            "有限互斥答案使用单选",
+            "开放答案直接自由回答",
+            "正式问题独立位于最后",
+            "动作、观察、复判",
+            "`真实目的对齐`、`终端可读性`、`可纠错性`、`问题可回答性`、`用户自主权` 均不得低于 2",
         ):
-            validation.require(phrase in rubric, f"UX rubric 缺少 v0.1.3 证据或分流规则：{phrase}")
+            validation.require(phrase in rubric, f"UX rubric 缺少 v0.1.4 证据或体验规则：{phrase}")
 
     legacy_rubric_path = trigger_dir / "rubric.md"
     if legacy_rubric_path.exists():
@@ -715,12 +797,26 @@ def validate_contract_graders(validation: Validation) -> None:
             '"multi"',
             '"single"',
             '"none"',
+            '"compatible-set"',
             '"finite-mutually-exclusive"',
             '"open"',
+            "ANSWER_SHAPES",
+            "A_ANSWER_SHAPES",
+            "_semantic_paragraphs",
+            "_last_paragraph_is_only_question",
+            "_selection_question_layout",
+            "_text_fallback_layout",
+            "_free_answer_interaction_valid",
             "PRODUCT_OTHER_RE",
             "host_free_text_available",
+            '"阶段 B 的动作、观察和复判分别成段"',
         ):
-            validation.require(token in current_text, f"当前评分器缺少 v0.1.3 交互合同：{token}")
+            validation.require(token in current_text, f"当前评分器缺少 v0.1.4 交互合同：{token}")
+        validation.require("method_selection_mode" not in current_text, "当前评分器不得保留重复的 method_selection_mode 分流")
+        validation.require(
+            '"compatible-set" if stage == "R" else "open"' in current_text,
+            "当前评分器必须按阶段默认 R=compatible-set、A=open",
+        )
         validation.require("extract_number_phrases" in current_text, "当前评分器缺少决定相关数字提取器")
     if behavior_grader.exists():
         behavior_text = behavior_grader.read_text(encoding="utf-8")
@@ -755,8 +851,16 @@ def validate_public_docs(validation: Validation) -> None:
         "开放",
         "Other",
         "一个现实实验",
+        "先合并可并存目的、不默认排序",
+        "真实排他约束",
+        "概念同层",
+        "一意一段",
+        "正式问题独立位于最后一个非空段落",
+        "不按固定字符数硬折行",
+        "十维",
+        "17/20",
     ):
-        validation.require(phrase in requirements, f"REQUIREMENTS.md 缺少 v0.1.3 规则：{phrase}")
+        validation.require(phrase in requirements, f"REQUIREMENTS.md 缺少 v0.1.4 规则：{phrase}")
     validation.require("先接住我" in product and "思考搭档" in product, "PRODUCT.md 缺少用户可感知体验与稳定身份")
     for phrase in (
         "优先实际调用",
@@ -765,9 +869,14 @@ def validate_public_docs(validation: Validation) -> None:
         "不调用选择控件",
         "问题型控件",
         "宿主自动提供的 `Other`",
+        "先合并能够同时成立或相互包含的目的，不默认排序",
+        "真实排他约束",
+        "必须保持同层",
+        "一意一段",
+        "按固定字符数手工折行",
         "未实测 / not_run",
     ):
-        validation.require(phrase in product, f"PRODUCT.md 缺少 v0.1.3 原生交互或证据边界：{phrase}")
+        validation.require(phrase in product, f"PRODUCT.md 缺少 v0.1.4 原生交互或证据边界：{phrase}")
     for legacy_phrase in ("本轮确认：基础分析", "本轮使用：基础分析"):
         validation.require(legacy_phrase not in readme_zh and legacy_phrase not in requirements, f"公开当前规范仍含旧版回显：{legacy_phrase}")
 

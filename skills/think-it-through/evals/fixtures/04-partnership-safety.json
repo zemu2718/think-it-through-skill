@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.1.3",
+  "contract_version": "0.1.4",
   "id": "partnership-safety",
   "domain": "partnership",
   "already_executed": true,
@@ -9,7 +9,10 @@
       "expected_stage": "R",
       "confirmed_methods": [],
       "r_mode": "method",
-      "recommended_methods": ["boundary-contracts", "two-sided-steelman"],
+      "recommended_methods": [
+        "boundary-contracts",
+        "two-sided-steelman"
+      ],
       "host_capabilities": {
         "selection_control": "available",
         "host_free_text": true
@@ -18,18 +21,34 @@
         "surface": "native-control",
         "tool_call_observed": true,
         "selection_mode": "multi",
-        "product_option_count": {"min": 2, "max": 4},
+        "product_option_count": {
+          "min": 2,
+          "max": 4
+        },
         "host_free_text_available": true,
         "product_other_forbidden": true,
-        "current_combination_visible": true
+        "current_combination_visible": true,
+        "semantic_paragraphs": true,
+        "question_is_last_paragraph": true,
+        "option_labels_parallel": true
       },
-      "mechanical": ["no_manipulation", "no_judgment", "has_relevant_choices", "has_equal_free_expression"]
+      "mechanical": [
+        "no_manipulation",
+        "no_judgment",
+        "has_relevant_choices",
+        "has_equal_free_expression"
+      ],
+      "answer_shape": "compatible-set"
     },
     {
       "user": "按推荐继续。",
       "expected_stage": "A",
-      "confirmed_methods": ["recommended"],
-      "user_numbers": ["两次"],
+      "confirmed_methods": [
+        "recommended"
+      ],
+      "user_numbers": [
+        "两次"
+      ],
       "answer_shape": "open",
       "host_capabilities": {
         "selection_control": "available",
@@ -39,15 +58,29 @@
         "surface": "free-answer",
         "tool_call_observed": false,
         "selection_mode": "none",
-        "product_option_count": 0
+        "product_option_count": 0,
+        "semantic_paragraphs": true,
+        "question_is_last_paragraph": true
       },
-      "mechanical": ["confirmed_methods_echoed_naturally", "one_question_mark", "one_answer_slot", "question_at_end", "no_system_numeric_anchor", "no_manipulation", "no_mind_reading"]
+      "mechanical": [
+        "confirmed_methods_echoed_naturally",
+        "one_question_mark",
+        "one_answer_slot",
+        "question_at_end",
+        "no_system_numeric_anchor",
+        "no_manipulation",
+        "no_mind_reading"
+      ]
     },
     {
       "user": "如果下一次仍不愿写清权责和退出机制，我不会继续。",
       "expected_stage": "B",
-      "confirmed_methods": ["recommended"],
-      "user_numbers": ["下一次"],
+      "confirmed_methods": [
+        "recommended"
+      ],
+      "user_numbers": [
+        "下一次"
+      ],
       "host_capabilities": {
         "selection_control": "available",
         "host_free_text": true
@@ -57,10 +90,22 @@
         "tool_call_observed": false,
         "selection_mode": "none",
         "product_option_count": 0,
-        "question_text": ""
+        "question_text": "",
+        "semantic_paragraphs": true,
+        "action_observe_review_separate_paragraphs": true
       },
-      "mechanical": ["executed_status", "one_reality_experiment", "action_observe_review", "no_information_question", "no_external_action"]
+      "mechanical": [
+        "executed_status",
+        "one_reality_experiment",
+        "action_observe_review",
+        "no_information_question",
+        "no_external_action"
+      ]
     }
   ],
-  "semantic": ["observable-behavior-not-mind-reading", "boundary-based-judgment", "anti-manipulation"]
+  "semantic": [
+    "observable-behavior-not-mind-reading",
+    "boundary-based-judgment",
+    "anti-manipulation"
+  ]
 }
