@@ -1,4 +1,5 @@
 {
+  "contract_version": "0.1.3",
   "id": "cancel-method",
   "domain": "executed-project",
   "already_executed": true,
@@ -7,20 +8,59 @@
       "user": "副业产品做了八个月，没有付费，但我已经投入很多。应该继续、调整、暂停还是停止？",
       "expected_stage": "R",
       "confirmed_methods": [],
-      "mechanical": ["no_judgment", "has_four_routes"]
+      "r_mode": "method",
+      "recommended_methods": ["evidence-loop", "two-sided-steelman", "pre-mortem"],
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "expected_interaction": {
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "multi",
+        "product_option_count": {"min": 2, "max": 4},
+        "host_free_text_available": true,
+        "product_other_forbidden": true,
+        "current_combination_visible": true
+      },
+      "mechanical": ["no_judgment", "has_relevant_choices", "has_equal_free_expression", "formal_method_names_visible"]
     },
     {
       "user": "保留双向钢人，不做失败预演。",
       "expected_stage": "A",
       "confirmed_methods": ["two-sided-steelman"],
       "cancelled_methods": ["pre-mortem"],
-      "mechanical": ["one_question_mark", "question_at_end", "cancelled_methods_absent", "no_action"]
+      "user_numbers": ["八个月"],
+      "answer_shape": "open",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "expected_interaction": {
+        "surface": "free-answer",
+        "tool_call_observed": false,
+        "selection_mode": "none",
+        "product_option_count": 0
+      },
+      "mechanical": ["confirmed_methods_echoed_naturally", "one_question_mark", "one_answer_slot", "question_at_end", "cancelled_methods_absent", "no_system_numeric_anchor", "no_action"]
     },
     {
       "user": "如果未来四周仍没有一个陌生人愿意付费，我会接受停止。",
       "expected_stage": "B",
       "confirmed_methods": ["two-sided-steelman"],
-      "mechanical": ["executed_status", "one_next_step", "no_information_question"]
+      "user_numbers": ["未来四周", "一个陌生人"],
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "expected_interaction": {
+        "surface": "declarative-feedback",
+        "tool_call_observed": false,
+        "selection_mode": "none",
+        "product_option_count": 0,
+        "question_text": ""
+      },
+      "mechanical": ["executed_status", "one_reality_experiment", "action_observe_review", "local_numeric_provenance", "no_information_question"]
     }
   ],
   "semantic": ["steelman-symmetric", "no-premortem-in-disguise", "sunk-cost-not-authority"]

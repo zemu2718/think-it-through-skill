@@ -1,0 +1,144 @@
+{
+  "contract_version": "0.1.3",
+  "id": "native-control-and-fallback",
+  "domain": "interaction-evidence",
+  "cases": [
+    {
+      "id": "available-host-rejects-markdown-only",
+      "expected_stage": "R",
+      "r_mode": "align",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "observed_interaction": {
+        "host_control_status": "available",
+        "surface": "text-fallback",
+        "tool_call_observed": false,
+        "selection_mode": "multi",
+        "options": [],
+        "host_free_text_available": false,
+        "question_text": ""
+      },
+      "must_fail": ["native_control_required_when_available"],
+      "reason": "Markdown 列表不能冒充一次实际的宿主工具调用。"
+    },
+    {
+      "id": "unavailable-host-allows-text-fallback",
+      "expected_stage": "R",
+      "r_mode": "align",
+      "host_capabilities": {
+        "selection_control": "unavailable",
+        "host_free_text": false
+      },
+      "observed_interaction": {
+        "host_control_status": "unavailable",
+        "surface": "text-fallback",
+        "tool_call_observed": false,
+        "selection_mode": "multi",
+        "options": [],
+        "host_free_text_available": false,
+        "question_text": ""
+      },
+      "assistant_shape": [
+        "[练手或做成作品]",
+        "[解决某类人的实际问题]",
+        "也可以不选，直接补充或纠正。"
+      ],
+      "must_pass": ["equivalent_text_fallback", "equal_free_expression"]
+    },
+    {
+      "id": "failed-control-allows-text-fallback",
+      "expected_stage": "R",
+      "r_mode": "method",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "observed_interaction": {
+        "host_control_status": "failed",
+        "surface": "text-fallback",
+        "tool_call_observed": false,
+        "selection_mode": "multi",
+        "options": [],
+        "host_free_text_available": false,
+        "question_text": ""
+      },
+      "assistant_shape": [
+        "[双向钢人]",
+        "[失败预演]",
+        "也可以不选，直接加入、取消、替换或纠正。"
+      ],
+      "must_pass": ["no_tool_retry", "equivalent_text_fallback"]
+    },
+    {
+      "id": "product-created-other-is-invalid",
+      "expected_stage": "R",
+      "r_mode": "align",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "observed_interaction": {
+        "host_control_status": "available",
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "multi",
+        "options": ["练手", "解决真实问题", "Other"],
+        "host_free_text_available": true,
+        "question_text": "可多选，也可以直接补充或纠正。你希望获得哪些结果？"
+      },
+      "must_fail": ["product_other_forbidden"]
+    },
+    {
+      "id": "host-native-other-is-valid",
+      "expected_stage": "R",
+      "r_mode": "align",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true,
+        "native_other": true
+      },
+      "observed_interaction": {
+        "host_control_status": "available",
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "multi",
+        "options": ["练手或做成作品", "解决某类人的实际问题"],
+        "host_free_text_available": true,
+        "question_text": "可多选，也可以直接补充或纠正。你希望获得哪些结果？"
+      },
+      "must_pass": ["host_other_not_counted_as_product_option", "equal_free_expression"]
+    },
+    {
+      "id": "selection-does-not-grant-authorization",
+      "expected_stage": "R",
+      "r_mode": "method",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "observed_interaction": {
+        "host_control_status": "available",
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "multi",
+        "options": ["对象校准", "双向钢人"],
+        "host_free_text_available": true,
+        "question_text": "可多选，也可以直接补充或纠正。请选择这轮保留的方法？"
+      },
+      "mechanical": [
+        "method_selection_only",
+        "no_capability_authorization",
+        "no_private_data_authorization",
+        "no_external_action_authorization"
+      ]
+    }
+  ],
+  "semantic": [
+    "native-tool-call-is-observable-behavior",
+    "fallback-only-after-unavailable-or-failed",
+    "host-free-text-is-not-a-product-option",
+    "selection-does-not-expand-authorization"
+  ]
+}

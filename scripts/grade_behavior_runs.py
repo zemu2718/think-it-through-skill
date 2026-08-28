@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from grade_contracts import Check, grade_a, grade_b, grade_r
+from grade_contracts_v0_1 import Check, grade_a, grade_b, grade_r
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_EVALS = ROOT / "skills" / "think-it-through" / "evals" / "evals.json"

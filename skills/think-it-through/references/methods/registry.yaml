@@ -1,4 +1,4 @@
-version: "0.1.0"
+version: "0.1.3"
 selection_policy:
   basic_analysis_always: true
   optional_methods_min: 0
@@ -8,7 +8,8 @@ selection_policy:
   require_current_turn_confirmation: true
 methods:
   - id: object-calibration
-    name: 校准真正要服务的对象
+    name: 对象校准
+    user_explanation: 分清使用者、付费者、受影响者和代价承担者，确认到底为谁解决什么问题。
     file: object-calibration.md
     purpose: 区分服务对象、受影响者、代价承担者与现实响应者，确定一个会改变判断的最小证据入口。
     use_when:
@@ -31,9 +32,10 @@ methods:
       commit: 4382484d8a4867f0bf9a6d089e04939618943dfb
       file: references/methods/investigation.md
       license: MIT
-    test_status: covered-in-v0.1-fixtures
+    test_status: covered-in-v0.1.3-fixtures
   - id: system-bottleneck
-    name: 找出牵动全局的问题
+    name: 系统瓶颈
+    user_explanation: 多个问题互相牵制时，分清表面症状和真正牵动全局的约束。
     file: system-bottleneck.md
     purpose: 在多个问题相互牵制时，区分表面症状、主导约束与现实控制点。
     use_when:
@@ -56,9 +58,10 @@ methods:
       commit: 4382484d8a4867f0bf9a6d089e04939618943dfb
       file: references/methods/core-contradiction.md
       license: MIT
-    test_status: covered-in-v0.1-fixtures
+    test_status: covered-in-v0.1.3-fixtures
   - id: stage-fit
-    name: 判断策略是否匹配当前阶段
+    name: 阶段匹配
+    user_explanation: 判断外部条件是否已经变化，以及过去有效的策略还适不适合现在。
     file: stage-fit.md
     purpose: 用联动信号判断条件是否转变，并相应重排当前判断标准。
     use_when:
@@ -80,9 +83,10 @@ methods:
       commit: 4382484d8a4867f0bf9a6d089e04939618943dfb
       file: references/methods/stage-judgment.md
       license: MIT
-    test_status: covered-in-v0.1-fixtures
+    test_status: covered-in-v0.1.3-fixtures
   - id: resource-leverage
-    name: 找出有限资源下的关键支点
+    name: 资源支点
+    user_explanation: 时间、资金或能力有限时，找出最值得集中投入的位置和承诺边界。
     file: resource-leverage.md
     purpose: 盘点资源、依赖与供给瓶颈，识别可持续支点和承诺边界。
     use_when:
@@ -98,16 +102,17 @@ methods:
     outputs:
       - 关键支点、保底能力、暂缓方向和重配阈值
     relationships:
-      - 不生成完整执行路线；B 仍只给一个最小下一步
+      - 不生成完整执行路线；B 仍只给一个现实实验
     provenance:
       type: adapted
       source: SamadhiFire/xinqingnian-maoxuan-skill
       commit: 4382484d8a4867f0bf9a6d089e04939618943dfb
       file: references/methods/forces-resources.md
       license: MIT
-    test_status: covered-in-v0.1-fixtures
+    test_status: covered-in-v0.1.3-fixtures
   - id: boundary-contracts
-    name: 划清合作权责与退出边界
+    name: 边界契约
+    user_explanation: 把合作中的责任、投入、决定权、承诺和退出条件说清楚并变得可检验。
     file: boundary-contracts.md
     purpose: 把合作意愿转为可观察的目标、权责、投入、授权和退出条件。
     use_when:
@@ -129,9 +134,10 @@ methods:
       commit: 4382484d8a4867f0bf9a6d089e04939618943dfb
       file: references/methods/alliance-boundaries.md
       license: MIT
-    test_status: covered-in-v0.1-fixtures
+    test_status: covered-in-v0.1.3-fixtures
   - id: communication-fit
-    name: 让表达匹配对象与目的
+    name: 沟通匹配
+    user_explanation: 判断已经清楚后，让信息、证据、渠道和反馈方式适合对象与目的。
     file: communication-fit.md
     purpose: 在判断已清楚但沟通可能失配时，使信息、证据、渠道和反馈入口服务真实目的。
     use_when:
@@ -152,9 +158,10 @@ methods:
       commit: 4382484d8a4867f0bf9a6d089e04939618943dfb
       file: references/methods/communication-calibration.md
       license: MIT
-    test_status: covered-in-v0.1-fixtures
+    test_status: covered-in-v0.1.3-fixtures
   - id: evidence-loop
-    name: 用现实结果重新判断是否继续
+    name: 证据闭环
+    user_explanation: 把原目标和假设与已经发生的结果对齐，重新判断继续、调整、暂停还是停止。
     file: evidence-loop.md
     purpose: 把原目标和判断与实际结果、成本及意外后果对齐，区分判断错误、执行偏差、资源错配和条件变化。
     use_when:
@@ -177,4 +184,4 @@ methods:
       commit: 4382484d8a4867f0bf9a6d089e04939618943dfb
       file: references/methods/review-loop.md
       license: MIT
-    test_status: covered-in-v0.1-fixtures
+    test_status: covered-in-v0.1.3-fixtures

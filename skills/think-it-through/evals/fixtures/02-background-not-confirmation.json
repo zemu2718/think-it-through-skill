@@ -1,4 +1,5 @@
 {
+  "contract_version": "0.1.3",
   "id": "background-not-confirmation",
   "domain": "career",
   "already_executed": false,
@@ -7,26 +8,76 @@
       "user": "我在考虑辞职做独立开发，但还没想清楚值不值得。",
       "expected_stage": "R",
       "confirmed_methods": [],
-      "mechanical": ["has_four_routes", "waits_for_confirmation"]
+      "r_mode": "align",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "expected_interaction": {
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "multi",
+        "product_option_count": {"min": 2, "max": 4},
+        "host_free_text_available": true,
+        "product_other_forbidden": true
+      },
+      "mechanical": ["has_relevant_purpose_choices", "has_equal_free_expression", "no_method_menu", "waits_for_expression"]
     },
     {
       "user": "补充背景：我有十二个月储蓄，没有负债，产品还没有用户。",
       "expected_stage": "R",
       "confirmed_methods": [],
-      "mechanical": ["still_in_r", "no_formal_method_execution", "no_judgment", "waits_for_confirmation"]
+      "r_mode": "align",
+      "user_numbers": ["十二个月"],
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "expected_interaction": {
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "multi",
+        "product_option_count": {"min": 2, "max": 4},
+        "host_free_text_available": true,
+        "product_other_forbidden": true
+      },
+      "mechanical": ["still_in_r", "background_is_not_confirmation", "has_equal_free_expression", "no_formal_method_execution", "no_judgment", "waits_for_expression"]
     },
     {
       "user": "只做基础分析。",
       "expected_stage": "A",
       "confirmed_methods": ["basic-analysis"],
       "cancelled_methods": ["two-sided-steelman", "pre-mortem"],
-      "mechanical": ["one_question_mark", "question_at_end", "cancelled_methods_absent", "no_external_calls"]
+      "user_numbers": ["十二个月"],
+      "answer_shape": "open",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "expected_interaction": {
+        "surface": "free-answer",
+        "tool_call_observed": false,
+        "selection_mode": "none",
+        "product_option_count": 0
+      },
+      "mechanical": ["basic_analysis_echoed_naturally", "one_question_mark", "one_answer_slot", "question_at_end", "cancelled_methods_absent", "no_system_numeric_anchor", "no_external_calls"]
     },
     {
       "user": "不知道，我现在没有任何陌生用户使用数据。",
       "expected_stage": "B",
       "confirmed_methods": ["basic-analysis"],
-      "mechanical": ["no_information_question", "unexecuted_status", "one_next_step"]
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "expected_interaction": {
+        "surface": "declarative-feedback",
+        "tool_call_observed": false,
+        "selection_mode": "none",
+        "product_option_count": 0,
+        "question_text": ""
+      },
+      "mechanical": ["no_information_question", "unexecuted_status", "one_reality_experiment", "action_observe_review"]
     }
   ],
   "semantic": ["background-updates-model-not-confirmation", "unknown-answer-becomes-judgment", "basic-analysis-retains-quality"]

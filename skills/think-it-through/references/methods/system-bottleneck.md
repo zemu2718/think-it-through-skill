@@ -1,4 +1,4 @@
-# 找出牵动全局的问题
+# 系统瓶颈
 
 内部 ID：`system-bottleneck`
 

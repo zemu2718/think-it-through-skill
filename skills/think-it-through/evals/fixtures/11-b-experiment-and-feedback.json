@@ -1,0 +1,71 @@
+{
+  "contract_version": "0.1.3",
+  "id": "b-experiment-and-feedback",
+  "domain": "judgment-experiment-feedback",
+  "already_executed": false,
+  "turns": [
+    {
+      "user": "如果没有真实付款，我就不继续投入。",
+      "expected_stage": "B",
+      "confirmed_methods": ["object-calibration", "two-sided-steelman"],
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "expected_interaction": {
+        "surface": "declarative-feedback",
+        "tool_call_observed": false,
+        "selection_mode": "none",
+        "product_option_count": 0,
+        "question_text": ""
+      },
+      "mechanical": [
+        "unexecuted_status",
+        "one_reality_experiment",
+        "action_observe_review",
+        "local_numeric_provenance",
+        "statement_feedback_controls",
+        "equal_free_correction",
+        "no_information_question",
+        "feedback_is_not_authorization"
+      ]
+    },
+    {
+      "user": "我点了‘这个方向符合我’，但补充一句：我刚拿到第一笔陌生客户付款，所以判断依据变了。",
+      "expected_stage": "R",
+      "r_mode": "method",
+      "input_precedence": "free-text-over-control",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "expected_interaction": {
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "multi",
+        "product_option_count": {"min": 2, "max": 4},
+        "host_free_text_available": true,
+        "product_other_forbidden": true
+      },
+      "mechanical": [
+        "new_fact_starts_new_r",
+        "does_not_auto_execute_experiment",
+        "does_not_infer_external_authorization",
+        "reroutes_with-new-evidence"
+      ]
+    }
+  ],
+  "invalid_experiment": {
+    "assistant_shape": [
+      "访谈用户",
+      "重写首页",
+      "发起预售"
+    ],
+    "must_fail": ["one_reality_experiment"]
+  },
+  "semantic": [
+    "action-observe-review-serve-one-hypothesis",
+    "feedback-does-not-create-fourth-stage",
+    "new-fact-can-change-judgment"
+  ]
+}

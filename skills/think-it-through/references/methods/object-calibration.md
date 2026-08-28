@@ -1,4 +1,4 @@
-# 校准真正要服务的对象
+# 对象校准
 
 内部 ID：`object-calibration`
 

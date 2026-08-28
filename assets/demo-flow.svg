@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
-  <title id="title">Think It Through interaction flow</title>
-  <desc id="desc">A topic moves through Recommend, Analyze, and Judge. The user confirms the analysis before one decision-changing question, then receives one bounded reversible next step.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="460" viewBox="0 0 1200 460" role="img" aria-labelledby="title desc">
+  <title id="title">Think It Through user journey</title>
+  <desc id="desc">Share the issue, use native multi-select when available or say it in your own words, clarify the real problem together, then take one step through a real-world experiment.</desc>
   <defs>
     <style>
       .bg { fill: #f7f3ea; }
@@ -10,10 +10,11 @@
       .accent-card { fill: #fff6f1; stroke: #ef7457; stroke-width: 3; }
       .line { fill: none; stroke: #8290a2; stroke-width: 3; stroke-linecap: round; }
       .accent-line { fill: none; stroke: #ef7457; stroke-width: 4; stroke-linecap: round; }
-      .label { font: 700 21px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: 1px; }
-      .heading { font: 700 30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      .body { font: 400 19px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      .small { font: 600 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .number { font: 700 18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .heading { font: 700 27px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .zh { font: 700 21px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .body { font: 400 17px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .small { font: 600 15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
     </style>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#8290a2"/>
@@ -23,44 +24,59 @@
     </marker>
   </defs>
 
-  <rect class="bg" width="1200" height="420" rx="28"/>
+  <rect class="bg" width="1200" height="460" rx="28"/>
 
-  <text class="heading ink" x="56" y="62">One decision. Three deliberate stages.</text>
-  <text class="body muted" x="56" y="94">The user keeps control at every waiting boundary.</text>
+  <text class="heading ink" x="56" y="58">Think clearly without learning a process first.</text>
+  <text class="body muted" x="56" y="88">先接住，再一起收敛；可多选，也可直接说。</text>
 
-  <path class="line" d="M342 228 H423" marker-end="url(#arrow)"/>
-  <path class="accent-line" d="M736 228 H817" marker-end="url(#accent-arrow)"/>
+  <path class="line" d="M300 235 H326" marker-end="url(#arrow)"/>
+  <path class="line" d="M590 235 H616" marker-end="url(#arrow)"/>
+  <path class="accent-line" d="M880 235 H906" marker-end="url(#accent-arrow)"/>
 
-  <g transform="translate(56 134)">
-    <rect class="card" width="286" height="188" rx="22"/>
-    <circle cx="42" cy="42" r="22" fill="#14243a"/>
-    <text class="label" x="35" y="50" fill="#fffdf8">R</text>
-    <text class="heading ink" x="78" y="52">Recommend</text>
-    <text class="body muted" x="28" y="96">Reframe the real decision.</text>
-    <text class="body muted" x="28" y="126">Offer the smallest useful</text>
-    <text class="body muted" x="28" y="156">analysis, then wait.</text>
+  <g transform="translate(36 126)">
+    <rect class="card" width="264" height="218" rx="22"/>
+    <circle cx="36" cy="36" r="18" fill="#14243a"/>
+    <text class="number" x="31" y="43" fill="#fffdf8">1</text>
+    <text class="heading ink" x="66" y="46">Share the issue</text>
+    <text class="zh ink" x="24" y="86">说出议题</text>
+    <text class="body muted" x="24" y="124">A problem, idea, choice,</text>
+    <text class="body muted" x="24" y="151">plan, or a sense that</text>
+    <text class="body muted" x="24" y="178">something does not fit.</text>
   </g>
 
-  <g transform="translate(450 134)">
-    <rect class="accent-card" width="286" height="188" rx="22"/>
-    <circle cx="42" cy="42" r="22" fill="#ef7457"/>
-    <text class="label" x="34" y="50" fill="#fffdf8">A</text>
-    <text class="heading ink" x="78" y="52">Analyze</text>
-    <text class="body muted" x="28" y="96">Run only confirmed methods.</text>
-    <text class="body muted" x="28" y="126">Find the key variable.</text>
-    <text class="small" x="28" y="160" fill="#d9573c">Ask exactly one question ?</text>
+  <g transform="translate(326 126)">
+    <rect class="card" width="264" height="218" rx="22"/>
+    <circle cx="36" cy="36" r="18" fill="#14243a"/>
+    <text class="number" x="31" y="43" fill="#fffdf8">2</text>
+    <text class="heading ink" x="66" y="46">Select or say it</text>
+    <text class="zh ink" x="24" y="86">可多选，也可直接说</text>
+    <text class="body muted" x="24" y="124">Native multi-select first.</text>
+    <text class="body muted" x="24" y="151">Host free text stays equal.</text>
+    <text class="small" x="24" y="185" fill="#d9573c">Your words override controls.</text>
   </g>
 
-  <g transform="translate(844 134)">
-    <rect class="card" width="300" height="188" rx="22"/>
-    <circle cx="42" cy="42" r="22" fill="#14243a"/>
-    <text class="label" x="35" y="50" fill="#fffdf8">B</text>
-    <text class="heading ink" x="78" y="52">Judge</text>
-    <text class="body muted" x="28" y="96">Absorb the answer.</text>
-    <text class="body muted" x="28" y="126">Give one conditional judgment</text>
-    <text class="body muted" x="28" y="156">and one bounded next step.</text>
+  <g transform="translate(616 126)">
+    <rect class="accent-card" width="264" height="218" rx="22"/>
+    <circle cx="36" cy="36" r="18" fill="#ef7457"/>
+    <text class="number" x="31" y="43" fill="#fffdf8">3</text>
+    <text class="heading ink" x="66" y="46">Think it through</text>
+    <text class="zh ink" x="24" y="86">一起想清楚</text>
+    <text class="body muted" x="24" y="124">Clarify the real decision.</text>
+    <text class="body muted" x="24" y="151">Test the strongest directions.</text>
+    <text class="small" x="24" y="185" fill="#d9573c">Ask one key question.</text>
   </g>
 
-  <path class="line" d="M593 330 C593 376 205 380 205 326" marker-end="url(#arrow)"/>
-  <text class="small muted" x="346" y="390">Change the topic or methods → return to R</text>
+  <g transform="translate(906 126)">
+    <rect class="card" width="258" height="218" rx="22"/>
+    <circle cx="36" cy="36" r="18" fill="#14243a"/>
+    <text class="number" x="31" y="43" fill="#fffdf8">4</text>
+    <text class="heading ink" x="66" y="46">Take one step</text>
+    <text class="zh ink" x="24" y="86">先走一步</text>
+    <text class="body muted" x="24" y="124">One revisable judgment.</text>
+    <text class="body muted" x="24" y="151">Action · Observe · Reassess.</text>
+    <text class="body muted" x="24" y="178">No automatic execution.</text>
+  </g>
+
+  <path class="line" d="M1035 355 C1035 416 458 418 458 351" marker-end="url(#arrow)"/>
+  <text class="small muted" x="570" y="421">Correction or new facts start a new round · 纠正或新事实开启新一轮</text>
 </svg>

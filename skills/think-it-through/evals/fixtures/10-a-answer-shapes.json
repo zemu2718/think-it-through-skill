@@ -1,0 +1,90 @@
+{
+  "contract_version": "0.1.3",
+  "id": "a-answer-shapes",
+  "domain": "question-contract",
+  "cases": [
+    {
+      "id": "finite-mutually-exclusive-answer",
+      "user": "我已经确认只做基本梳理；现在要分清我最想保护的是收入、作品还是时间。",
+      "expected_stage": "A",
+      "confirmed_methods": ["basic-analysis"],
+      "answer_shape": "finite-mutually-exclusive",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "expected_interaction": {
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "single",
+        "product_option_count": {"min": 2, "max": 4},
+        "host_free_text_available": true,
+        "product_other_forbidden": true,
+        "question_has_exactly_one_mark_at_end": true
+      },
+      "mechanical": [
+        "basic_analysis_echoed_naturally",
+        "two_to_four_answer_choices",
+        "has_equal_free_expression",
+        "one_question_mark",
+        "one_answer_slot",
+        "question_at_end",
+        "no_system_numeric_anchor"
+      ]
+    },
+    {
+      "id": "open-answer",
+      "user": "我已经确认用双向钢人；现在需要找出会让我放弃当前方向的现实结果。",
+      "expected_stage": "A",
+      "confirmed_methods": ["two-sided-steelman"],
+      "answer_shape": "open",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "expected_interaction": {
+        "surface": "free-answer",
+        "tool_call_observed": false,
+        "selection_mode": "none",
+        "product_option_count": 0
+      },
+      "mechanical": [
+        "confirmed_methods_echoed_naturally",
+        "does_not_invent_answer_choices",
+        "one_question_mark",
+        "one_answer_slot",
+        "question_at_end",
+        "no_system_numeric_anchor"
+      ]
+    },
+    {
+      "id": "reuse-user-number",
+      "user": "我说过只有十个人可访谈，已经确认只做基本梳理。",
+      "expected_stage": "A",
+      "confirmed_methods": ["basic-analysis"],
+      "user_numbers": ["十个人"],
+      "answer_shape": "open",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "expected_interaction": {
+        "surface": "free-answer",
+        "tool_call_observed": false,
+        "selection_mode": "none",
+        "product_option_count": 0
+      },
+      "mechanical": [
+        "may_reuse_same_user_number_and_unit",
+        "rejects_new_sample_size_or_deadline",
+        "one_question_mark",
+        "question_at_end"
+      ]
+    }
+  ],
+  "semantic": [
+    "choices-only-when-answer-space-is-naturally-finite",
+    "open-question-does-not-anchor-user",
+    "question-remains-easy-to-answer"
+  ]
+}

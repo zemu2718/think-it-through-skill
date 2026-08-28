@@ -1,4 +1,4 @@
-# 让表达匹配对象与目的
+# 沟通匹配
 
 内部 ID：`communication-fit`
 

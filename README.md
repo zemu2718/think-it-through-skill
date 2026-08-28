@@ -1,18 +1,18 @@
 <div align="center">
-  <img src="assets/hero.png" alt="Think It Through — converging paths lead to one decision-changing question and a reversible next step" width="100%">
+  <img src="assets/hero.png" alt="Think It Through — converging paths lead to one decision-changing question and a reversible real-world experiment" width="100%">
 
 # 想清楚 · Think It Through
 
 **Do not let AI flawlessly execute the wrong task.**
 
-An open Agent Skill that uncovers the real objective, finds the one answer most likely to change the decision, and turns it into one testable, bounded, reversible next step.
+An open Agent Skill that first understands what you truly want to achieve or protect, finds the one answer most likely to change the decision, and turns it into one testable, bounded, reversible real-world experiment.
 
 [简体中文](README.zh-CN.md) · [Product](PRODUCT.md) · [Requirements](REQUIREMENTS.md) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
 > [!IMPORTANT]
-> The core Skill, behavior evaluation, generated PNG assets, package inspection, unpacked quick validation, official `skills-ref` validation, and isolated Claude Code source installation are complete. Automatic discovery did **not** pass its frozen holdout (1/8 positive recall; 8/8 negative specificity), and end-to-end `.skill` archive installation in a client is not verified. For v0.1, invoke `/think-it-through` explicitly; do not present automatic loading or other-client compatibility as established.
+> The current source contract is **v0.1.3**. Its real multi-turn model behavior, native-control rendering, and real-user UX evaluation have not been run; their status is `not_run`. A wireframe, Markdown, unit tests, and old scores are not substitutes for observed tool-call evidence. The published model-behavior evidence remains the frozen v0.1 snapshot. Automatic discovery also missed its frozen holdout gate (1/8 positive recall; 8/8 negative specificity), so invoke `/think-it-through` explicitly and do not present natural-language auto-loading or other-client compatibility as established.
 
 ## The problem
 
@@ -23,78 +23,167 @@ AI is very good at completing explicit requests. That becomes wasteful when the 
 - optimizing a message when the partnership boundary itself is unclear;
 - producing more options when one missing answer would reorder all of them.
 
-Think It Through inserts a deliberate checkpoint before consequential action:
+Think It Through inserts a restrained checkpoint before consequential action:
 
 ```text
 Surface task → Real objective → Decision question
 ```
 
-It does not make the choice for you. It helps you see what you are actually choosing, what could overturn the current view, and how to learn without overcommitting.
+It does not make the choice for you. It helps you see what you are really trying to resolve, what the current judgment depends on, and how reality can correct the direction without overcommitment.
 
-## See the interaction before installing
+## See the experience before installing
 
-<img src="assets/demo-flow.svg" alt="R: recommend an analysis and wait. A: run only confirmed methods and ask exactly one question. B: give one conditional judgment and one bounded next step." width="100%">
+<img src="assets/demo-flow.svg" alt="Share the issue, choose a relevant direction or say it in your own words, clarify the real question and one key answer together, then take one step through a real-world experiment." width="100%">
 
-| Stage | What the Skill does | Waiting boundary |
-| --- | --- | --- |
-| **R — Recommend** | Reframes the surface task, tentative real objective, and decision question; recommends the smallest useful analysis. | Waits for your explicit confirmation or adjustment. |
-| **A — Analyze** | Runs basic analysis plus only the methods you confirmed; finds the highest-sensitivity variable. | Ends with exactly one independent question. |
-| **B — Judge** | Absorbs your answer—even “I don't know”—and gives one conditional judgment plus one bounded next step. | Ends the round; it does not execute for you. |
+```text
+Hear me first
+→ Give me easy directions, and let me say it my way
+→ Help me clarify the real problem
+→ Ask only one key question
+→ Give me a clear but revisable judgment
+→ Help me take only the next step
+```
 
-The [SaaS validation transcript](skills/think-it-through/examples/saas-validation.md) and [partnership-boundary transcript](skills/think-it-through/examples/partnership-boundary.md) are exact `with_skill` outputs from the fixed behavior evaluation—not rewritten success stories.
+### 1. First, help you say what you really want
 
-<details>
-<summary><strong>Short real transcript: from “write a launch plan” to a payment test</strong></summary>
+The Skill does not see a product idea and immediately assume revenue, growth, or a startup. When the objective is unclear, it handles only the largest current unknown. If the host provides `AskUserQuestion` or an equivalent selection tool, the Skill prioritizes an actual native multi-select and lets you use host free text to add or correct the objective.
 
-**User:** I built a scheduling SaaS for small businesses. No unfamiliar customer has paid. I wanted a launch plan and another three months of development. Should I do that?
+```text
+You: I want to build a chat app like QQ. What do you think?
 
-**R:** The Skill tentatively reframes the choice as “continue development and promotion, or first test whether the current version solves a problem worth paying for,” recommends three methods, presents four routes, and waits.
+Think It Through: You already have a product direction, but what you most want it
+for will change the rest of the judgment. I will not assume that objective yet.
 
-**User:** Proceed as recommended.
+Native multi-select:
+Select any that apply, or use host free text to add or correct. Which outcomes matter here?
 
-**A:** It compares the strongest competing judgments, traces the failure mechanism, and ends with one question: how many of ten matched unfamiliar businesses would need to pay at a real acceptable price to justify three more months?
+☐ Practice and create a portfolio piece
+☐ Solve a real problem for a particular group
+☐ Try to turn it into income
+☐ I have not worked that out yet
+```
 
-**User:** If fewer than two pay, I will not continue development.
+The checkboxes are a readable wireframe of native-control semantics, not Markdown the model should emit. When the control is available, the Skill must actually call it. Equivalent text choices appear only when the tool is unavailable, fails, or is declined. This is not a fixed button template; choices change with the issue and serve only the largest current unknown:
 
-**B — Small test:** For seven days, offer the unchanged version at one real price to ten matched businesses with no prior relationship. Reassess on day seven: at least two payments support conditional progression; fewer than two stop the three-month commitment.
+- a choice alone is accepted;
+- matching choice and text are merged;
+- when choice and text conflict, free text wins;
+- rejecting the offered choices is accepted directly—no re-clicking;
+- the product never creates its own “Other” option; host-provided `Other` is equal free-text input and is not counted as a product choice.
 
-[Read the exact Chinese transcript and formal grades →](benchmarks/behavior-v0.1/eval-1-saas-misalignment/with_skill/transcript.md)
+### 2. Only after the objective is clear, recommend how to think
 
-</details>
+The Skill decides internally whether basic analysis is enough, then considers two-sided steelmanning, a pre-mortem, and one specialist card that fills a distinct gap. After deduplication, it recommends only 0–3 useful angles rather than handing you a full method catalog.
 
-## What makes it different
+What you see is “plain language (stable method name) + why it helps now”:
 
-### One question means one answer slot
+```text
+- Make the current direction and strongest alternative as strong as possible,
+  then test both with comparable evidence standards (Two-sided steelmanning):
+  this avoids merely defending the current preference.
 
-The question in stage A is not a disguised questionnaire. “What are your budget, deadline, and minimum return?” has one question mark but three independent answers, so it fails the contract.
+- Look ahead at how a candidate path is most likely to fail, then trace the
+  earliest signals and controllable boundary (Pre-mortem): this avoids learning
+  too late that the validation order was wrong.
 
-The Skill asks instead:
+Native multi-select:
+Basic analysis is always included. Select any methods to keep, or use host free
+text to add, remove, replace, or correct.
+
+☐ Two-sided steelmanning
+☐ Pre-mortem
+☐ Object calibration
+```
+
+Combination semantics stay stable:
+
+- **Add X** = keep the current combination and add X;
+- **Remove X** = remove only X;
+- **Replace Y with X** = remove Y and add X.
+
+After confirmation, the Skill echoes the final combination naturally—for example, “Good, we’ll use object calibration + two-sided steelmanning”—instead of exposing an internal technical checklist. Adding background, opening an adjustment view, browsing candidates, or accepting a default selection is not confirmation.
+
+### 3. Answer only one genuinely decisive question
+
+The analysis does not simulate a panel or dump frameworks one by one. Every confirmed method must add distinct value, and all of it is synthesized into one question:
 
 > Which single answer, if different, would most likely change the option ranking, direction, or whether to continue?
 
-### Methods require your confirmation
+“What are your budget, deadline, and minimum return?” contains one question mark but needs three answers, so it fails the contract.
 
-Basic analysis is always present. Optional methods are recommended only when they add independent value:
+- when the answer set is naturally finite and mutually exclusive, an available host control is actually called as a native single-select with 2–4 product choices and host free text for adding or correcting;
+- when the answer is open, the Skill does not call a selection control, invent candidate answers, or constrain your direct response;
+- either way, there is one answer slot and one question mark at the end of the question; native question text is included in this check and option labels contain no question marks;
+- the Skill may reuse numbers you supplied, but it cannot invent a sample size, deadline, amount, people count, ratio, success threshold, or future commitment length in stage A.
 
-- **Two-sided steelmanning** — test the strongest competing judgments using comparable evidence standards;
-- **Pre-mortem** — trace a concrete future failure through 1–3 causal chains and early signals;
-- **Neutral specialist cards** — clarify objects, bottlenecks, stage fit, resource leverage, boundaries, communication fit, or evidence from work already done.
+After asking, it stops and waits rather than answering on your behalf.
 
-You can accept the recommendation, change it, use basic analysis only, or add background. Adding background never silently confirms a method.
+### 4. After your answer, get a judgment and one real-world experiment
 
-### The outcome is a decision, not a framework dump
-
-After your answer, the Skill uses exactly one state:
+Even if you answer “I don’t know,” answer partially, or decline to answer, the Skill does not start another questionnaire. It incorporates the uncertainty and uses one state appropriate to the work:
 
 | Not yet executed | Already executed |
 | --- | --- |
 | Hold / Small test / Proceed conditionally / Proceed | Continue / Adjust / Pause / Stop |
 
-The next step is one action with a time or cost bound, success signal, stop or pivot condition, and re-evaluation point—not a new backlog.
+The user-facing result is natural:
+
+```text
+Based on what we know, I recommend: …
+
+The simple reason: …
+
+### Do this one thing first
+
+Action: …
+Observe: …
+Reassess: …
+
+[This direction fits]
+[The direction fits, but change the next step]
+[I disagree]
+[Set this aside]
+
+You can also say what does not fit reality.
+```
+
+Action, observation, and reassessment test one hypothesis; they are not three tasks. Boundaries first reuse numbers you supplied. Every decision-relevant number introduced by the Skill must be labeled locally as a **suggested boundary**, **heuristic starting point**, or supported by a reliable source.
+
+Feedback after the judgment is declarative. Stage B does not call `AskUserQuestion` or any equivalent question control and contains no question mark. It does not request more information or authorize a tool, private data access, or external action. A correction, new fact, or disagreement starts a new round; agreement or setting it aside ends the round and waits.
+
+> [!NOTE]
+> The interaction above is a **v0.1.3 specification wireframe**, not a model-generated transcript. Checkboxes and radio buttons represent expected native-control semantics; square brackets represent text fallback or declarative B feedback. Static content cannot prove that a tool was actually called or that real-model behavior or UX has passed.
+
+## Methods stay transparent without becoming homework
+
+Basic analysis always runs in the background. Method routing is the Skill’s selection mechanism, not another method for the user to choose. Beyond two-sided steelmanning and pre-mortem, the seven specialist cards are:
+
+- separate users, payers, affected parties, and cost bearers (**Object calibration**);
+- find the constraint that moves the whole system (**System bottleneck**);
+- check whether an old strategy still fits current conditions (**Stage fit**);
+- find where limited resources should concentrate and where commitment stops (**Resource leverage**);
+- make responsibilities, inputs, decision rights, and exit terms testable (**Boundary contracts**);
+- fit information, evidence, channel, and feedback to audience and purpose (**Communication fit**);
+- use actual outcomes to revisit continue, adjust, pause, or stop (**Evidence loop**).
+
+Usually no more than one specialist card is recommended; zero is a valid result. Stable names remain visible for transparency and precise adjustment, but users do not need to learn the catalog.
+
+## How the hidden contract keeps the Skill restrained
+
+R, A, B, and method routing stay backstage. They constrain the Skill rather than becoming user homework:
+
+| Internal state | Required work | Waiting boundary |
+| --- | --- | --- |
+| **R-align** | Help express the real objective; use native multi-select when available, with host free text. | Wait for the user to add or correct the objective. |
+| **R-method** | Recommend only after the objective is clear; use native multi-select for composable methods. | Wait for explicit adoption, adjustment, or basic-only choice. |
+| **A** | Run confirmed angles; use single-select for finite mutually exclusive answers and free answer for open ones. | End with the single final question mark. |
+| **B** | Absorb the answer; give one judgment and one experiment without a question control. | End the round; never execute automatically. |
+
+For factual lookup, clear low-risk execution, pure creation, and entertainment, the Skill should stay out of the way. Urgent safety situations receive immediate protective guidance instead of a longer decision process.
 
 ## When it should trigger
 
-Use `/think-it-through`, or describe the issue naturally, when an important choice is uncertain, costly, hard to reverse, or already consuming resources:
+The most reliable current path is explicit `/think-it-through`. It fits important choices that are uncertain, costly, hard to reverse, or already consuming resources:
 
 - “Is this worth doing?”
 - “I am stuck between A and B.”
@@ -102,28 +191,22 @@ Use `/think-it-through`, or describe the issue naturally, when an important choi
 - “Does the action I asked AI to perform actually serve my goal?”
 - “Should I continue, adjust, pause, or stop?”
 - “Find the one question that would change this decision.”
-- “I need a decision-support skill with trade-off analysis, steelmanning, a pre-mortem, and a reversible next step.”
+- “I need a decision-support skill with trade-off analysis, steelmanning, a pre-mortem, and a reversible experiment.”
 - “还没想清楚 / 值不值得做 / A 还是 B / 帮我检验这个想法 / 下一步最该做什么。”
 
-These phrases are also useful search language for Skill directories: **decision support**, **decision framing**, **trade-off analysis**, **pre-mortem**, **two-sided steelman**, **reversible next step**, and **continue adjust pause stop**. This repository does **not** claim to appear in a particular external index before that is observed after publication.
-
-The Skill is designed for product and business, career, team, partnership, relationship boundaries, high-cost choices, and review of work already in motion.
+Useful directory search language includes **decision support**, **decision framing**, **trade-off analysis**, **pre-mortem**, **two-sided steelman**, **real-world experiment**, **reversible next step**, and **continue adjust pause stop**. This repository does not claim to appear for a particular query before external indexing is actually observed.
 
 ### When it should not trigger
 
-It should stay out of the way for:
-
-- factual lookup or a definition of a decision method;
-- clear, low-risk, reversible execution after the decision is made;
+- factual lookup or definitions of decision methods;
+- a decided, clearly specified, low-risk, reversible execution task;
 - pure creation or entertainment;
 - code review, FMEA, research, or project planning without an unresolved user choice;
-- urgent safety situations—give immediate protective guidance instead.
+- urgent safety situations.
 
-This boundary matters as much as recall. A decision Skill that activates on every use of “trade-off”, “pause”, or “pre-mortem” is not useful.
+Precision matters as much as recall. A decision Skill that activates whenever “trade-off,” “pause,” or “pre-mortem” appears is not useful.
 
 ## Installation
-
-The verified source layout below follows Claude Code's documented personal and project Skill locations. The folder name becomes the direct command, while `description` enables automatic loading for matching requests.
 
 ### Personal — available in all local projects
 
@@ -136,7 +219,7 @@ cp -R think-it-through-skill/skills/think-it-through ~/.claude/skills/
 
 ### Project — available only in one repository
 
-Run this from that repository root after cloning this repository beside or within your workspace:
+Run from the target project root after cloning this repository:
 
 ```bash
 test ! -e .claude/skills/think-it-through
@@ -144,30 +227,29 @@ mkdir -p .claude/skills
 cp -R /path/to/think-it-through-skill/skills/think-it-through .claude/skills/
 ```
 
-If `think-it-through` is already installed, remove or rename that existing directory first rather than merging two versions. Claude Code detects edits to an existing Skill directory live. If the top-level `~/.claude/skills/` or `.claude/skills/` directory did not exist when the session started, restart Claude Code after creating it.
+If `think-it-through` is already installed, remove or rename the existing directory first instead of merging versions. If the top-level `~/.claude/skills/` or `.claude/skills/` directory did not exist when the session started, restart Claude Code after creating it.
 
-Invoke it directly:
+Invoke directly:
 
 ```text
 /think-it-through
 ```
 
-Or ask naturally—for example, “I am about to invest six months in this idea; help me test whether that serves the real goal.”
-
-The Skill itself requires no network access, API key, account, executable script, or remote dependency. It is currently verified only as a source Skill in **local Claude Code 2.1.245** using an isolated project copy of the documented directory layout: both explicit `/think-it-through` invocation and a matching natural-language request loaded the Skill and stopped at stage R. The `.skill` archive has been built, inspected, unpacked, and quick-validated, but end-to-end archive installation and other clients are not yet claimed.
+The Skill needs no network access, API key, account, executable script, or remote dependency. The source-directory approach follows Claude Code’s personal and project Skill locations. End-to-end client installation of the `.skill` archive and compatibility with other clients are not yet claimed.
 
 Official Claude Code reference: [Extend Claude with skills](https://code.claude.com/docs/en/slash-commands).
 
-## Evaluation
+## Evaluation and evidence boundaries
 
-The repository tests two separate questions:
+The repository separates three questions:
 
-1. **Discovery:** does the description trigger for consequential decision-support requests and avoid close non-examples?
-2. **Behavior after loading:** does the Skill obey the multi-turn R → A → B contract better than a no-skill baseline?
+1. **Discovery:** does the description auto-trigger and avoid close non-examples?
+2. **Behavior after loading:** does a real model obey the multi-turn contract?
+3. **User experience:** does the conversation actually help users align objectives, correct misunderstandings, and reach actionable judgment?
 
-### Current behavior snapshot
+### Frozen v0.1 behavior snapshot
 
-Three fixed, three-turn scenarios were each run once with the Skill and once against a strictly independent no-Skill baseline.
+The results below bind only three fixed, three-turn v0.1 scenarios. Each was run once with the Skill and once against an independent no-Skill baseline. They do not establish v0.1.3 behavior.
 
 | Metric | With Skill | Without Skill | Delta |
 | --- | ---: | ---: | ---: |
@@ -175,25 +257,30 @@ Three fixed, three-turn scenarios were each run once with the Skill and once aga
 | 20-point semantic rubric | **98.3%** | 38.3% | +0.60 |
 | Runs passing the full semantic gate | **3/3** | 0/3 | — |
 
-The full semantic gate requires no serious failure, at least 18/20, and full marks for question quality, stage-B judgment, and user control/safety. Exact transcripts, per-assertion evidence, rubric evidence, SHA-256 bindings, and aggregate JSON are in [`benchmarks/behavior-v0.1/`](benchmarks/behavior-v0.1/).
+Exact transcripts, per-assertion evidence, rubric evidence, SHA-256 bindings, and aggregate JSON are in [`benchmarks/behavior-v0.1/`](benchmarks/behavior-v0.1/). The [SaaS validation](skills/think-it-through/examples/saas-validation.md) and [partnership-boundary](skills/think-it-through/examples/partnership-boundary.md) files preserve the same v0.1 outputs verbatim; their transcript bodies were not rewritten into v0.1.3 examples.
 
 > [!CAUTION]
-> This is a regression snapshot, not a general answer-quality ranking or evidence of statistical significance. There is only one run per scenario/configuration. The runtime-reported model name was not independently verified through API metadata. Comparable token and timing data were unavailable and are not reported. The no-Skill outputs often contained useful advice; the measured difference is specifically about the documented R → A → B product contract and rubric.
+> This is a contract-regression snapshot, not a general answer-quality ranking or evidence of statistical significance. There is one run per scenario/configuration. The runtime-reported model name was not independently verified through API metadata, and comparable token and timing data were unavailable.
 
-Behavior fixtures additionally cover background-without-confirmation, method cancellation, “I don't know”, executed work, anti-manipulation, factual and low-risk bypasses, emergencies, external-capability degradation, independent permission scopes, and all seven specialist-card routing boundaries.
+### v0.1.3 static contract and UX scenarios
 
-Deterministic repository checks use Python 3.12 and PyYAML:
+v0.1.3 includes a mechanical grader, versioned fixtures, and an independent nine-dimension UX rubric. These define and regress the contract; they are not model outputs or real-user results. UX status is explicitly `not_run`:
+
+- [`ux-evals.json`](skills/think-it-through/evals/ux-evals.json)
+- [`ux-rubric.md`](skills/think-it-through/evals/ux-rubric.md)
+
+Deterministic checks use Python 3.12 and PyYAML:
 
 ```bash
 uv run --python 3.12 --with pyyaml python -m unittest discover -s scripts -p 'test_*.py' -v
 uv run --python 3.12 --with pyyaml python scripts/validate_repo.py
 ```
 
-Automatic discovery was run once on the 16-case dev set, then the seven dev failures informed one description revision. A second dev run was not allowed because it would exceed the session-wide 50-agent limit. The revised description was frozen at SHA-256 `f89f3d1f…e4c6f3d3` before the untouched 16-case holdout ran. Holdout passed **9/16 overall**: all eight negatives stayed inactive, but only one of eight positives loaded the Skill. This misses the discovery gate, and the holdout was not fed back into v0.1 tuning. Exact results and limitations are in [`benchmarks/trigger-v0.1/`](benchmarks/trigger-v0.1/).
+The frozen discovery holdout passed **9/16 overall**: all eight negatives stayed inactive, but only one of eight positives loaded the Skill, missing the gate. The result was not fed back into the same-version description. Details are in [`benchmarks/trigger-v0.1/`](benchmarks/trigger-v0.1/).
 
 ## Safety, privacy, and control
 
-Think It Through is an instruction-only Skill. It does not need to browse the web or read private data by default.
+Think It Through is an instruction-only Skill. It does not need web access or private data by default.
 
 It treats these as independent permissions:
 
@@ -201,14 +288,14 @@ It treats these as independent permissions:
 2. access private data;
 3. act externally—send, publish, purchase, delete, or modify.
 
-One never implies another. Confirming an analysis method is not tool permission. Permission to browse is not permission to read private files or contact anyone. A request made before analysis is not automatically reused as authorization after the judgment.
+One never implies another. Confirming a thinking angle, clicking a control, or selecting stage-B feedback is not permission to use tools, access data, or act externally.
 
 The Skill:
 
 - does not replace medical, legal, investment, or emergency professional help;
 - does not provide manipulation, deception, intimidation, tracking, or coercion tactics;
 - distinguishes confirmed facts, reasonable inferences, hypotheses, and unknowns;
-- keeps the final choice and any external action with you.
+- keeps the final choice and every external action with you.
 
 See [`SECURITY.md`](SECURITY.md) and [`skills/think-it-through/references/safety-boundaries.md`](skills/think-it-through/references/safety-boundaries.md).
 
@@ -223,23 +310,23 @@ Every adopted card records its repository, fixed commit, exact file, license, an
 ```text
 skills/think-it-through/
 ├── SKILL.md                    # Core state contract
-├── references/                 # Analysis, methods, safety, authorization
-├── examples/                   # Exact passing multi-turn transcripts
-├── evals/                      # Behavior, trigger, and routing definitions
+├── references/                 # Interaction, analysis, methods, safety, authorization
+├── examples/                   # Frozen v0.1 exact transcripts
+├── evals/                      # Behavior, UX, trigger, and routing definitions
 ├── LICENSE
 └── THIRD_PARTY_NOTICES.md
 
-benchmarks/behavior-v0.1/       # Public transcripts and formal behavior evidence
-benchmarks/trigger-v0.1/        # Automatic-discovery results, including failed holdout
-scripts/                        # Deterministic grading and validation
+benchmarks/behavior-v0.1/       # Public transcripts and frozen behavior evidence
+benchmarks/trigger-v0.1/        # Discovery results, including the failed holdout
+scripts/                        # Versioned grading, tests, validation, packaging
 assets/                         # Original project visuals
 ```
 
-Temporary evaluation workspaces, the local viewer, caches, and packaged release artifacts are intentionally excluded from source control.
+The single maintenance source is `skills/think-it-through/`. A project-level `.claude/skills/think-it-through/` is only a local installation copy. Temporary workspaces, viewers, caches, and development configuration are excluded from the package.
 
 ## Contributing
 
-Useful contributions are realistic decision cases, close trigger negatives, simpler instructions, method-routing tests, accessibility improvements, and reproducible validation fixes. New frameworks or personas need evidence of independent decision value—not a longer feature list.
+Useful contributions include realistic decision cases, close trigger negatives, more natural and restrained language, method-routing tests, accessibility improvements, and reproducible validation fixes. New frameworks or personas need distinct decision value—not a longer feature list.
 
 Start with [`CONTRIBUTING.md`](CONTRIBUTING.md). Report security issues privately through [`SECURITY.md`](SECURITY.md).
 

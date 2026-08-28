@@ -1,4 +1,5 @@
 {
+  "contract_version": "0.1.3",
   "id": "specialist-method-routing",
   "domain": "method-governance",
   "cases": [
@@ -179,6 +180,15 @@
       "prefer_over": "stage-fit"
     }
   ],
+  "presentation_contract": {
+    "formal_name_visible": true,
+    "plain_language_explanation_required": true,
+    "current_issue_reason_required": true,
+    "internal_id_hidden": true,
+    "full_catalog_hidden": true,
+    "plain_language_before_formal_name": true,
+    "equal_free_expression": true
+  },
   "semantic": [
     "each-method-has-applicable-not-applicable-overlap",
     "specialist-methods-are-not-mandatory",

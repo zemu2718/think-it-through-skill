@@ -1,4 +1,4 @@
-# 划清合作权责与退出边界
+# 边界契约
 
 内部 ID：`boundary-contracts`
 

@@ -1,0 +1,140 @@
+{
+  "contract_version": "0.1.3",
+  "id": "interactive-method-adjustment",
+  "domain": "product",
+  "already_executed": false,
+  "turns": [
+    {
+      "user": "我想做一个通用聊天软件，希望以后靠它变现，但还没决定投入多大。",
+      "expected_stage": "R",
+      "recommended_methods": [
+        "object-calibration",
+        "two-sided-steelman"
+      ],
+      "confirmed_methods": [],
+      "r_mode": "method",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "expected_interaction": {
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "multi",
+        "product_option_count": {"min": 2, "max": 4},
+        "host_free_text_available": true,
+        "product_other_forbidden": true,
+        "current_combination_visible": true
+      },
+      "mechanical": [
+        "formal_method_names_visible",
+        "plain_language_before_formal_name",
+        "method_explanations_visible",
+        "has_relevant_choices",
+        "has_equal_free_expression",
+        "waits_for_confirmation"
+      ]
+    },
+    {
+      "user": "调整方法：在当前推荐上加入失败预演。",
+      "expected_stage": "R",
+      "r_mode": "method",
+      "recommended_methods": [
+        "object-calibration",
+        "two-sided-steelman",
+        "pre-mortem"
+      ],
+      "current_methods": [
+        "object-calibration",
+        "two-sided-steelman"
+      ],
+      "selection_semantics": "additive",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "expected_interaction": {
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "multi",
+        "product_option_count": {"min": 2, "max": 4},
+        "host_free_text_available": true,
+        "product_other_forbidden": true,
+        "current_combination_visible": true
+      },
+      "mechanical": [
+        "add_preserves_current_recommendation",
+        "formal_method_names_visible",
+        "has_equal_free_expression",
+        "waits_for_final_combination"
+      ]
+    },
+    {
+      "user": "最终就用对象校准、双向钢人和失败预演。",
+      "expected_stage": "A",
+      "confirmed_methods": [
+        "object-calibration",
+        "two-sided-steelman",
+        "pre-mortem"
+      ],
+      "answer_shape": "open",
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "expected_interaction": {
+        "surface": "free-answer",
+        "tool_call_observed": false,
+        "selection_mode": "none",
+        "product_option_count": 0
+      },
+      "mechanical": [
+        "confirmed_methods_echoed_naturally",
+        "confirmed_methods_have_distinct_outputs",
+        "one_question_mark",
+        "question_at_end",
+        "no_system_numeric_anchor",
+        "no_action"
+      ]
+    },
+    {
+      "user": "我最不能缺少的结果是真实收入。",
+      "expected_stage": "B",
+      "confirmed_methods": [
+        "object-calibration",
+        "two-sided-steelman",
+        "pre-mortem"
+      ],
+      "host_capabilities": {
+        "selection_control": "available",
+        "host_free_text": true
+      },
+      "expected_interaction": {
+        "surface": "declarative-feedback",
+        "tool_call_observed": false,
+        "selection_mode": "none",
+        "product_option_count": 0
+      },
+      "mechanical": [
+        "unexecuted_status",
+        "one_reality_experiment",
+        "action_observe_review",
+        "local_numeric_provenance",
+        "no_information_question"
+      ]
+    }
+  ],
+  "fallback": {
+    "allowed_host_statuses": ["unavailable", "failed"],
+    "surface": "text-fallback",
+    "tool_call_observed": false,
+    "when_interactive_controls_unavailable": "show-equivalent-relevant-choices-and-equal-free-expression",
+    "must_preserve_selection_semantics": true
+  },
+  "semantic": [
+    "formal-method-names-remain-visible",
+    "add-preserves-current-recommendation",
+    "language-matches-user-domain",
+    "no-unsupported-precision"
+  ]
+}
