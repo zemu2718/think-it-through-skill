@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zemu2718/think-it-through-skill/compatibility/v1/runtime-support.schema.json",
+  "title": "Think It Through Runtime Support Matrix",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "skill_version",
+    "source_commit",
+    "package_sha256",
+    "runtimes"
+  ],
+  "properties": {
+    "$schema": {"const": "./runtime-support.schema.json"},
+    "schema_version": {"const": "1"},
+    "skill_version": {"const": "0.3.0"},
+    "source_commit": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40}$"},
+    "package_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+    "runtimes": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {"$ref": "#/$defs/runtime"}
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "status": {
+      "enum": ["passed", "failed", "not_run", "blocked", "unsupported"]
+    },
+    "level_result": {
+      "type": "object",
+      "required": ["status", "evidence_refs"],
+      "properties": {
+        "status": {"$ref": "#/$defs/status"},
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^evidence/(?:[a-z0-9._-]+/)+evidence\\.json$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"enum": ["passed", "failed", "blocked"]}}},
+          "then": {"properties": {"evidence_refs": {"minItems": 1}}}
+        },
+        {
+          "if": {"properties": {"status": {"enum": ["not_run", "unsupported"]}}},
+          "then": {"properties": {"evidence_refs": {"maxItems": 0}}}
+        }
+      ]
+    },
+    "runtime": {
+      "type": "object",
+      "required": [
+        "id",
+        "display_name",
+        "aliases",
+        "installer_target",
+        "runtime_version",
+        "levels",
+        "native_capabilities"
+      ],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+        "display_name": {"type": "string", "minLength": 1},
+        "aliases": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "installer_target": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+        "runtime_version": {"type": ["string", "null"], "minLength": 1},
+        "levels": {
+          "type": "object",
+          "required": ["L0", "L1", "L2", "L3", "L4", "L5"],
+          "properties": {
+            "L0": {"$ref": "#/$defs/level_result"},
+            "L1": {"$ref": "#/$defs/level_result"},
+            "L2": {"$ref": "#/$defs/level_result"},
+            "L3": {"$ref": "#/$defs/level_result"},
+            "L4": {"$ref": "#/$defs/level_result"},
+            "L5": {"$ref": "#/$defs/level_result"}
+          },
+          "additionalProperties": false
+        },
+        "native_capabilities": {
+          "type": "object",
+          "additionalProperties": {"$ref": "#/$defs/level_result"}
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

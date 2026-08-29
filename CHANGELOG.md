@@ -6,6 +6,18 @@
 
 ## [Unreleased]
 
+### Added
+
+- 准备 v0.3.0 开放 Agent Skills 候选：新增通用 Adapter、L0～L5 兼容矩阵、机器可读证据 schema 与固定版本验证路径。
+- 新增精确分发 manifest，供 builder、validator 与 tests 共同使用。
+- 新增隔离的安装器 smoke 和需单独授权执行的 Claude Code / Codex runtime smoke harness。
+
+### Changed
+
+- 将当前源码合同、schema、fixtures 与评分器升级为 v0.3.0，同时保持冻结 v0.1 evidence 与 description 不变。
+- 把格式符合、安装器发现、可安装、runtime 加载、纯文本行为与原生能力分层声明；安装器 target 数不再被视为 runtime 认证。
+- v0.3.0 在正式 tag 与 Release 前保持候选状态，不覆盖或改写 v0.2.0 发布事实。
+
 ## [0.2.0] - 2026-08-29
 
 ### Added

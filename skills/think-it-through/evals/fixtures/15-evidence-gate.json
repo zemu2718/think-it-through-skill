@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.2.0",
+  "contract_version": "0.3.0",
   "id": "evidence-gate",
   "domain": "evidence-routing",
   "cases": [
@@ -69,7 +69,7 @@
         "granted_by": "user"
       },
       "receipt": {
-        "contract_version": "0.2.0",
+        "contract_version": "0.3.0",
         "capabilities": [
           {
             "name": "search.public_web",

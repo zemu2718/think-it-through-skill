@@ -4,30 +4,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目定位
 
-本仓库发布纯指令型 Agent Skill“想清楚 · Think It Through”。v0.2.0 将其定义为重要行动前后的决策与证据协议：先把“表面任务 → 真实目的 → 决策问题”收敛为 R-align / R-method / A；用户回答后才按需要路由有界 Evidence / Participation Gate；最终 B 交付一个综合判断、一个主现实证据闭环、可复制的决策快照和四项反馈。
+本仓库发布纯指令型 Agent Skill“想清楚 · Think It Through”。v0.3.0 将其定义为重要行动前后的决策与证据协议：先把“表面任务 → 真实目的 → 决策问题”收敛为 R-align / R-method / A；用户回答后才按需要路由有界 Evidence / Participation Gate；最终 B 交付一个综合判断、一个主现实证据闭环、可复制的决策快照和四项反馈。
 
-文档职责必须保持单一：`README.md` / `README.zh-CN.md` 是对应语言的用户入口；`PRODUCT.md` 说明产品愿景、目标用户与原则；`REQUIREMENTS.md` 是唯一正式行为、安全与验收依据；`docs/product-architecture-v0.2.0.md` 只保留非规范性架构理由、历史取舍和验证路线；`CHANGELOG.md` 记录版本事实。不要在多个文件维护第二套正式合同。
+文档职责必须保持单一：`README.md` / `README.zh-CN.md` 是对应语言的用户入口；`PRODUCT.md` 说明产品愿景、目标用户与原则；`REQUIREMENTS.md` 是唯一正式行为、安全与验收依据；`docs/product-architecture-v0.3.0.md` 只保留非规范性架构理由、历史取舍和验证路线；`CHANGELOG.md` 记录版本事实。不要在多个文件维护第二套正式合同。
 
 当前可靠调用方式是 `/think-it-through`。自动发现的冻结 v0.1 holdout 仅为 9/16（正例 1/8、负例 8/8），不要把自然语言自动加载或其他客户端兼容性描述为已经通过。
 
 ## 常用命令
 
-仓库没有应用运行时、构建系统或常驻服务；开发工作主要是编辑 Markdown/YAML/JSON、运行 Python 合同测试、校验仓库和构建 `.skill` 包。CI 使用 Python 3.12 与 PyYAML；本机优先用 `uv` 复现：
+仓库没有应用运行时、构建系统或常驻服务；开发工作主要是编辑 Markdown/YAML/JSON、运行 Python 合同测试、校验仓库和构建 `.skill` 包。CI 使用 Python 3.12 与 `requirements-validation.txt` 中固定的验证依赖；本机优先用 `uv` 复现：
 
 ```bash
 # 完整测试
-uv run --python 3.12 --with pyyaml \
+uv run --python 3.12 --with-requirements requirements-validation.txt \
   python -m unittest discover -s scripts -p 'test_*.py' -v
 
 # 仓库结构、合同、schema、链接、来源、冻结证据和分发集合
-uv run --python 3.12 --with pyyaml python scripts/validate_repo.py
+uv run --python 3.12 --with-requirements requirements-validation.txt python scripts/validate_repo.py
 
 # 单个测试文件
-uv run --python 3.12 --with pyyaml \
+uv run --python 3.12 --with-requirements requirements-validation.txt \
   python -m unittest discover -s scripts -p 'test_contract_graders.py' -v
 
 # 单个测试方法；把 scripts/ 放入导入路径
-PYTHONPATH=scripts uv run --python 3.12 --with pyyaml \
+PYTHONPATH=scripts uv run --python 3.12 --with-requirements requirements-validation.txt \
   python -m unittest \
   test_contract_graders.ContractGraderTests.test_valid_r_align -v
 
@@ -35,12 +35,12 @@ PYTHONPATH=scripts uv run --python 3.12 --with pyyaml \
 git diff --check
 ```
 
-不用 `uv` 时，先在 Python 3.12 环境安装 `PyYAML`，再使用 CI 中的 `python -m unittest ...` 和 `python scripts/validate_repo.py`。
+不用 `uv` 时，先在 Python 3.12 环境安装 `requirements-validation.txt` 中的固定依赖，再使用 CI 中的 `python -m unittest ...` 和 `python scripts/validate_repo.py`。
 
 当前评分器的 R / A / B CLI 必须提供结构化交互证据：
 
 ```bash
-PYTHONPATH=scripts uv run --python 3.12 --with pyyaml \
+PYTHONPATH=scripts uv run --python 3.12 --with-requirements requirements-validation.txt \
   python scripts/grade_contracts.py \
   --stage R \
   --r-mode align \
@@ -51,21 +51,21 @@ PYTHONPATH=scripts uv run --python 3.12 --with pyyaml \
 Gate 与记录使用对应 JSON：
 
 ```bash
-PYTHONPATH=scripts uv run --python 3.12 --with pyyaml \
+PYTHONPATH=scripts uv run --python 3.12 --with-requirements requirements-validation.txt \
   python scripts/grade_contracts.py \
   --stage EVIDENCE \
   --record-json /path/to/evidence-record.json \
   --consent-json /path/to/consent.json \
   --receipt-json /path/to/receipt-bundle.json
 
-PYTHONPATH=scripts uv run --python 3.12 --with pyyaml \
+PYTHONPATH=scripts uv run --python 3.12 --with-requirements requirements-validation.txt \
   python scripts/grade_contracts.py \
   --stage PARTICIPATION \
   --record-json /path/to/participation-record.json \
   --consent-json /path/to/consent.json \
   --receipt-json /path/to/receipt-bundle.json
 
-PYTHONPATH=scripts uv run --python 3.12 --with pyyaml \
+PYTHONPATH=scripts uv run --python 3.12 --with-requirements requirements-validation.txt \
   python scripts/grade_contracts.py \
   --stage DECISION_RECORD \
   --record-json /path/to/decision-record.json
@@ -80,7 +80,7 @@ python3 scripts/build_distribution.py --output-dir dist/vX.Y.Z
 unzip -t dist/vX.Y.Z/think-it-through.skill
 ```
 
-分发包刻意排除 `evals/`，并在构建时解包复验文件集合和字节内容。`dist/` 被 Git 忽略。
+`distribution/package-manifest.json` 是运行时归档精确文件集合的唯一机器事实源，builder、validator 和 tests 必须共同读取它，不再复制固定文件数。分发包刻意排除 `evals/`、兼容证据、benchmark 与本机配置，并在构建时解包复验文件集合和字节内容。`dist/` 被 Git 忽略。
 
 ## 架构与维护边界
 
@@ -96,6 +96,7 @@ unzip -t dist/vX.Y.Z/think-it-through.skill
 - `policies/evidence-routing.md`：Evidence Gate 的必要性、范围、来源、停止、失败和回执。
 - `policies/participation-routing.md`：单 / 多 Agent、总数上限、最小上下文、非递归、无投票综合和真人参与。
 - `adapters/text.md`：一等纯文本参考实现。
+- `adapters/agent-skills.md`：开放 Agent Skills 的共同目录、相对引用、纯文本基线与能力证据边界。
 - `adapters/claude-code.md`：Claude Code 当前会话的原生选择、搜索、文件、Agent 与授权映射。
 - `adapters/chatgpt.md`：Skill-only / 纯文本支持范围、条件能力映射与宿主能力不得推定的边界。
 - `references/core-analysis.md`：问题重构、证据状态、唯一问题、判断、主现实闭环和数字纪律。
@@ -104,6 +105,8 @@ unzip -t dist/vX.Y.Z/think-it-through.skill
 - `references/two-sided-steelman.md`、`pre-mortem.md` 与 `references/methods/`：可选分析方法。
 - `references/external-validation.md`、`safety-boundaries.md`：证据来源、四类授权和高风险边界。
 - `evals/`：current fixtures、核心 / 增强 UX、触发与冻结行为定义；不进入 `.skill` 包。
+
+仓库级 `compatibility/` 不进入 `.skill`：`profile.json` 固定 L0～L5、状态、证据类型和工具版本；`runtime-support.json` 是机器可读状态投影；`evidence/` 只在真实执行并完成脱敏审阅后保存证据。L0 格式、L1 发现、L2 安装、L3 加载、L4 纯文本行为和 L5 原生能力互不替代；L3～L5 只能由绑定准确 runtime version 的 `real_runtime` 证据提升。安装器 target 数不得转述为已验证 runtime 数量。
 
 调研、多 Agent、真人参与、持久化和宿主适配不是方法卡，不得进入 `references/methods/registry.yaml`。
 
@@ -116,7 +119,7 @@ diff -qr skills/think-it-through .claude/skills/think-it-through
 
 不要先在 `.claude/skills/` 修改再回抄；也不要把本地设置或该副本加入版本控制。
 
-### 当前 v0.2.0 状态与交互合同
+### 当前 v0.3.0 状态与交互合同
 
 唯一状态语义：
 
@@ -192,7 +195,7 @@ DecisionRecord 默认：
 
 ### 当前评分器与同步范围
 
-`scripts/grade_contracts.py` 是 v0.2.0 当前评分器。其 `InteractionEvidence` 规范化字符串或结构化 option，并记录宿主状态、交互表面、实际调用、single / multi / none、宿主自由输入、原生问题正文和 `supplement_mode`。failed / rejected 记录已发生的 trace，surface 记录最终呈现。
+`scripts/grade_contracts.py` 是 v0.3.0 当前评分器。其 `InteractionEvidence` 规范化字符串或结构化 option，并记录宿主状态、交互表面、实际调用、single / multi / none、宿主自由输入、原生问题正文和 `supplement_mode`。failed / rejected 记录已发生的 trace，surface 记录最终呈现。
 
 当前行为修改应同步：
 
@@ -214,7 +217,7 @@ DecisionRecord 默认：
 
 不要用当前合同重新评分或改写 v0.1 快照：
 
-- `scripts/grade_contracts.py`：当前 v0.2.0 评分器；
+- `scripts/grade_contracts.py`：当前 v0.3.0 评分器；
 - `scripts/grade_contracts_v0_1.py`：冻结 legacy 评分器；
 - `scripts/grade_behavior_runs.py`：必须显式从 `grade_contracts_v0_1` 导入；
 - `scripts/test_legacy_behavior_grader.py`：可维护的保护测试，负责导入隔离、transcript 哈希和冻结评分重现；可适配 canonical benchmark 布局，但不得改变受保护语义；
@@ -227,13 +230,16 @@ DecisionRecord 默认：
 
 合同变化需要同步 `SKILL.md` metadata、方法 registry、core schema、policies、adapters、current fixtures、core / enhancement UX、评分器、validator 和公开文档中的版本。
 
-对外发布状态与内部评测状态必须分层：
+当前源码候选、稳定发布、兼容证据、内部评测状态与具体会话事实必须分层：
 
-- README、PRODUCT、REQUIREMENTS、架构说明和 28 文件运行时包只写当前发布支持范围，不复制内部机器评测状态表；
-- 当前发布范围使用“Claude Code 显式 `/think-it-through` + 纯文本跨宿主基线 + 条件能力逐会话协商”表达；
-- `evals/` 继续按实际执行情况维护机器状态，正式发布不得把未运行项改成 `passed`；
+- v0.3.0 当前是未发布源码候选，v0.2.0 仍是最新稳定发布；不得把 candidate 冒充 Release，也不得改写 v0.2.0 历史事实；
+- README、PRODUCT、REQUIREMENTS 和当前架构说明可以说明候选状态与已由实际 evidence 建立的兼容层级；运行时包不复制仓库级矩阵或内部评测状态；
+- 当前可靠入口仍用“Claude Code 显式 `/think-it-through` + 纯文本跨宿主基线 + 条件能力逐会话协商”表达；
+- `evals/` 继续按实际执行情况维护内部机器状态，不得把未运行项改成 `passed`；
+- 普通 CI 只做合同、schema、L0 格式和 L1/L2 安装器检查，不调用模型 provider，也不自动修改兼容矩阵；
+- Claude Code / Codex 真实 smoke 只由手动 workflow 或本地 harness 生成候选 artifact；实际 provider 调用需要独立 `capability_call` 授权，且不会自动提升 L3～L5；
 - 静态规范、schema、fixtures、单元测试和线框只能证明合同定义，不能证明某次真实模型行为、原生 UI、搜索、Agent、真人参与、持久化、宿主兼容或真实 UX；
 - 具体能力是否发生只由当前会话 capability observation、consent、工具 trace 与 receipt 建立；未调用、拒绝和失败不得写成完成；
 - 新增宿主原生兼容或真实体验声明前，必须建立对应版本化加载、能力、交互、授权、执行与降级证据。
 
-旧 v0.1 分数不能证明 v0.2.0 行为。
+旧 v0.1 分数不能证明 v0.3.0 行为。

@@ -3,9 +3,13 @@ name: think-it-through
 description: >-
   Use this skill whenever the user needs decision support, decision framing, or trade-off analysis for an important choice—even if they ask for advice, a plan, or execution. Trigger on uncertain, costly, high-stakes, hard-to-reverse choices; A vs B; feeling stuck; testing before committing; choosing where scarce time or money matters; checking whether an action serves the goal or bottleneck; or deciding whether to continue, adjust, pause, or stop ongoing work. Use for product/business launches, hiring, solo-founder priorities, career, relocation, teams, partnerships, relationship boundaries, and searches for a decision-making skill. It uncovers the real objective, steelmans competing judgments or runs a confirmed pre-mortem, asks one decision-changing question, then gives one conditional judgment and one reversible test. 中文意图：帮我想清楚、值不值得做、A还是B、是否走偏、哪个投入更重要、继续调整还是停止。Do not use for factual lookup, definitions, decided low-risk execution, pure creation, technical review/FMEA, fixed project planning, or emergencies.
 license: MIT; see LICENSE and THIRD_PARTY_NOTICES.md
+compatibility: >-
+  Portable text behavior for Agent Skills-compatible runtimes; native controls,
+  tools, data access, delegation, persistence, and external actions require
+  per-session capability observation, consent, trace, and receipt.
 metadata:
   author: zemu2718
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # 想清楚 · Think It Through
@@ -273,8 +277,11 @@ A 可以复用用户已提供的数字，不得自行植入样本量、期限、
 Adapter 只映射真实能力：
 
 - [纯文本](adapters/text.md) 是一等参考实现；
+- [开放 Agent Skills](adapters/agent-skills.md) 定义共同的发现、相对引用、纯文本与能力协商边界；
 - [Claude Code](adapters/claude-code.md) 要求实际工具调用与回执；
-- [ChatGPT](adapters/chatgpt.md) 定义 Skill-only / 纯文本语义映射；Adapter 不构成原生兼容认证，也不得用宿主名称推定当前会话能力。
+- [ChatGPT](adapters/chatgpt.md) 定义 Skill-only / 纯文本语义映射。
+
+Adapter、安装器 target 或文件已复制都不构成原生兼容认证，也不得用宿主名称推定当前会话能力。
 
 ## 结束、复判与总检
 

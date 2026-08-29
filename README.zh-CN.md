@@ -12,7 +12,7 @@
 </div>
 
 > [!IMPORTANT]
-> **v0.2.0 已正式发布。** 当前可靠使用方式是在 Claude Code 中显式调用 `/think-it-through`。纯文本协议是跨宿主基线；原生控件、搜索、额外 Agent、私有数据、持久化和外部行动仅在当前会话实际具备相应能力、满足路由条件并取得对应授权时使用，实际执行以 trace 和 receipt 为准。Adapter 文档定义协议映射，不代表对应宿主已经完成原生兼容认证。
+> **v0.2.0 仍是最新稳定版；当前分支包含尚未发布的 v0.3.0 源码候选。** 当前可靠使用方式仍是在 Claude Code 中显式调用 `/think-it-through`。纯文本协议是跨宿主基线；原生控件、搜索、额外 Agent、私有数据、持久化和外部行动仅在当前会话实际具备相应能力、满足路由条件并取得对应授权时使用，实际执行以 trace 和 receipt 为准。Adapter 文档定义协议映射，不代表对应宿主已经完成原生兼容认证。
 
 ## 它解决什么问题
 
@@ -261,13 +261,27 @@ B 默认在对话中输出可复制的决策快照，不写文件、不上传：
 
 ## 跨宿主怎么工作
 
-| Adapter | v0.2.0 支持边界 |
+| Adapter | v0.3.0 候选边界 |
 | --- | --- |
 | 纯文本 | 跨宿主基线；无原生控件、搜索、Agent 或持久化时仍完整保留核心语义 |
-| Claude Code | 通过显式 `/think-it-through` 正式使用；只映射当前会话观察到的能力 |
+| 开放 Agent Skills | 定义 Skill 根目录发现、相对引用、可移植纯文本行为与能力协商的共同边界 |
+| Claude Code | 可靠入口仍是显式 `/think-it-through`；只映射当前会话观察到的能力 |
 | ChatGPT | Skill-only / 纯文本语义映射；不代表原生控件、工具、Agent 或持久化认证 |
 
-Adapter 只能改变交互表面，不能改变状态、授权、等待、判断和降级语义。官方产品“可能支持”某项能力，不等于当前会话已经启用。
+Adapter 只能改变交互表面，不能改变状态、授权、等待、判断和降级语义。Adapter、安装器 target、已复制目录或产品文档都不能证明某个具体 runtime/version 已加载 Skill 或遵守其行为。
+
+兼容性按六个互不替代的层级记录：
+
+| 层级 | 证明什么 | 最低证据 |
+| --- | --- | --- |
+| L0 | Agent Skills 格式符合性 | 固定规范 revision 的静态校验 |
+| L1 | 安装器能够发现 Skill | 固定安装器版本的隔离本地 harness |
+| L2 | 精确 manifest 文件集合安装成功 | 隔离安装与逐字节比较 |
+| L3 | 指定 runtime/version 加载或显式激活 | 真实 runtime trace |
+| L4 | 该 runtime 中纯文本行为走通 | 真实多轮 transcript 与当前评分器 |
+| L5 | 该 runtime 中某项原生能力工作 | 对应 trace、授权和 receipt |
+
+机器可读状态位于 [`compatibility/runtime-support.json`](compatibility/runtime-support.json)。初始 L0～L5 均保持 `not_run`，直到仓库提交经过审阅的真实证据。八个已命名安装器 target——Claude Code、Codex、Cursor、OpenClaw、Hermes Agent、CodeBuddy / WorkBuddy、Gemini CLI、OpenCode——只是安装映射，不是 runtime 行为认证。
 
 ## 方法透明，但不成为学习负担
 
@@ -285,7 +299,7 @@ Adapter 只能改变交互表面，不能改变状态、授权、等待、判断
 
 ## 什么时候使用
 
-v0.2.0 的正式使用入口是：
+v0.2.0 稳定版与 v0.3.0 源码候选的可靠入口都是：
 
 ```text
 /think-it-through
@@ -305,7 +319,9 @@ v0.2.0 的正式使用入口是：
 
 ## 安装
 
-### 个人安装
+下面的仓库源码安装是尚未发布的 v0.3.0 候选开发路径。源码目录包含 `evals/`，runtime 会忽略它；最小候选归档的精确内容由 [`distribution/package-manifest.json`](distribution/package-manifest.json) 定义。在完全相同的归档真正发布并复验之前，不宣称存在 v0.3.0 Release asset。
+
+### 从源码安装到 Claude Code 个人目录
 
 ```bash
 git clone https://github.com/zemu2718/think-it-through-skill.git
@@ -314,7 +330,7 @@ mkdir -p ~/.claude/skills
 cp -R think-it-through-skill/skills/think-it-through ~/.claude/skills/
 ```
 
-### 项目安装
+### 从源码安装到 Claude Code 项目目录
 
 在目标项目根目录执行：
 
@@ -324,9 +340,20 @@ mkdir -p .claude/skills
 cp -R /path/to/think-it-through-skill/skills/think-it-through .claude/skills/
 ```
 
-如果已经安装，请先自行删除或改名旧目录，不要合并两个版本。若会话启动时 Skill 目录尚不存在，创建后重启 Claude Code。
+### 构建本地最小候选归档
 
-Skill 核心不依赖网络、API Key、账号或可执行脚本。只有当前问题满足条件并取得授权时，才可能使用宿主已有的搜索、私有数据、Agent 或持久化能力。发布归档包含[项目结构](#项目结构)所列的同一组 28 个运行时源文件；Claude Code 当前按上述源码目录方式安装。
+在克隆后的仓库中执行：
+
+```bash
+python3 scripts/build_distribution.py --output-dir dist/v0.3.0-candidate
+unzip -t dist/v0.3.0-candidate/think-it-through.skill
+```
+
+只应通过已经核验文档路径的 runtime 或安装器安装这个本地 `.skill`。复制成功最多证明安装器发现和可安装性，不证明 runtime 已加载或行为通过。
+
+如果目标目录已经存在，请先自行删除或改名旧目录，不要合并两个版本。若会话启动时 Claude Code 顶层 Skill 目录尚不存在，创建后重启 Claude Code。
+
+Skill 核心不依赖网络、API Key、账号或可执行脚本。只有当前问题满足条件并取得授权时，才可能使用宿主已有的搜索、私有数据、Agent 或持久化能力。
 
 Claude Code 官方参考：[Extend Claude with skills](https://code.claude.com/docs/en/slash-commands)。
 
@@ -341,7 +368,7 @@ Claude Code 官方参考：[Extend Claude with skills](https://code.claude.com/d
 
 ### 冻结 v0.1 行为快照
 
-以下结果只绑定 v0.1 的三个固定场景，不能证明 v0.2.0：
+以下结果只绑定 v0.1 的三个固定场景，既不能证明 v0.2.0，也不能证明 v0.3.0：
 
 | 指标 | With Skill | Without Skill | 差值 |
 | --- | ---: | ---: | ---: |
@@ -351,17 +378,19 @@ Claude Code 官方参考：[Extend Claude with skills](https://code.claude.com/d
 
 逐字 transcript、评分和 SHA-256 绑定位于 [`benchmarks/behavior-v0.1/`](benchmarks/behavior-v0.1/)。自动发现的冻结 holdout 为 **9/16**；详情见 [`benchmarks/trigger-v0.1/`](benchmarks/trigger-v0.1/)。
 
-### v0.2.0 合同校验
+### v0.3.0 候选合同校验
 
-current grader、versioned fixtures、十维 20 分核心 UX rubric 和八维 16 分增强 rubric 让正式发布合同保持可机械复核：
+current grader、versioned fixtures、十维 20 分核心 UX rubric 和八维 16 分增强 rubric 让源码候选保持可机械复核：
 
 - [`ux-evals.json`](skills/think-it-through/evals/ux-evals.json)
 - [`ux-rubric.md`](skills/think-it-through/evals/ux-rubric.md)
 - [`enhancement-rubric.md`](skills/think-it-through/evals/enhancement-rubric.md)
 
 ```bash
-uv run --python 3.12 --with pyyaml python -m unittest discover -s scripts -p 'test_*.py' -v
-uv run --python 3.12 --with pyyaml python scripts/validate_repo.py
+uv run --python 3.12 --with-requirements requirements-validation.txt \
+  python -m unittest discover -s scripts -p 'test_*.py' -v
+uv run --python 3.12 --with-requirements requirements-validation.txt \
+  python scripts/validate_repo.py
 ```
 
 仓库合同校验与具体会话执行分开管理：前者确认分发协议和机器合同，后者只由当次能力观测、授权、trace 与 receipt 建立。新增宿主原生兼容声明，需要对应版本的加载、交互、执行与降级证据。
@@ -389,12 +418,14 @@ skills/think-it-through/
 ├── SKILL.md                    # 当前宿主入口与精简状态合同
 ├── core/                       # Portable protocol 与 JSON Schema
 ├── policies/                   # Evidence / Participation 路由
-├── adapters/                   # text / Claude Code / ChatGPT
+├── adapters/                   # Agent Skills / text / Claude Code / ChatGPT
 ├── references/                 # 分析、交互、方法、安全与来源
 ├── evals/                      # current fixtures、UX 与触发定义；不打包
 ├── LICENSE
 └── THIRD_PARTY_NOTICES.md
 
+distribution/package-manifest.json  # 运行时归档精确文件集合
+compatibility/                  # L0～L5 profile、schema、状态与已审阅证据
 benchmarks/behavior-v0.1/       # 冻结行为证据
 benchmarks/trigger-v0.1/        # 冻结 discovery 证据
 docs/                           # 版本化产品架构与第三方审计
@@ -403,7 +434,7 @@ assets/                         # 原创项目视觉
 CHANGELOG.md                    # 发布状态与版本历史
 ```
 
-唯一维护源是 `skills/think-it-through/`。项目级 `.claude/skills/think-it-through/` 只是本地安装副本。分发包共 28 个源文件，包含运行时入口、core、policies、adapters、必要 references、许可证和第三方通知；排除 evals、benchmarks、历史 transcript、workspace、缓存和本机配置。
+唯一维护源是 `skills/think-it-through/`。项目级 `.claude/skills/think-it-through/` 只是本地安装副本。运行时归档精确包含 [`distribution/package-manifest.json`](distribution/package-manifest.json) 中排序后的文件集合：运行时入口、core、policies、adapters、必要 references、许可证和第三方通知；排除 evals、兼容证据、benchmarks、历史 transcript、workspace、缓存和本机配置。
 
 ## 参与贡献
 

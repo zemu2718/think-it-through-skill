@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.2.0",
+  "contract_version": "0.3.0",
   "id": "participation-and-human",
   "domain": "participation-routing",
   "cases": [
@@ -108,7 +108,7 @@
         "granted_by": "user"
       },
       "receipt": {
-        "contract_version": "0.2.0",
+        "contract_version": "0.3.0",
         "capabilities": [
           {
             "name": "agents.subagent",

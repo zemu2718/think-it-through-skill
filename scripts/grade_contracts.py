@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""对“想清楚”v0.2.0 的阶段输出与 Gate 记录执行确定性合同检查。"""
+"""对“想清楚”v0.3.0 的阶段输出与 Gate 记录执行确定性合同检查。"""
 
 from __future__ import annotations
 
@@ -1983,8 +1983,8 @@ def grade_decision_record(record: dict[str, object]) -> list[Check]:
     )
     return [
         _check(
-            "DecisionRecord 使用 v0.2.0 且包含全部核心字段",
-            _required_keys(record, required) and record.get("contract_version") == "0.2.0",
+            "DecisionRecord 使用 v0.3.0 且包含全部核心字段",
+            _required_keys(record, required) and record.get("contract_version") == "0.3.0",
             f"缺少字段={sorted(required - set(record))}；version={record.get('contract_version')!r}",
             severe=True,
         ),
@@ -2111,7 +2111,7 @@ def main() -> int:
             checks = grade_decision_record(record)
     passed = sum(check.passed for check in checks)
     result = {
-        "contract_version": "0.2.0",
+        "contract_version": "0.3.0",
         "stage": args.stage,
         "expectations": [
             {key: value for key, value in asdict(check).items() if key != "severe"}

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/zemu2718/think-it-through-skill/schemas/v0.2.0/consent.schema.json",
-  "title": "Think It Through v0.2.0 Consent Record",
+  "$id": "https://github.com/zemu2718/think-it-through-skill/schemas/v0.3.0/consent.schema.json",
+  "title": "Think It Through v0.3.0 Consent Record",
   "type": "object",
   "required": ["consent_id", "consent_type", "status", "scope", "valid_for", "requested_by", "granted_by"],
   "properties": {

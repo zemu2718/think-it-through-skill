@@ -1,4 +1,4 @@
-version: "0.2.0"
+version: "0.3.0"
 selection_policy:
   basic_analysis_always: true
   optional_methods_min: 0
@@ -32,7 +32,7 @@ methods:
       commit: 4382484d8a4867f0bf9a6d089e04939618943dfb
       file: references/methods/investigation.md
       license: MIT
-    test_status: covered-in-v0.2.0-fixtures
+    test_status: covered-in-v0.3.0-fixtures
   - id: system-bottleneck
     name: 系统瓶颈
     user_explanation: 多个问题互相牵制时，分清表面症状和真正牵动全局的约束。
@@ -58,7 +58,7 @@ methods:
       commit: 4382484d8a4867f0bf9a6d089e04939618943dfb
       file: references/methods/core-contradiction.md
       license: MIT
-    test_status: covered-in-v0.2.0-fixtures
+    test_status: covered-in-v0.3.0-fixtures
   - id: stage-fit
     name: 阶段匹配
     user_explanation: 判断外部条件是否已经变化，以及过去有效的策略还适不适合现在。
@@ -83,7 +83,7 @@ methods:
       commit: 4382484d8a4867f0bf9a6d089e04939618943dfb
       file: references/methods/stage-judgment.md
       license: MIT
-    test_status: covered-in-v0.2.0-fixtures
+    test_status: covered-in-v0.3.0-fixtures
   - id: resource-leverage
     name: 资源支点
     user_explanation: 时间、资金或能力有限时，找出最值得集中投入的位置和承诺边界。
@@ -109,7 +109,7 @@ methods:
       commit: 4382484d8a4867f0bf9a6d089e04939618943dfb
       file: references/methods/forces-resources.md
       license: MIT
-    test_status: covered-in-v0.2.0-fixtures
+    test_status: covered-in-v0.3.0-fixtures
   - id: boundary-contracts
     name: 边界契约
     user_explanation: 把合作中的责任、投入、决定权、承诺和退出条件说清楚并变得可检验。
@@ -134,7 +134,7 @@ methods:
       commit: 4382484d8a4867f0bf9a6d089e04939618943dfb
       file: references/methods/alliance-boundaries.md
       license: MIT
-    test_status: covered-in-v0.2.0-fixtures
+    test_status: covered-in-v0.3.0-fixtures
   - id: communication-fit
     name: 沟通匹配
     user_explanation: 判断已经清楚后，让信息、证据、渠道和反馈方式适合对象与目的。
@@ -158,7 +158,7 @@ methods:
       commit: 4382484d8a4867f0bf9a6d089e04939618943dfb
       file: references/methods/communication-calibration.md
       license: MIT
-    test_status: covered-in-v0.2.0-fixtures
+    test_status: covered-in-v0.3.0-fixtures
   - id: evidence-loop
     name: 证据闭环
     user_explanation: 把原目标和假设与已经发生的结果对齐，重新判断继续、调整、暂停还是停止。
@@ -184,4 +184,4 @@ methods:
       commit: 4382484d8a4867f0bf9a6d089e04939618943dfb
       file: references/methods/review-loop.md
       license: MIT
-    test_status: covered-in-v0.2.0-fixtures
+    test_status: covered-in-v0.3.0-fixtures

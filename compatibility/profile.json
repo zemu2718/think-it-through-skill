@@ -1,0 +1,85 @@
+{
+  "schema_version": "1",
+  "skill": {
+    "id": "think-it-through",
+    "version": "0.3.0"
+  },
+  "levels": {
+    "L0": "format-conformance",
+    "L1": "installer-discovery",
+    "L2": "installability",
+    "L3": "loadability",
+    "L4": "portable-behavior",
+    "L5": "native-capability"
+  },
+  "statuses": [
+    "passed",
+    "failed",
+    "not_run",
+    "blocked",
+    "unsupported"
+  ],
+  "evidence_kinds": [
+    "static",
+    "synthetic",
+    "local_harness",
+    "real_runtime"
+  ],
+  "evidence_policy": {
+    "L0": [
+      "static"
+    ],
+    "L1": [
+      "local_harness"
+    ],
+    "L2": [
+      "local_harness"
+    ],
+    "L3": [
+      "real_runtime"
+    ],
+    "L4": [
+      "real_runtime"
+    ],
+    "L5": [
+      "real_runtime"
+    ]
+  },
+  "tools": {
+    "agent_skills": {
+      "revision": "69ef37e9424c0a7ea9dd2293b559e43ec8176379"
+    },
+    "installer": {
+      "package": "skills",
+      "version": "1.5.23",
+      "revision": "435076e78988e1e6ec40d00b0b1d76bdbbc5419a",
+      "minimum_node_version": "22.20.0"
+    }
+  },
+  "cases": [
+    {
+      "id": "format-validation",
+      "level": "L0"
+    },
+    {
+      "id": "archive-discovery",
+      "level": "L1"
+    },
+    {
+      "id": "archive-install",
+      "level": "L2"
+    },
+    {
+      "id": "explicit-load",
+      "level": "L3"
+    },
+    {
+      "id": "portable-text-flow",
+      "level": "L4"
+    },
+    {
+      "id": "native-capability",
+      "level": "L5"
+    }
+  ]
+}

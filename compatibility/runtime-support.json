@@ -1,0 +1,137 @@
+{
+  "$schema": "./runtime-support.schema.json",
+  "schema_version": "1",
+  "skill_version": "0.3.0",
+  "source_commit": null,
+  "package_sha256": null,
+  "runtimes": [
+    {
+      "id": "claude-code",
+      "display_name": "Claude Code",
+      "aliases": [],
+      "installer_target": "claude-code",
+      "runtime_version": null,
+      "levels": {
+        "L0": {"status": "not_run", "evidence_refs": []},
+        "L1": {"status": "not_run", "evidence_refs": []},
+        "L2": {"status": "not_run", "evidence_refs": []},
+        "L3": {"status": "not_run", "evidence_refs": []},
+        "L4": {"status": "not_run", "evidence_refs": []},
+        "L5": {"status": "not_run", "evidence_refs": []}
+      },
+      "native_capabilities": {}
+    },
+    {
+      "id": "codex",
+      "display_name": "Codex",
+      "aliases": [],
+      "installer_target": "codex",
+      "runtime_version": null,
+      "levels": {
+        "L0": {"status": "not_run", "evidence_refs": []},
+        "L1": {"status": "not_run", "evidence_refs": []},
+        "L2": {"status": "not_run", "evidence_refs": []},
+        "L3": {"status": "not_run", "evidence_refs": []},
+        "L4": {"status": "not_run", "evidence_refs": []},
+        "L5": {"status": "not_run", "evidence_refs": []}
+      },
+      "native_capabilities": {}
+    },
+    {
+      "id": "codebuddy-workbuddy",
+      "display_name": "CodeBuddy / WorkBuddy",
+      "aliases": ["CodeBuddy", "WorkBuddy"],
+      "installer_target": "codebuddy",
+      "runtime_version": null,
+      "levels": {
+        "L0": {"status": "not_run", "evidence_refs": []},
+        "L1": {"status": "not_run", "evidence_refs": []},
+        "L2": {"status": "not_run", "evidence_refs": []},
+        "L3": {"status": "not_run", "evidence_refs": []},
+        "L4": {"status": "not_run", "evidence_refs": []},
+        "L5": {"status": "not_run", "evidence_refs": []}
+      },
+      "native_capabilities": {}
+    },
+    {
+      "id": "cursor",
+      "display_name": "Cursor",
+      "aliases": [],
+      "installer_target": "cursor",
+      "runtime_version": null,
+      "levels": {
+        "L0": {"status": "not_run", "evidence_refs": []},
+        "L1": {"status": "not_run", "evidence_refs": []},
+        "L2": {"status": "not_run", "evidence_refs": []},
+        "L3": {"status": "not_run", "evidence_refs": []},
+        "L4": {"status": "not_run", "evidence_refs": []},
+        "L5": {"status": "not_run", "evidence_refs": []}
+      },
+      "native_capabilities": {}
+    },
+    {
+      "id": "gemini-cli",
+      "display_name": "Gemini CLI",
+      "aliases": [],
+      "installer_target": "gemini-cli",
+      "runtime_version": null,
+      "levels": {
+        "L0": {"status": "not_run", "evidence_refs": []},
+        "L1": {"status": "not_run", "evidence_refs": []},
+        "L2": {"status": "not_run", "evidence_refs": []},
+        "L3": {"status": "not_run", "evidence_refs": []},
+        "L4": {"status": "not_run", "evidence_refs": []},
+        "L5": {"status": "not_run", "evidence_refs": []}
+      },
+      "native_capabilities": {}
+    },
+    {
+      "id": "hermes-agent",
+      "display_name": "Hermes Agent",
+      "aliases": [],
+      "installer_target": "hermes-agent",
+      "runtime_version": null,
+      "levels": {
+        "L0": {"status": "not_run", "evidence_refs": []},
+        "L1": {"status": "not_run", "evidence_refs": []},
+        "L2": {"status": "not_run", "evidence_refs": []},
+        "L3": {"status": "not_run", "evidence_refs": []},
+        "L4": {"status": "not_run", "evidence_refs": []},
+        "L5": {"status": "not_run", "evidence_refs": []}
+      },
+      "native_capabilities": {}
+    },
+    {
+      "id": "openclaw",
+      "display_name": "OpenClaw",
+      "aliases": [],
+      "installer_target": "openclaw",
+      "runtime_version": null,
+      "levels": {
+        "L0": {"status": "not_run", "evidence_refs": []},
+        "L1": {"status": "not_run", "evidence_refs": []},
+        "L2": {"status": "not_run", "evidence_refs": []},
+        "L3": {"status": "not_run", "evidence_refs": []},
+        "L4": {"status": "not_run", "evidence_refs": []},
+        "L5": {"status": "not_run", "evidence_refs": []}
+      },
+      "native_capabilities": {}
+    },
+    {
+      "id": "opencode",
+      "display_name": "OpenCode",
+      "aliases": [],
+      "installer_target": "opencode",
+      "runtime_version": null,
+      "levels": {
+        "L0": {"status": "not_run", "evidence_refs": []},
+        "L1": {"status": "not_run", "evidence_refs": []},
+        "L2": {"status": "not_run", "evidence_refs": []},
+        "L3": {"status": "not_run", "evidence_refs": []},
+        "L4": {"status": "not_run", "evidence_refs": []},
+        "L5": {"status": "not_run", "evidence_refs": []}
+      },
+      "native_capabilities": {}
+    }
+  ]
+}

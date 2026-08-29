@@ -1,12 +1,12 @@
 # 想清楚 · Think It Through 产品需求文档
 
-> 版本：v0.2.0
+> 版本：v0.3.0
 >
 > 文档状态：正式实现与验收依据
 >
 > 更新日期：2026-08-29
 
-本文档是 v0.2.0 的唯一正式行为、安全与验收依据。产品说明、示例、优化方案或 Adapter 文档如与本文档冲突，以本文档为准。
+本文档是 v0.3.0 的唯一正式行为、安全与验收依据。产品说明、示例、优化方案或 Adapter 文档如与本文档冲突，以本文档为准。
 
 ## 1. 产品定义
 
@@ -18,7 +18,8 @@
 - **Skill 命令**：`/think-it-through`
 - **仓库名**：`think-it-through-skill`
 - **产品形态**：面向 AI 使用者的开源思考、证据与决策支持 Skill
-- **当前发布入口**：Claude Code 中显式调用；纯文本协议是跨宿主基线，其他宿主能力按 Adapter 与对应运行证据单独声明
+- **当前源码入口**：Claude Code 中显式调用；纯文本协议是跨宿主基线，其他宿主的格式、发现、安装、加载、行为与原生能力按分层证据单独声明
+- **发布状态**：v0.3.0 为未发布候选；已发布版本与当前源码合同不得混写
 
 ### 1.2 一句话定位
 
@@ -41,9 +42,9 @@
 9. 形成一个围绕核心假设、可验证且尽量可撤回的主现实证据闭环；
 10. 留下可复制的决策快照，支持继续、调整、暂停或停止的后续复判。
 
-### 1.4 v0.2.0 目标
+### 1.4 v0.3.0 目标
 
-v0.2.0 必须做到：
+v0.3.0 必须做到：
 
 - 以宿主无关的 Portable Decision Core 定义状态、意图、等待与完成语义；
 - 默认当前主 Agent、零外部调用、对话内快照和不改变外部世界；
@@ -59,12 +60,13 @@ v0.2.0 必须做到：
 - 区分能力调用、参与 / 委派、私有数据访问和外部行动四类授权；
 - 逐项协商能力，`unknown` 不得当作可用，真实执行产生诚实 receipt；
 - B 给一个判断、一个主现实证据闭环、一个决策快照和四项反馈入口；
-- 纯文本路径完整保留核心语义；Claude Code 和 ChatGPT Adapter 只映射当前会话观察到的真实能力；
-- 发布支持范围、内部评测状态与具体会话执行记录分层管理，不让任何一层替另一层作证。
+- 纯文本路径完整保留核心语义；通用 Agent Skills、Claude Code 和 ChatGPT Adapter 只映射各自边界，不由宿主名称推定能力；
+- 以 L0～L5 分开记录格式、发现、安装、加载、纯文本行为和原生能力，任何层级不得替后续层级作证；
+- 发布支持范围、内部评测状态、兼容证据与具体会话执行记录分层管理，不让任何一层替另一层作证。
 
 ### 1.5 非目标
 
-v0.2.0 不建设：
+v0.3.0 不建设：
 
 - 固定 AI 高管、永久专家团或展示型多 Agent 会议；
 - Agent 多数投票或用模型一致性替代证据；
@@ -220,7 +222,7 @@ R-method 的正式候选必须具有：
 - 同一候选集合中 ID 与名称不得重复；
 - 不得先在正文完整重复说明，再在原生选项中只列名称。
 
-非方法选择和旧冻结证据可保留字符串 option；v0.2.0 R-method 的正式原生推荐必须使用结构化字段。
+非方法选择和旧冻结证据可保留字符串 option；v0.3.0 R-method 的正式原生推荐必须使用结构化字段。
 
 ### 3.7 证据状态与分歧类型
 
@@ -757,7 +759,13 @@ Skill 表现为有经验、值得信赖的思考搭档：
 - 主现实证据闭环、决策快照和 B 四项反馈；
 - 搜索、Agent、真人和持久化不可用时的诚实降级。
 
-### 7.2 Claude Code Adapter
+### 7.2 开放 Agent Skills Adapter
+
+开放 Agent Skills Adapter 只定义共同目录与 portable baseline：宿主从 Skill 根目录加载 `SKILL.md`，相对引用从该根目录解析，纯文本行为采用 `adapters/text.md`。显式调用语法、扫描目录和原生能力由具体 runtime 决定。
+
+Adapter、安装器 target、目标目录中出现文件或 runtime 官方文档，均不单独证明该 Skill 已被具体 runtime/version 加载。未观察到的能力保持 `unknown` 或 `unavailable`；真实能力仍须逐项 consent、trace 与 receipt。
+
+### 7.3 Claude Code Adapter
 
 - 当前可靠加载方式是显式 `/think-it-through`；
 - 原生选择必须有实际工具调用证据；
@@ -767,9 +775,9 @@ Skill 表现为有经验、值得信赖的思考搭档：
 - 外部服务写操作需要独立确认；
 - 自动发现的冻结 v0.1 holdout 为 9/16（正例 1/8、负例 8/8），不得宣称自然语言自动加载已通过。
 
-### 7.3 ChatGPT Adapter
+### 7.4 ChatGPT Adapter
 
-v0.2.0 的支持范围是 Skill-only / 纯文本语义映射。Adapter 的存在不构成 ChatGPT 原生兼容认证，也不得据此假设通用原生控件、宿主搜索、MCP、私有连接器、子 Agent、自定义 UI 或持久化。
+v0.3.0 的支持范围是 Skill-only / 纯文本语义映射。Adapter 的存在不构成 ChatGPT 原生兼容认证，也不得据此假设通用原生控件、宿主搜索、MCP、私有连接器、子 Agent、自定义 UI 或持久化。
 
 当前会话未观察到某项能力时使用纯文本路径；观察到额外能力时，仍须逐项记录 provider、可用性、就绪状态、对应授权、实际 trace、receipt 与失败降级。扩大宿主原生兼容声明必须有对应版本化运行证据。
 
@@ -853,7 +861,11 @@ B 默认在对话中输出 DecisionRecord 的自然语言显示投影，不持�
 
 ### FR-20 跨宿主保真
 
-纯文本完整保真；Claude Code 和 ChatGPT Adapter 只映射当前会话真实能力；任何宿主能力不可用时诚实降级，不虚构兼容或调用。
+纯文本完整保真；通用 Agent Skills、Claude Code 和 ChatGPT Adapter 只映射各自定义的边界；任何宿主能力不可用时诚实降级，不虚构兼容或调用。
+
+### FR-20A 分层兼容证据
+
+仓库必须分别记录 L0 格式符合性、L1 安装器发现、L2 可安装性、L3 runtime 加载、L4 portable behavior 和 L5 native capability。任何 `passed` 或 `failed` 都引用实际 evidence；`not_run` 不得携带伪证据。L3～L5 只接受绑定准确 runtime version 的 `real_runtime` 证据。
 
 ### FR-21 安全与外部行动
 
@@ -899,11 +911,15 @@ Core 不依赖特定模型、平台、工具名、固定 Agent 数量、联网�
 
 ### NFR-09 体验评测独立
 
-核心 UX 使用十维 20 分 rubric；v0.2.0 增强能力使用八维 16 分 rubric。两者不得覆盖或重解释冻结 v0.1 行为 rubric。正式体验声明必须有真实 transcript、工具 trace 或用户评审证据。
+核心 UX 使用十维 20 分 rubric；v0.3.0 增强能力使用八维 16 分 rubric。两者不得覆盖或重解释冻结 v0.1 行为 rubric。正式体验声明必须有真实 transcript、工具 trace 或用户评审证据。
 
 ### NFR-10 安全与来源治理
 
 第三方方法可追溯到固定仓库、commit、准确文件、许可证和修改说明。关系场景不得提供操控、欺骗、跟踪、胁迫或施压策略。
+
+### NFR-11 兼容证据可追溯
+
+兼容状态使用 `passed / failed / not_run / blocked / unsupported`，证据区分 `static / synthetic / local_harness / real_runtime`。证据至少绑定 Skill 版本、源码 commit、候选包 SHA-256、工具或 runtime 版本、环境、执行 case、artifact 哈希与审阅状态；不得保存密钥、个人路径、无关会话数据或隐藏思维链。
 
 ## 10. 交付结构与维护边界
 
@@ -923,6 +939,7 @@ skills/think-it-through/
 │   └── participation-routing.md
 ├── adapters/
 │   ├── text.md
+│   ├── agent-skills.md
 │   ├── claude-code.md
 │   └── chatgpt.md
 ├── references/
@@ -939,10 +956,10 @@ skills/think-it-through/
 
 ### 10.2 Schema 合同
 
-v0.2.0 schema 必须：
+v0.3.0 schema 必须：
 
 - 使用 JSON Schema Draft 2020-12；
-- `$id` 包含 v0.2.0；
+- `$id` 包含 v0.3.0；
 - 使用稳定枚举；
 - 对对象使用 `additionalProperties: false`；
 - 对持久化、数量、授权和状态关系提供条件约束；
@@ -950,11 +967,13 @@ v0.2.0 schema 必须：
 
 ### 10.3 分发包
 
-独立 `.skill` 包必须包含 `SKILL.md`、core、policies、adapters、必要 references、MIT 许可证和第三方通知；排除 evals、benchmarks、历史 transcript、workspace、缓存、私有数据和本机配置。当前分发集合为 28 个源文件。构建必须使用新的空目录，并解包复验文件集合与字节内容。
+独立 `.skill` 包必须包含 `SKILL.md`、core、policies、adapters、必要 references、MIT 许可证和第三方通知；排除 evals、benchmarks、兼容证据、历史 transcript、workspace、缓存、私有数据和本机配置。`distribution/package-manifest.json` 是精确文件集合的唯一机器事实源；builder、validator 和 tests 必须共用它，不再复制固定文件数。构建必须使用新的空目录，并解包复验精确集合与字节内容。
+
+仓库直装是开发路径，可能包含 evals；已发布 `.skill` asset 才是稳定用户分发路径。未发布候选不得伪造 Release URL 或覆盖历史 asset。
 
 ### 10.4 冻结历史证据
 
-不得用 v0.2.0 当前合同重新评分或改写：
+不得用 v0.3.0 当前合同重新评分或改写：
 
 - `scripts/grade_contracts_v0_1.py`；
 - `scripts/grade_behavior_runs.py` 的 legacy 导入与评分语义；
@@ -986,7 +1005,7 @@ R-align 不发明动机；选项只服务一个目的未知；按答案形态使
 
 ### AC-05 结构化方法 option
 
-v0.2.0 原生方法候选均具有稳定 ID、正式 label、足够具体的 description 和布尔 recommended；推荐集合与标记一致；ID 和名称唯一。
+v0.3.0 原生方法候选均具有稳定 ID、正式 label、足够具体的 description 和布尔 recommended；推荐集合与标记一致；ID 和名称唯一。
 
 ### AC-06 单屏内联方法体验
 
@@ -1100,17 +1119,21 @@ B 只有一个核心假设，四个语义角色按固定顺序分别成段，并
 
 Adapter 只保证 Skill-only / 纯文本语义映射，不被描述为 ChatGPT 原生兼容认证。当前会话没有能力证据时使用文本路径；任何原生 UI、搜索、MCP、私有连接器、Agent 或持久化调用都必须逐项记录 provider、状态、授权、trace、receipt 与降级。
 
-### AC-34 跨场景、安全与用户拍板
+### AC-34 开放 Agent Skills 兼容边界
+
+固定 revision 的格式检查只建立 L0；固定安装器的发现与精确复制只建立 L1/L2。L3～L5 必须由特定 runtime/version 的真实运行证据建立。安装器 target 数、Adapter、schema、fixture、单元测试和宿主文档不得转述为已验证 runtime 数量。
+
+### AC-35 跨场景、安全与用户拍板
 
 商业、职业、团队、合作、关系、高成本和已执行事项遵守同一合同并使用对应语言；高风险不冒充专业意见；紧急危险优先保护；最终决定归用户。
 
-### AC-35 版本、评测与冻结隔离
+### AC-36 版本、评测与冻结隔离
 
-current schema、fixtures、grader、UX 和公开文档均为 v0.2.0；legacy grader 和冻结 v0.1 benchmark 未被改写；旧分数不用于证明 v0.2.0。
+current schema、fixtures、grader、UX 和公开文档均为 v0.3.0；legacy grader 和冻结 v0.1 benchmark 未被改写；旧分数不用于证明 v0.3.0。
 
-### AC-36 分发集合
+### AC-37 分发集合
 
-打包文件包含 `SKILL.md`、core、policies、adapters、必要 references、许可证和第三方通知，当前严格为 28 个源文件；不包含 evals、benchmarks、examples、workspace、缓存或本机配置；解包内容与源码逐字节一致。
+打包文件包含 `SKILL.md`、core、policies、adapters、必要 references、许可证和第三方通知，并与 `distribution/package-manifest.json` 的精确集合一致；不包含 evals、benchmarks、兼容证据、examples、workspace、缓存或本机配置；解包内容与源码逐字节一致。
 
 ## 12. 严重失败判定
 
@@ -1143,10 +1166,12 @@ current schema、fixtures、grader、UX 和公开文档均为 v0.2.0；legacy gr
 - B 继续盘问新的决策信息；
 - B 缺少四个稳定反馈方向，错误承诺独立附注，或把反馈当执行 / 授权；
 - 未经授权写入文件、保存长期偏好、发送、发布、购买、联系、删除或修改；
-- 纯文本降级删除核心语义，或把静态 ChatGPT Adapter 当作实测兼容；
+- 纯文本降级删除核心语义，或把静态 Adapter 当作实测兼容；
+- 把安装器 target 数、文件已复制、静态 schema、fixture、单元测试或宿主文档写成已验证 runtime 数量；
+- 用非 `real_runtime` 证据提升 L3～L5，或给 `not_run` 状态绑定虚假 evidence；
 - 关系场景给操控、欺骗、跟踪、胁迫或施压策略；
 - 高风险专业领域冒充持证意见，或紧急危险仍延长流程；
-- 用静态 schema、fixture、单元测试或旧 v0.1 分数宣称 v0.2.0 真实能力或体验通过；
+- 用静态 schema、fixture、单元测试或旧 v0.1 分数宣称 v0.3.0 真实能力或体验通过；
 - 没有把最终选择权交还用户。
 
 ## 13. 评测设计与证据声明
@@ -1162,7 +1187,7 @@ current schema、fixtures、grader、UX 和公开文档均为 v0.2.0；legacy gr
 
 ### 13.2 current fixtures 最低覆盖
 
-v0.2.0 current fixtures 至少覆盖：
+v0.3.0 current fixtures 至少覆盖：
 
 - 空状态、R-align、R-method、A、B 和反馈转移；
 - 可并存目的、真实互斥边界和开放回答；
@@ -1188,13 +1213,27 @@ v0.2.0 current fixtures 至少覆盖：
 
 ### 13.4 发布支持范围与证据发布规则
 
-v0.2.0 可以对外声明：当前正式协议版本、Claude Code 中显式 `/think-it-through` 入口、纯文本跨宿主基线、仓库机械校验事实，以及条件能力所遵守的路由、授权和回执合同。
+v0.3.0 当前是未发布候选。对外只能声明当前源码合同版本、已由实际检查建立的兼容层级、Claude Code 中已有的显式 `/think-it-through` 入口、纯文本跨宿主基线、仓库机械校验事实，以及条件能力所遵守的路由、授权和回执合同。候选状态不得冒充稳定 Release。
+
+兼容层级定义如下：
+
+| 层级 | 证明对象 | 最低证据 |
+| --- | --- | --- |
+| L0 | Agent Skills 格式符合性 | 固定 revision 的静态参考校验 |
+| L1 | 安装器发现 archive 或 repository Skill | 固定版本的隔离 local harness |
+| L2 | 精确文件集合安装到目标扫描目录 | 固定版本的隔离 local harness 与逐字节比较 |
+| L3 | 指定 runtime/version 实际加载或显式激活 | `real_runtime` trace |
+| L4 | 该 runtime 中走通 portable text behavior | `real_runtime` 多轮 transcript 与当前 grader |
+| L5 | 某项原生能力实际工作 | 触发该能力的 `real_runtime` trace、consent 与 receipt |
 
 以下信息必须分层维护：
 
 - **发布支持范围**：写入 README、正式合同和版本记录，说明当前支持入口、纯文本基线与条件能力边界；
-- **内部评测状态**：只在 `skills/think-it-through/evals/` 的机器文件与 rubric 中记录，不复制到公开文档或运行时分发包；
+- **兼容矩阵**：仓库级 `compatibility/` 记录 L0～L5、runtime/version 和证据引用，不进入 `.skill`；
+- **内部评测状态**：只在 `skills/think-it-through/evals/` 的机器文件与 rubric 中记录，不复制到运行时分发包；
 - **具体会话执行事实**：只由当次 capability observation、consent、工具 trace、receipt 和失败降级记录建立；
 - **宿主原生兼容声明**：扩大范围前必须有对应版本的加载、能力、交互、授权、执行与降级证据。
 
-正式发布不把 Adapter、schema、fixture、单元测试或线框转化为某次真实调用、原生 UI、Agent 启动、持久化或真实用户体验声明。冻结 v0.1 行为快照和 discovery holdout 只证明当时固定版本与场景，不证明 v0.2.0。
+固定工具版本、evidence kind 和状态由 `compatibility/profile.json` 定义；`runtime-support.json` 只引用已存在且通过 schema 与跨文件校验的 evidence。普通 CI 不自动提升状态。
+
+正式发布不把 Adapter、schema、fixture、单元测试、安装器 target 或线框转化为某次真实加载、调用、原生 UI、Agent 启动、持久化或真实用户体验声明。冻结 v0.1 行为快照和 discovery holdout 只证明当时固定版本与场景，不证明 v0.3.0。

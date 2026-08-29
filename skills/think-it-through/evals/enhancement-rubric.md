@@ -1,8 +1,8 @@
-# v0.2.0 增强能力体验 Rubric
+# v0.3.0 增强能力体验 Rubric
 
 ## 适用边界
 
-本 Rubric 只评估 v0.2.0 新增的 Evidence / Participation Gate、跨宿主保真、解决方案与复判体验。它不改变 [`ux-rubric.md`](ux-rubric.md) 的十维 20 分含义，也不重解释 [`rubric.md`](rubric.md) 或冻结 v0.1 benchmark。
+本 Rubric 只评估 v0.3.0 新增的 Evidence / Participation Gate、跨宿主保真、解决方案与复判体验。它不改变 [`ux-rubric.md`](ux-rubric.md) 的十维 20 分含义，也不重解释 [`rubric.md`](rubric.md) 或冻结 v0.1 benchmark。
 
 Schema、fixture、单元测试和线框只能证明合同已定义。没有真实模型运行、宿主工具 trace 或用户评审时，每个维度都必须标为 `未实测 / not_run`，不能从静态实现猜测得分。
 
@@ -56,19 +56,19 @@ Schema、fixture、单元测试和线框只能证明合同已定义。没有真�
 在完成这些步骤前，状态只能记录为：
 
 ```text
-v0.2.0 增强能力静态合同：按实际验证结果记录
-v0.2.0 Evidence Gate：未实测 / not_run
-v0.2.0 多 Agent：未实测 / not_run
-v0.2.0 真人参与体验：未实测 / not_run
-v0.2.0 ChatGPT / 其他宿主：未实测 / not_run
-v0.2.0 解决方案与复判体验：未实测 / not_run
+v0.3.0 增强能力静态合同：按实际验证结果记录
+v0.3.0 Evidence Gate：未实测 / not_run
+v0.3.0 多 Agent：未实测 / not_run
+v0.3.0 真人参与体验：未实测 / not_run
+v0.3.0 ChatGPT / 其他宿主：未实测 / not_run
+v0.3.0 解决方案与复判体验：未实测 / not_run
 ```
 
 ## 评审记录格式
 
 ```json
 {
-  "contract_version": "0.2.0",
+  "contract_version": "0.3.0",
   "rubric": "enhancement-rubric.md",
   "status": "not_run",
   "dimensions": [

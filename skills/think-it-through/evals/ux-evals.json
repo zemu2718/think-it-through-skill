@@ -1,6 +1,6 @@
 {
   "skill_name": "think-it-through",
-  "contract_version": "0.2.0",
+  "contract_version": "0.3.0",
   "status": "not_run",
   "rubric": "ux-rubric.md",
   "enhancement_rubric": "enhancement-rubric.md",

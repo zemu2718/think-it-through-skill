@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""用合规和违规样本验证 v0.2.0 机械合同评分器。"""
+"""用合规和违规样本验证 v0.3.0 机械合同评分器。"""
 
 from __future__ import annotations
 
@@ -1406,7 +1406,7 @@ If payment appears, reassess whether to proceed; if refusals persist, stop new i
     @staticmethod
     def evidence_receipt(status: str = "completed") -> dict[str, object]:
         return {
-            "contract_version": "0.2.0",
+            "contract_version": "0.3.0",
             "capabilities": [
                 {
                     "name": "search.public_web",
@@ -1497,7 +1497,7 @@ If payment appears, reassess whether to proceed; if refusals persist, stop new i
     @staticmethod
     def participation_receipt() -> dict[str, object]:
         return {
-            "contract_version": "0.2.0",
+            "contract_version": "0.3.0",
             "capabilities": [
                 {
                     "name": "agents.subagent",
@@ -1622,7 +1622,7 @@ If payment appears, reassess whether to proceed; if refusals persist, stop new i
     @staticmethod
     def valid_decision_record() -> dict[str, object]:
         return {
-            "contract_version": "0.2.0",
+            "contract_version": "0.3.0",
             "topic": "是否继续开发当前产品",
             "true_objectives": ["验证陌生客户是否愿意付费"],
             "decision": "继续开发还是先验证付费意愿",

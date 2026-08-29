@@ -12,7 +12,7 @@ An open Agent Skill that clarifies what you are actually trying to resolve, find
 </div>
 
 > [!IMPORTANT]
-> **v0.2.0 is the current release.** The reliable entry point is explicit `/think-it-through` invocation in Claude Code. The text protocol is the cross-host baseline. Native controls, search, additional agents, private data, persistence, and external actions are used only when the current session exposes the capability, routing conditions are met, and the corresponding consent is granted; actual execution is established by traces and receipts. An Adapter defines protocol mapping, not native compatibility certification for that host.
+> **v0.2.0 remains the latest stable release; this branch contains the unreleased v0.3.0 source candidate.** The reliable entry point remains explicit `/think-it-through` invocation in Claude Code. The text protocol is the cross-host baseline. Native controls, search, additional agents, private data, persistence, and external actions are used only when the current session exposes the capability, routing conditions are met, and the corresponding consent is granted; actual execution is established by traces and receipts. An Adapter defines protocol mapping, not native compatibility certification for that host.
 
 ## The problem
 
@@ -261,13 +261,27 @@ An agent cannot answer a real person's values, authority, commitment, customer b
 
 ## How it works across hosts
 
-| Adapter | v0.2.0 support boundary |
+| Adapter | v0.3.0 candidate boundary |
 | --- | --- |
 | Text | Cross-host baseline; preserves the complete core without native controls, search, agents, or persistence |
-| Claude Code | Official release entry via explicit `/think-it-through`; maps only capabilities observed in the current session |
+| Open Agent Skills | Common Skill-root discovery, relative references, portable text behavior, and capability-negotiation boundary |
+| Claude Code | Reliable entry remains explicit `/think-it-through`; maps only capabilities observed in the current session |
 | ChatGPT | Skill-only and text semantic mapping; does not certify native controls, tools, agents, or persistence |
 
-An Adapter may change the interaction surface, not the state, authorization, waiting, judgment, or fallback semantics. A capability that a product may support is not proof that it is enabled in this session.
+An Adapter may change the interaction surface, not the state, authorization, waiting, judgment, or fallback semantics. An Adapter, installer target, copied directory, or product documentation is not evidence that a particular runtime/version loaded the Skill or followed its behavior.
+
+Compatibility is recorded as six non-substitutable layers:
+
+| Layer | What it establishes | Minimum evidence |
+| --- | --- | --- |
+| L0 | Agent Skills format conformance | Static validation at the pinned specification revision |
+| L1 | Installer discovery | Isolated local harness using the pinned installer version |
+| L2 | Installation of the exact manifest file set | Isolated install plus byte-for-byte comparison |
+| L3 | Loading or explicit activation by a named runtime/version | Real-runtime trace |
+| L4 | Portable text behavior in that runtime | Real-runtime multi-turn transcript plus the current grader |
+| L5 | One native capability in that runtime | Capability-specific trace, consent, and receipt |
+
+The machine-readable status is in [`compatibility/runtime-support.json`](compatibility/runtime-support.json). Its initial L0–L5 values remain `not_run` until reviewed evidence is committed. The eight named installer targets—Claude Code, Codex, Cursor, OpenClaw, Hermes Agent, CodeBuddy / WorkBuddy, Gemini CLI, and OpenCode—are installation mappings, not runtime behavior certifications.
 
 ## Methods stay transparent without becoming homework
 
@@ -285,7 +299,7 @@ Usually no more than one specialist card is recommended; zero is valid. Research
 
 ## When to use it
 
-The v0.2.0 release entry point is:
+The reliable entry point for the v0.2.0 release and the v0.3.0 source candidate is:
 
 ```text
 /think-it-through
@@ -305,7 +319,9 @@ It should stay out of the way for factual lookup, method definitions, clear low-
 
 ## Installation
 
-### Personal
+The repository copy below is the development path for the unreleased v0.3.0 candidate. It contains `evals/`; runtimes ignore those files, while the minimal candidate archive is defined exactly by [`distribution/package-manifest.json`](distribution/package-manifest.json). No v0.3.0 Release asset is claimed until an identical archive has been published and verified.
+
+### Claude Code personal installation from source
 
 ```bash
 git clone https://github.com/zemu2718/think-it-through-skill.git
@@ -314,7 +330,7 @@ mkdir -p ~/.claude/skills
 cp -R think-it-through-skill/skills/think-it-through ~/.claude/skills/
 ```
 
-### Project
+### Claude Code project installation from source
 
 Run from the target project root:
 
@@ -324,9 +340,20 @@ mkdir -p .claude/skills
 cp -R /path/to/think-it-through-skill/skills/think-it-through .claude/skills/
 ```
 
-If it is already installed, remove or rename the old directory instead of merging versions. Restart Claude Code if the top-level Skill directory did not exist when the session started.
+### Build a local minimal candidate archive
 
-The core Skill needs no network access, API key, account, or executable script. It can use an existing host's search, private-data, agent, or persistence capability only when the current issue passes the Gate and the user grants the corresponding consent. The release archive contains the same 28 runtime source files described under [Project structure](#project-structure); source-directory installation remains the documented Claude Code path.
+Run from the cloned repository:
+
+```bash
+python3 scripts/build_distribution.py --output-dir dist/v0.3.0-candidate
+unzip -t dist/v0.3.0-candidate/think-it-through.skill
+```
+
+Install that local `.skill` only with a runtime or installer whose documented path you have verified. A successful copy establishes at most installer discovery and installability; it does not establish runtime loading or behavior.
+
+If a destination already exists, remove or rename the old directory yourself instead of merging versions. Restart Claude Code if its top-level Skill directory did not exist when the session started.
+
+The core Skill needs no network access, API key, account, or executable script. It can use an existing host's search, private-data, agent, or persistence capability only when the current issue passes the Gate and the user grants the corresponding consent.
 
 Official Claude Code reference: [Extend Claude with skills](https://code.claude.com/docs/en/slash-commands).
 
@@ -341,7 +368,7 @@ The repository evaluates four separate questions:
 
 ### Frozen v0.1 behavior snapshot
 
-These results bind only three fixed v0.1 scenarios and do not establish v0.2.0 behavior:
+These results bind only three fixed v0.1 scenarios and establish neither v0.2.0 nor v0.3.0 behavior:
 
 | Metric | With Skill | Without Skill | Delta |
 | --- | ---: | ---: | ---: |
@@ -351,17 +378,19 @@ These results bind only three fixed v0.1 scenarios and do not establish v0.2.0 b
 
 Exact transcripts, scores, and SHA-256 bindings are in [`benchmarks/behavior-v0.1/`](benchmarks/behavior-v0.1/). The frozen discovery holdout is **9/16**; see [`benchmarks/trigger-v0.1/`](benchmarks/trigger-v0.1/).
 
-### v0.2.0 contract validation
+### v0.3.0 candidate contract validation
 
-The current grader, versioned fixtures, ten-dimension 20-point core UX rubric, and eight-dimension 16-point enhancement rubric keep the release contract mechanically reviewable:
+The current grader, versioned fixtures, ten-dimension 20-point core UX rubric, and eight-dimension 16-point enhancement rubric keep the source candidate mechanically reviewable:
 
 - [`ux-evals.json`](skills/think-it-through/evals/ux-evals.json)
 - [`ux-rubric.md`](skills/think-it-through/evals/ux-rubric.md)
 - [`enhancement-rubric.md`](skills/think-it-through/evals/enhancement-rubric.md)
 
 ```bash
-uv run --python 3.12 --with pyyaml python -m unittest discover -s scripts -p 'test_*.py' -v
-uv run --python 3.12 --with pyyaml python scripts/validate_repo.py
+uv run --python 3.12 --with-requirements requirements-validation.txt \
+  python -m unittest discover -s scripts -p 'test_*.py' -v
+uv run --python 3.12 --with-requirements requirements-validation.txt \
+  python scripts/validate_repo.py
 ```
 
 Contract validation and session execution are intentionally separate: repository checks establish the packaged protocol, while a capability call in a particular session is established only by its observation, consent, trace, and receipt. New native-host compatibility claims require versioned loading, interaction, execution, and fallback evidence.
@@ -389,12 +418,14 @@ skills/think-it-through/
 ├── SKILL.md                    # Current-host entry and compact state contract
 ├── core/                       # Portable protocol and JSON Schemas
 ├── policies/                   # Evidence and participation routing
-├── adapters/                   # Text, Claude Code, and ChatGPT
+├── adapters/                   # Agent Skills, text, Claude Code, and ChatGPT
 ├── references/                 # Analysis, interaction, methods, safety, provenance
 ├── evals/                      # Current fixtures, UX, and trigger definitions; not packaged
 ├── LICENSE
 └── THIRD_PARTY_NOTICES.md
 
+distribution/package-manifest.json  # Exact runtime archive file set
+compatibility/                  # L0–L5 profile, schemas, status, reviewed evidence
 benchmarks/behavior-v0.1/       # Frozen behavior evidence
 benchmarks/trigger-v0.1/        # Frozen discovery evidence
 docs/                           # Versioned product architecture and third-party audit
@@ -403,7 +434,7 @@ assets/                         # Original project visuals
 CHANGELOG.md                    # Release status and version history
 ```
 
-The single maintenance source is `skills/think-it-through/`. A project-level `.claude/skills/think-it-through/` is only a local installation copy. Distribution contains 28 source files: the runtime entry, core, policies, adapters, required references, licenses, and notices. It excludes evals, benchmarks, historical transcripts, workspaces, caches, and local configuration.
+The single maintenance source is `skills/think-it-through/`. A project-level `.claude/skills/think-it-through/` is only a local installation copy. The runtime archive contains exactly the sorted file set in [`distribution/package-manifest.json`](distribution/package-manifest.json): the runtime entry, core, policies, adapters, required references, licenses, and notices. It excludes evals, compatibility evidence, benchmarks, historical transcripts, workspaces, caches, and local configuration.
 
 ## Contributing
 

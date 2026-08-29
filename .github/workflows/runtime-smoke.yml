@@ -1,0 +1,142 @@
+name: Runtime smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      runtime:
+        description: Provider runtime to exercise
+        required: true
+        type: choice
+        options:
+          - claude-code
+          - codex
+      authorization:
+        description: Type I_AUTHORIZE_PROVIDER_CALLS to authorize this provider call
+        required: true
+        type: string
+      expected_version:
+        description: Optional substring required in the runtime CLI version
+        required: false
+        type: string
+      model:
+        description: Optional model override
+        required: false
+        type: string
+      max_budget_usd:
+        description: Claude Code per-turn budget ceiling in USD
+        required: true
+        default: "1.00"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Candidate ${{ inputs.runtime }} smoke
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require explicit provider authorization
+        if: ${{ inputs.authorization != 'I_AUTHORIZE_PROVIDER_CALLS' }}
+        run: |
+          echo "Provider call authorization was not granted."
+          exit 1
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Require clean committed source
+        run: test -z "$(git status --porcelain --untracked-files=all)"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install validation dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements-validation.txt
+
+      - name: Run repository validation before provider calls
+        run: |
+          python -m unittest discover -s scripts -p 'test_*.py' -v
+          python scripts/validate_repo.py
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.20.0"
+
+      - name: Install Claude Code CLI
+        if: ${{ inputs.runtime == 'claude-code' }}
+        run: npm install --global @anthropic-ai/claude-code
+
+      - name: Install Codex CLI
+        if: ${{ inputs.runtime == 'codex' }}
+        run: npm install --global @openai/codex
+
+      - name: Run authorized Claude Code smoke
+        if: ${{ inputs.runtime == 'claude-code' }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          EXPECTED_VERSION: ${{ inputs.expected_version }}
+          MODEL: ${{ inputs.model }}
+        run: |
+          args=(
+            --runtime claude-code
+            --authorize-provider-calls I_AUTHORIZE_PROVIDER_CALLS
+            --max-budget-usd "${{ inputs.max_budget_usd }}"
+          )
+          if [ -n "$EXPECTED_VERSION" ]; then
+            args+=(--expected-version "$EXPECTED_VERSION")
+          fi
+          if [ -n "$MODEL" ]; then
+            args+=(--model "$MODEL")
+          fi
+          python scripts/run_runtime_smoke.py "${args[@]}"
+
+      - name: Run authorized Codex smoke
+        if: ${{ inputs.runtime == 'codex' }}
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          EXPECTED_VERSION: ${{ inputs.expected_version }}
+          MODEL: ${{ inputs.model }}
+        run: |
+          args=(
+            --runtime codex
+            --authorize-provider-calls I_AUTHORIZE_PROVIDER_CALLS
+          )
+          if [ -n "$EXPECTED_VERSION" ]; then
+            args+=(--expected-version "$EXPECTED_VERSION")
+          fi
+          if [ -n "$MODEL" ]; then
+            args+=(--model "$MODEL")
+          fi
+          python scripts/run_runtime_smoke.py "${args[@]}"
+
+      - name: Validate candidate evidence schema
+        if: ${{ hashFiles('dist/runtime-smoke/**/evidence.json') != '' }}
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from jsonschema import Draft202012Validator, FormatChecker
+
+          schema = json.loads(Path("compatibility/evidence.schema.json").read_text())
+          validator = Draft202012Validator(schema, format_checker=FormatChecker())
+          for path in Path("dist/runtime-smoke").rglob("evidence.json"):
+              validator.validate(json.loads(path.read_text()))
+              print(f"Validated candidate evidence: {path}")
+          PY
+
+      - name: Upload candidate evidence
+        if: ${{ always() && hashFiles('dist/runtime-smoke/**') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-smoke-${{ inputs.runtime }}-${{ github.sha }}
+          path: dist/runtime-smoke/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Ensure harness did not modify tracked files
+        if: ${{ always() }}
+        run: git diff --exit-code

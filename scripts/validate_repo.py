@@ -11,6 +11,11 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from jsonschema import Draft202012Validator, FormatChecker
+from jsonschema.exceptions import SchemaError, ValidationError
+from referencing import Registry, Resource
+
+from build_distribution import load_manifest, source_files
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILL_DIR = ROOT / "skills" / "think-it-through"
@@ -18,7 +23,7 @@ SKILL_MD = SKILL_DIR / "SKILL.md"
 
 TEXT_SUFFIXES = {".md", ".json", ".yaml", ".yml", ".py", ".svg", ".txt"}
 IGNORED_SCAN_PARTS = {".git", ".claude", "dist", "review", "think-it-through-workspace", "__pycache__"}
-CURRENT_CONTRACT_VERSION = "0.2.0"
+CURRENT_CONTRACT_VERSION = "0.3.0"
 LEGACY_BEHAVIOR_PROFILE = "legacy-v0.1"
 EXPECTED_FIXTURE_STAGES = {"R", "A", "B", "Gate-routing", "direct", "emergency"}
 INTERACTIVE_FIXTURE_STAGES = {"R", "A", "B"}
@@ -107,36 +112,6 @@ EXPECTED_ANSWER_SHAPES = {
     "open": ("none", {"free-answer"}),
 }
 DESCRIPTION_SHA256 = "f89f3d1fca11641e925a6f2e27b487ddd182789a0bea4f7ae3a3d197e4c6f3d3"
-EXPECTED_PACKAGE_FILES = {
-    "LICENSE",
-    "SKILL.md",
-    "THIRD_PARTY_NOTICES.md",
-    "adapters/chatgpt.md",
-    "adapters/claude-code.md",
-    "adapters/text.md",
-    "core/consent.schema.json",
-    "core/decision-record.schema.json",
-    "core/intents.schema.json",
-    "core/protocol.md",
-    "core/receipts.schema.json",
-    "policies/evidence-routing.md",
-    "policies/participation-routing.md",
-    "references/core-analysis.md",
-    "references/external-validation.md",
-    "references/interaction-ux.md",
-    "references/method-selection.md",
-    "references/pre-mortem.md",
-    "references/safety-boundaries.md",
-    "references/two-sided-steelman.md",
-    "references/methods/boundary-contracts.md",
-    "references/methods/communication-fit.md",
-    "references/methods/evidence-loop.md",
-    "references/methods/object-calibration.md",
-    "references/methods/registry.yaml",
-    "references/methods/resource-leverage.md",
-    "references/methods/stage-fit.md",
-    "references/methods/system-bottleneck.md",
-}
 METHOD_ROUTING_COVERAGE = {"applicable", "not-applicable", "overlap"}
 MIN_TRIGGER_EXAMPLES_PER_LABEL = 8
 REQUIRED_METHOD_FIELDS = {
@@ -227,12 +202,23 @@ def validate_skill(validation: Validation) -> None:
         return
 
     validation.require(metadata.get("name") == SKILL_DIR.name, "Skill name 必须与父目录 think-it-through 一致")
+    validation.require(isinstance(metadata.get("license"), str), "Skill license 必须是字符串")
+    compatibility = metadata.get("compatibility")
+    validation.require(isinstance(compatibility, str), "Skill compatibility 必须是字符串")
+    if isinstance(compatibility, str):
+        validation.require(1 <= len(compatibility.strip()) <= 500, "Skill compatibility 长度必须为 1～500")
+        validation.require("Portable text behavior" in compatibility, "Skill compatibility 必须说明纯文本基线")
+        validation.require("per-session" in compatibility, "Skill compatibility 必须说明逐会话能力边界")
     skill_metadata = metadata.get("metadata")
     validation.require(isinstance(skill_metadata, dict), "Skill metadata 必须是对象")
     if isinstance(skill_metadata, dict):
         validation.require(
             str(skill_metadata.get("version")) == CURRENT_CONTRACT_VERSION,
             f"Skill 版本必须为 {CURRENT_CONTRACT_VERSION}",
+        )
+        validation.require(
+            all(isinstance(key, str) and isinstance(value, str) for key, value in skill_metadata.items()),
+            "Skill metadata 的 key 与 value 必须都是字符串",
         )
     description = metadata.get("description")
     validation.require(isinstance(description, str), "description 必须是字符串")
@@ -288,10 +274,11 @@ def validate_skill(validation: Validation) -> None:
         "inline-text",
         "冲突时以文字为准",
         "反馈不执行实验，也不授权能力、委派、私有数据、持久化或外部行动",
-        "Adapter 不构成原生兼容认证",
+        "不构成原生兼容认证",
+        "安装器 target 或文件已复制都不构成原生兼容认证",
         "实际执行只由 trace 与 receipt 建立",
     ):
-        validation.require(phrase in body, f"SKILL.md 缺少 v0.2.0 合同：{phrase}")
+        validation.require(phrase in body, f"SKILL.md 缺少 v0.3.0 合同：{phrase}")
     for forbidden in (
         "本轮确认：基础分析",
         "本轮使用：基础分析",
@@ -331,7 +318,7 @@ def validate_skill(validation: Validation) -> None:
             "反馈不执行实验，也不授权能力、委派、私有数据、持久化或外部行动",
             "静态线框写成真实 UI、搜索、Agent 或兼容证据",
         ):
-            validation.require(phrase in interaction, f"interaction-ux.md 缺少 v0.2.0 交互规则：{phrase}")
+            validation.require(phrase in interaction, f"interaction-ux.md 缺少 v0.3.0 交互规则：{phrase}")
 
     method_selection_path = SKILL_DIR / "references" / "method-selection.md"
     validation.require(method_selection_path.exists(), "缺少 references/method-selection.md")
@@ -354,7 +341,7 @@ def validate_skill(validation: Validation) -> None:
             "用 X 替换 Y",
             "Gate 能力没有被混入方法组合",
         ):
-            validation.require(phrase in method_selection, f"method-selection.md 缺少 v0.2.0 规则：{phrase}")
+            validation.require(phrase in method_selection, f"method-selection.md 缺少 v0.3.0 规则：{phrase}")
 
 
 def validate_json_yaml(validation: Validation, files: list[Path]) -> None:
@@ -429,6 +416,12 @@ def validate_core_schemas(validation: Validation) -> None:
         schemas[key] = data
         validation.require(data.get("$schema") == SCHEMA_DRAFT_2020_12, f"core/{file_name} 必须使用 Draft 2020-12")
         validation.require(f"/v{CURRENT_CONTRACT_VERSION}/" in str(data.get("$id", "")), f"core/{file_name} 的 $id 必须包含 v{CURRENT_CONTRACT_VERSION}")
+        try:
+            Draft202012Validator.check_schema(data)
+        except SchemaError as error:
+            validation.require(False, f"core/{file_name} 不是有效 Draft 2020-12 schema：{error.message}")
+        else:
+            validation.require(True, f"core/{file_name} 通过 Draft 2020-12 schema 自检")
         validation.require(data.get("type") == "object", f"core/{file_name} 顶层必须声明 type=object")
         validation.require(data.get("additionalProperties") is False, f"core/{file_name} 顶层必须禁止额外字段")
         object_schemas = _object_schemas(data)
@@ -484,6 +477,75 @@ def validate_core_schemas(validation: Validation) -> None:
         "receipt agent_counts 必须记录主、计划、启动、完成、失败与实际总数",
     )
 
+    intents_schema = schemas.get("intents")
+    decision_schema = schemas.get("decision-record")
+    if intents_schema is not None and decision_schema is not None:
+        registry = Registry().with_resource(
+            "decision-record.schema.json",
+            Resource.from_contents(decision_schema),
+        )
+        try:
+            Draft202012Validator(
+                intents_schema,
+                registry=registry,
+                format_checker=FormatChecker(),
+            ).validate(
+                {
+                    "kind": "present_decision_snapshot",
+                    "stage": "B",
+                    "body": {
+                        "record": {
+                            "contract_version": CURRENT_CONTRACT_VERSION,
+                            "topic": "检查跨文件引用",
+                            "true_objectives": ["确保 snapshot 引用 DecisionRecord schema"],
+                            "decision": "跨文件引用是否可解析",
+                            "confirmed_methods": ["基础分析"],
+                            "judgment": {
+                                "state": "small_test",
+                                "recommendation": "保留校验",
+                                "rationale": ["避免只检查单文件语法"],
+                                "validity_conditions": [],
+                            },
+                            "evidence": {
+                                "confirmed_facts": [],
+                                "inferences": [],
+                                "assumptions": [],
+                                "unknowns": [],
+                                "sources": [],
+                            },
+                            "reversal_signals": ["引用错误"],
+                            "main_experiment": {
+                                "core_hypothesis": "registry 能解析相对引用",
+                                "action": "验证 canonical instance",
+                                "observation": "没有引用错误",
+                                "reassessment": "出现错误时修复引用",
+                            },
+                            "reassessment_triggers": ["引用错误"],
+                            "participation_and_capabilities": {
+                                "main_agents": 1,
+                                "additional_agents_planned": 0,
+                                "additional_agents_started": 0,
+                                "additional_agents_completed": 0,
+                                "additional_agents_failed": 0,
+                                "private_data_accessed": False,
+                                "external_action_executed": False,
+                                "consent_ids": [],
+                                "receipt_ids": [],
+                            },
+                            "persistence": {
+                                "mode": "conversation_only",
+                                "authorized": False,
+                            },
+                        },
+                        "persistence_mode": "conversation_only",
+                    },
+                }
+            )
+        except ValidationError as error:
+            validation.require(False, f"intent 与 DecisionRecord schema 跨文件校验失败：{error.message}")
+        else:
+            validation.require(True, "intent 与 DecisionRecord schema 跨文件引用可解析")
+
     decision = schemas.get("decision-record", {})
     validation.require(_schema_enum(decision, "properties", "judgment", "properties", "state", "enum") == DECISION_STATES, "DecisionRecord judgment state 稳定枚举不匹配")
     validation.require(_schema_enum(decision, "properties", "persistence", "properties", "mode", "enum") == PERSISTENCE_MODES, "DecisionRecord persistence mode 稳定枚举不匹配")
@@ -502,6 +564,171 @@ def validate_core_schemas(validation: Validation) -> None:
         and "consent_id" in persistence_rules,
         "DecisionRecord 必须约束默认不持久化与授权持久化目标",
     )
+
+
+def _load_json(path: Path) -> dict[str, Any]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError(f"{path.relative_to(ROOT)} 顶层必须是对象")
+    return data
+
+
+def _validate_instance(
+    validation: Validation,
+    instance: dict[str, Any],
+    schema: dict[str, Any],
+    label: str,
+) -> None:
+    try:
+        Draft202012Validator(schema, format_checker=FormatChecker()).validate(instance)
+    except ValidationError as error:
+        location = "/".join(str(part) for part in error.absolute_path) or "<root>"
+        validation.require(False, f"{label} 不符合 schema（{location}）：{error.message}")
+    else:
+        validation.require(True, f"{label} 符合 schema")
+
+
+def validate_compatibility(validation: Validation) -> None:
+    compatibility_dir = ROOT / "compatibility"
+    profile_path = compatibility_dir / "profile.json"
+    support_path = compatibility_dir / "runtime-support.json"
+    support_schema_path = compatibility_dir / "runtime-support.schema.json"
+    evidence_schema_path = compatibility_dir / "evidence.schema.json"
+    for path in (profile_path, support_path, support_schema_path, evidence_schema_path):
+        validation.require(path.exists(), f"缺少兼容性文件：{path.relative_to(ROOT)}")
+    if not all(path.exists() for path in (profile_path, support_path, support_schema_path, evidence_schema_path)):
+        return
+
+    profile = _load_json(profile_path)
+    support = _load_json(support_path)
+    support_schema = _load_json(support_schema_path)
+    evidence_schema = _load_json(evidence_schema_path)
+    for name, schema in (("runtime-support.schema.json", support_schema), ("evidence.schema.json", evidence_schema)):
+        try:
+            Draft202012Validator.check_schema(schema)
+        except SchemaError as error:
+            validation.require(False, f"compatibility/{name} 不是有效 Draft 2020-12 schema：{error.message}")
+        else:
+            validation.require(True, f"compatibility/{name} 通过 Draft 2020-12 schema 自检")
+    _validate_instance(validation, support, support_schema, "compatibility/runtime-support.json")
+
+    expected_levels = {
+        "L0": "format-conformance",
+        "L1": "installer-discovery",
+        "L2": "installability",
+        "L3": "loadability",
+        "L4": "portable-behavior",
+        "L5": "native-capability",
+    }
+    expected_statuses = {"passed", "failed", "not_run", "blocked", "unsupported"}
+    expected_kinds = {"static", "synthetic", "local_harness", "real_runtime"}
+    validation.require(profile.get("schema_version") == "1", "兼容 profile schema_version 必须为 1")
+    validation.require(profile.get("skill") == {"id": "think-it-through", "version": CURRENT_CONTRACT_VERSION}, "兼容 profile Skill 身份不匹配")
+    validation.require(profile.get("levels") == expected_levels, "兼容 profile L0～L5 定义不匹配")
+    validation.require(set(profile.get("statuses", [])) == expected_statuses, "兼容 profile status 枚举不匹配")
+    validation.require(set(profile.get("evidence_kinds", [])) == expected_kinds, "兼容 profile evidence kind 不匹配")
+    expected_policy = {
+        "L0": ["static"],
+        "L1": ["local_harness"],
+        "L2": ["local_harness"],
+        "L3": ["real_runtime"],
+        "L4": ["real_runtime"],
+        "L5": ["real_runtime"],
+    }
+    validation.require(profile.get("evidence_policy") == expected_policy, "兼容 evidence promotion 规则不匹配")
+    tools = profile.get("tools", {})
+    validation.require(tools.get("agent_skills", {}).get("revision") == "69ef37e9424c0a7ea9dd2293b559e43ec8176379", "Agent Skills revision 未固定")
+    validation.require(tools.get("installer", {}).get("version") == "1.5.23", "skills CLI 版本未固定")
+    validation.require(tools.get("installer", {}).get("revision") == "435076e78988e1e6ec40d00b0b1d76bdbbc5419a", "skills CLI revision 未固定")
+    validation.require(tools.get("installer", {}).get("minimum_node_version") == "22.20.0", "installer Node 下限必须为 22.20.0")
+
+    runtimes = support.get("runtimes", [])
+    ids = [item.get("id") for item in runtimes if isinstance(item, dict)]
+    targets = [item.get("installer_target") for item in runtimes if isinstance(item, dict)]
+    validation.require(len(ids) == len(set(ids)) == 8, "runtime family 必须恰好八个且 ID 唯一")
+    validation.require(len(targets) == len(set(targets)) == 8, "installer target 必须恰好八个且唯一")
+    expected_ids = {"claude-code", "codex", "cursor", "openclaw", "hermes-agent", "codebuddy-workbuddy", "gemini-cli", "opencode"}
+    validation.require(set(ids) == expected_ids, "runtime family 集合不匹配")
+    codebuddy = next((item for item in runtimes if item.get("id") == "codebuddy-workbuddy"), {})
+    validation.require(codebuddy.get("installer_target") == "codebuddy" and set(codebuddy.get("aliases", [])) == {"CodeBuddy", "WorkBuddy"}, "CodeBuddy / WorkBuddy 必须共用一个 canonical family")
+
+    evidence_root = compatibility_dir / "evidence"
+    evidence_files = sorted(evidence_root.rglob("evidence.json")) if evidence_root.exists() else []
+    evidence_by_ref: dict[str, dict[str, Any]] = {}
+    for path in evidence_files:
+        evidence = _load_json(path)
+        _validate_instance(validation, evidence, evidence_schema, str(path.relative_to(ROOT)))
+        relative = path.relative_to(compatibility_dir).as_posix()
+        evidence_by_ref[relative] = evidence
+        levels = set(evidence.get("levels", []))
+        cases = evidence.get("cases", [])
+        validation.require(levels == {case.get("level") for case in cases}, f"{relative} 的 levels 与 cases 不一致")
+        allowed_levels = {
+            level
+            for level, kinds in expected_policy.items()
+            if evidence.get("kind") in kinds
+        }
+        validation.require(levels <= allowed_levels, f"{relative} 的 evidence kind 不得支持 {sorted(levels - allowed_levels)}")
+        if evidence.get("kind") == "real_runtime":
+            runtime = evidence.get("runtime", {})
+            validation.require(_is_nonempty_string(runtime.get("id")) and _is_nonempty_string(runtime.get("version")), f"{relative} 缺少真实 runtime/version")
+        for artifact in evidence.get("artifacts", []):
+            artifact_relative = artifact.get("path", "")
+            artifact_path = path.parent / artifact_relative
+            validation.require(artifact_path.is_file(), f"{relative} 引用的 artifact 不存在：{artifact_relative}")
+            if artifact_path.is_file():
+                actual_sha = hashlib.sha256(artifact_path.read_bytes()).hexdigest()
+                validation.require(actual_sha == artifact.get("sha256"), f"{relative} artifact SHA-256 不匹配：{artifact_relative}")
+        serialized_commands = json.dumps([case.get("command_argv", []) for case in cases], ensure_ascii=False)
+        validation.require(not re.search(r"(?:api[_-]?key|token|secret|/Users/|/home/)", serialized_commands, re.IGNORECASE), f"{relative} command_argv 含敏感字段或个人路径")
+        review_status = evidence.get("review", {}).get("status")
+        if review_status in {"candidate", "rejected"}:
+            validation.require(
+                all(reference != relative for runtime in runtimes for result in runtime.get("levels", {}).values() for reference in result.get("evidence_refs", [])),
+                f"{relative} review.status={review_status}，不得提升 runtime-support.json",
+            )
+
+    for runtime in runtimes:
+        if not isinstance(runtime, dict):
+            continue
+        levels = runtime.get("levels", {})
+        executed_runtime_levels = [
+            level
+            for level in ("L3", "L4", "L5")
+            if levels.get(level, {}).get("status") in {"passed", "failed", "blocked"}
+        ]
+        validation.require(bool(runtime.get("runtime_version")) == bool(executed_runtime_levels), f"{runtime.get('id')} runtime_version 与 L3～L5 执行状态不一致")
+        for level, result in levels.items():
+            status = result.get("status")
+            refs = result.get("evidence_refs", [])
+            if status in {"not_run", "unsupported"}:
+                validation.require(not refs, f"{runtime.get('id')} {level} 未运行状态不得带 evidence")
+            for reference in refs:
+                evidence = evidence_by_ref.get(reference)
+                validation.require(evidence is not None, f"{runtime.get('id')} {level} 引用不存在的 evidence：{reference}")
+                if evidence is None:
+                    continue
+                validation.require(level in evidence.get("levels", []), f"{runtime.get('id')} {level} 引用的 evidence 不支持该层")
+                validation.require(evidence.get("kind") in expected_policy[level], f"{runtime.get('id')} {level} 使用了错误 evidence kind")
+                validation.require(evidence.get("review", {}).get("status") == "approved", f"{runtime.get('id')} {level} 只能引用 approved evidence")
+                validation.require(evidence.get("source_commit") == support.get("source_commit"), f"{runtime.get('id')} {level} evidence source_commit 与当前矩阵不一致")
+                validation.require(evidence.get("package_sha256") == support.get("package_sha256"), f"{runtime.get('id')} {level} evidence package_sha256 与当前矩阵不一致")
+                case_statuses = {
+                    case.get("status")
+                    for case in evidence.get("cases", [])
+                    if case.get("level") == level
+                }
+                validation.require(
+                    case_statuses == {status},
+                    f"{runtime.get('id')} {level} 矩阵状态 {status} 与 evidence case 状态 {sorted(case_statuses)} 不一致",
+                )
+                if level in {"L3", "L4", "L5"}:
+                    evidence_runtime = evidence.get("runtime", {})
+                    validation.require(evidence_runtime.get("id") == runtime.get("id") and evidence_runtime.get("version") == runtime.get("runtime_version"), f"{runtime.get('id')} {level} runtime/version 与 evidence 不一致")
+
+    readmes = (ROOT / "README.md").read_text(encoding="utf-8") + "\n" + (ROOT / "README.zh-CN.md").read_text(encoding="utf-8")
+    forbidden_claim = re.compile(r"(?:50\+|55\+|77)\s*(?:verified\s*)?runtimes?|(?:50\+|55\+|77)\s*个?(?:已验证)?(?:兼容)?\s*runtime", re.IGNORECASE)
+    validation.require(not forbidden_claim.search(readmes), "README 不得把 50+/55+/77 installer targets 宣称为已验证 runtimes")
 
 
 def validate_links(validation: Validation, files: list[Path]) -> None:
@@ -679,7 +906,7 @@ def validate_specialized_fixtures(validation: Validation, fixture_dir: Path) -> 
             grade_r,
         )
     except ImportError as error:
-        validation.require(False, f"无法导入 v0.2.0 当前评分器：{error}")
+        validation.require(False, f"无法导入 v0.3.0 当前评分器：{error}")
         return
 
     def load(name: str) -> dict[str, Any]:
@@ -1470,7 +1697,7 @@ def validate_evals(validation: Validation) -> None:
             "严重失败为 0",
             "真实 transcript、能力 trace 或用户评审证据",
         ):
-            validation.require(phrase in enhancement, f"增强 UX rubric 缺少 v0.2.0 规则：{phrase}")
+            validation.require(phrase in enhancement, f"增强 UX rubric 缺少 v0.3.0 规则：{phrase}")
 
     legacy_rubric_path = trigger_dir / "rubric.md"
     if legacy_rubric_path.exists():
@@ -1641,7 +1868,7 @@ def validate_contract_graders(validation: Validation) -> None:
             '"阶段 B 的核心假设、本轮动作、观察信号和复判条件以自然句分别成段并后置标记"',
             '"阶段 B 只提出一个反馈问题，不追加决策信息问题"',
         ):
-            validation.require(token in current_text, f"当前评分器缺少 v0.2.0 合同：{token}")
+            validation.require(token in current_text, f"当前评分器缺少 v0.3.0 合同：{token}")
         validation.require(
             '"declarative-feedback"' not in current_text,
             "当前评分器不得继续接受 declarative-feedback",
@@ -1667,6 +1894,7 @@ def validate_contract_graders(validation: Validation) -> None:
 
 
 def validate_public_docs(validation: Validation) -> None:
+    current_architecture_path = f"docs/product-architecture-v{CURRENT_CONTRACT_VERSION}.md"
     public_paths = (
         "README.md",
         "README.zh-CN.md",
@@ -1674,6 +1902,7 @@ def validate_public_docs(validation: Validation) -> None:
         "REQUIREMENTS.md",
         "SECURITY.md",
         "docs/product-architecture-v0.2.0.md",
+        current_architecture_path,
         "CLAUDE.md",
     )
     public_docs = {
@@ -1686,18 +1915,24 @@ def validate_public_docs(validation: Validation) -> None:
     product = public_docs["PRODUCT.md"]
     claude_md = public_docs["CLAUDE.md"]
     security = public_docs["SECURITY.md"]
-    architecture = public_docs["docs/product-architecture-v0.2.0.md"]
+    stable_architecture = public_docs["docs/product-architecture-v0.2.0.md"]
+    current_architecture = public_docs[current_architecture_path]
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
 
-    readme_shared_facts = (
+    for fact in (
         f"v{CURRENT_CONTRACT_VERSION}",
+        "v0.2.0",
         "/think-it-through",
         "Evidence Gate",
         "Participation Gate",
+        "Agent Skills",
         "ChatGPT",
-        "28",
-    )
-    for fact in readme_shared_facts:
+        "L0",
+        "L5",
+        "not_run",
+        "compatibility/runtime-support.json",
+        "distribution/package-manifest.json",
+    ):
         validation.require(fact in readme_en and fact in readme_zh, f"中英文 README 共享事实缺失或漂移：{fact}")
 
     readme_requirements = (
@@ -1706,7 +1941,8 @@ def validate_public_docs(validation: Validation) -> None:
             readme_en,
             "assets/demo-flow.svg",
             "Decision snapshot",
-            "v0.2.0 is the current release",
+            "v0.2.0 remains the latest stable release",
+            "unreleased v0.3.0 source candidate",
             "text protocol is the cross-host baseline",
             "native compatibility certification",
         ),
@@ -1715,17 +1951,20 @@ def validate_public_docs(validation: Validation) -> None:
             readme_zh,
             "assets/demo-flow.zh-CN.svg",
             "决策快照",
-            "v0.2.0 已正式发布",
+            "v0.2.0 仍是最新稳定版",
+            "尚未发布的 v0.3.0 源码候选",
             "纯文本协议是跨宿主基线",
             "原生兼容认证",
         ),
     )
-    for name, text, flow_asset, snapshot_label, release_phrase, text_baseline, adapter_boundary in readme_requirements:
+    for name, text, flow_asset, snapshot_label, stable_phrase, candidate_phrase, text_baseline, adapter_boundary in readme_requirements:
         validation.require(flow_asset in text, f"{name} 缺少对应语言的用户流程图：{flow_asset}")
         validation.require("R-align" in text and "R-method" in text, f"{name} 缺少状态边界")
         validation.require(snapshot_label in text, f"{name} 缺少决策快照说明")
         validation.require("git clone" in text and "test ! -e" in text, f"{name} 缺少非覆盖式安装步骤")
-        validation.require(release_phrase in text, f"{name} 缺少正式发布状态")
+        validation.require("scripts/build_distribution.py" in text and "unzip -t" in text, f"{name} 缺少本地候选包构建与校验步骤")
+        validation.require(stable_phrase in text, f"{name} 缺少 v0.2.0 稳定发布状态")
+        validation.require(candidate_phrase in text, f"{name} 缺少 v0.3.0 源码候选状态")
         validation.require(text_baseline in text, f"{name} 缺少纯文本跨宿主基线")
         validation.require(adapter_boundary in text, f"{name} 缺少 Adapter 原生兼容边界")
         validation.require("trace" in text and "receipt" in text, f"{name} 缺少具体会话执行证明边界")
@@ -1753,18 +1992,11 @@ def validate_public_docs(validation: Validation) -> None:
         "What this judgment still assumes" in readme_en and "What remains unknown" in readme_en,
         "英文 README 决策快照必须分别显示假设与未知",
     )
-
-    validation.require(
-        "assets/demo-flow.zh-CN.svg" not in readme_en,
-        "英文 README 不应引用中文流程图",
-    )
-    validation.require(
-        "assets/demo-flow.svg" not in readme_zh,
-        "中文 README 不应引用英文流程图",
-    )
+    validation.require("assets/demo-flow.zh-CN.svg" not in readme_en, "英文 README 不应引用中文流程图")
+    validation.require("assets/demo-flow.svg" not in readme_zh, "中文 README 不应引用英文流程图")
 
     for phrase in (
-        "v0.2.0 的唯一正式行为、安全与验收依据",
+        "本文档是 v0.3.0 的唯一正式行为、安全与验收依据",
         "结构化方法 option",
         "推荐不等于确认",
         "Evidence Gate",
@@ -1782,7 +2014,7 @@ def validate_public_docs(validation: Validation) -> None:
         "纯文本协议是跨宿主基线",
         "Skill-only / 纯文本语义映射",
         "原生兼容认证",
-        "发布支持范围、内部评测状态与具体会话执行记录分层管理",
+        "发布支持范围、内部评测状态和具体会话执行记录必须分层管理",
         "capability observation",
         "trace",
         "receipt",
@@ -1790,11 +2022,12 @@ def validate_public_docs(validation: Validation) -> None:
         "14/16",
         "Draft 2020-12",
         "不改变外部世界",
-        "当前严格为 28 个源文件",
+        "distribution/package-manifest.json` 是精确文件集合的唯一机器事实源",
         "普通正文先自然说清",
         "assumptions` 与 `unknowns` 必须分别呈现",
+        "L3～L5 只接受绑定准确 runtime version 的 `real_runtime` 证据",
     ):
-        validation.require(phrase in requirements, f"REQUIREMENTS.md 缺少 v0.2.0 规则：{phrase}")
+        validation.require(phrase in requirements, f"REQUIREMENTS.md 缺少 v0.3.0 规则：{phrase}")
 
     validation.require("思考搭档" in product, "PRODUCT.md 缺少稳定用户体验定位")
     for phrase in (
@@ -1810,30 +2043,33 @@ def validate_public_docs(validation: Validation) -> None:
         "主现实证据闭环",
         "决策快照",
         "纯文本仍保留完整状态",
-        "v0.2.0 是当前正式版本",
+        "v0.3.0 是当前源码中的未发布候选",
+        "格式、发现、安装、加载、纯文本行为和原生能力分别记录",
         "原生兼容认证",
         "capability observation",
         "trace 与 receipt",
+        "未运行保持 `not_run`",
     ):
-        validation.require(phrase in product, f"PRODUCT.md 缺少 v0.2.0 产品或声明边界：{phrase}")
+        validation.require(phrase in product, f"PRODUCT.md 缺少 v0.3.0 产品或声明边界：{phrase}")
 
     for phrase in (
-        "当前 v0.2.0 状态与交互合同",
+        "当前 v0.3.0 状态与交互合同",
         "Evidence Gate",
         "Participation Gate",
         "四类授权互不继承",
         "DecisionRecord",
-        "scripts/grade_contracts.py` 是 v0.2.0 当前评分器",
+        "scripts/grade_contracts.py` 是 v0.3.0 当前评分器",
         "版本、发布范围与证据声明",
-        "对外发布状态与内部评测状态必须分层",
-        "28 文件运行时包只写当前发布支持范围",
+        "v0.3.0 当前是未发布源码候选，v0.2.0 仍是最新稳定发布",
+        "distribution/package-manifest.json` 是运行时归档精确文件集合的唯一机器事实源",
+        "L3～L5 只能由绑定准确 runtime version 的 `real_runtime` 证据提升",
         "具体能力是否发生只由当前会话 capability observation",
         "文档职责必须保持单一",
         "用户可见文档优先使用读者语言",
         "普通正文先说完整含义",
         "canonical key 与用户可见字段分离",
     ):
-        validation.require(phrase in claude_md, f"CLAUDE.md 缺少 v0.2.0 维护规则：{phrase}")
+        validation.require(phrase in claude_md, f"CLAUDE.md 缺少 v0.3.0 维护规则：{phrase}")
 
     for phrase in (
         "四类授权彼此独立",
@@ -1847,9 +2083,9 @@ def validate_public_docs(validation: Validation) -> None:
         validation.require(phrase in security, f"SECURITY.md 缺少当前安全模型或发行政策：{phrase}")
 
     validation.require(
-        "文档性质：非规范性架构说明与历史决策记录" in architecture
-        and "正式行为、安全与验收只以 [`REQUIREMENTS.md`]" in architecture,
-        "架构文档必须明确非规范性角色和 REQUIREMENTS 唯一合同边界",
+        "文档性质：非规范性架构说明与历史决策记录" in stable_architecture
+        and "正式行为、安全与验收只以 [`REQUIREMENTS.md`]" in stable_architecture,
+        "v0.2.0 架构文档必须保持非规范性角色和 REQUIREMENTS 唯一合同边界",
     )
     for phrase in (
         "v0.2.0 已正式发布",
@@ -1859,21 +2095,36 @@ def validate_public_docs(validation: Validation) -> None:
         "自然语言显示投影",
         "current grader 检查主现实闭环的受控句末标记",
     ):
-        validation.require(phrase in architecture, f"架构文档缺少正式发布或声明扩展治理：{phrase}")
+        validation.require(phrase in stable_architecture, f"v0.2.0 架构文档缺少冻结的发布或声明治理事实：{phrase}")
+    for phrase in (
+        "状态：未发布候选的非规范性架构说明",
+        "distribution/package-manifest.json",
+        "L0",
+        "L5",
+        "L2 不证明 L3",
+        "not_run",
+        "real_runtime",
+        "普通 CI 不读取模型 provider secret",
+        "本轮架构改造不包含这些外向动作",
+    ):
+        validation.require(phrase in current_architecture, f"v0.3.0 架构文档缺少候选兼容边界：{phrase}")
+
     validation.require(
-        "不构成逐项实现或验收规范" in product
-        and "REQUIREMENTS.md" in product,
+        "不构成逐项实现或验收规范" in product and "REQUIREMENTS.md" in product,
         "PRODUCT.md 必须明确只负责产品愿景而非验收合同",
     )
-    validation.require(
-        "唯一正式行为、安全与验收依据" in requirements,
-        "REQUIREMENTS.md 必须声明唯一正式合同角色",
-    )
+    validation.require("唯一正式行为、安全与验收依据" in requirements, "REQUIREMENTS.md 必须声明唯一正式合同角色")
 
     validation.require("## [Unreleased]" in changelog, "CHANGELOG.md 必须保留 Unreleased 节")
+    validation.require("## [0.2.0] - 2026-08-29" in changelog, "CHANGELOG.md 缺少 v0.2.0 正式发布记录")
     validation.require(
-        f"## [{CURRENT_CONTRACT_VERSION}] - 2026-08-29" in changelog,
-        "CHANGELOG.md 缺少 v0.2.0 正式发布记录",
+        f"准备 v{CURRENT_CONTRACT_VERSION} 开放 Agent Skills 候选" in changelog
+        and f"v{CURRENT_CONTRACT_VERSION} 在正式 tag 与 Release 前保持候选状态" in changelog,
+        "CHANGELOG.md Unreleased 缺少 v0.3.0 候选状态",
+    )
+    validation.require(
+        f"## [{CURRENT_CONTRACT_VERSION}] -" not in changelog,
+        "CHANGELOG.md 不得在正式发布前创建 v0.3.0 日期段",
     )
     for phrase in (
         "显式调用 `/think-it-through`",
@@ -1886,32 +2137,14 @@ def validate_public_docs(validation: Validation) -> None:
     ):
         validation.require(phrase in changelog, f"CHANGELOG.md 缺少 v0.2.0 发布事实：{phrase}")
 
-    current_changelog = changelog.split("## [0.1.5]", 1)[0]
-    release_status_re = re.compile(
-        r"not_run|未实测|release candidate|pre-release|候选版(?:本)?|预发布|0\.2\.0-rc",
+    release_asset_re = re.compile(
+        r"https?://[^\s)]+/releases/(?:download|tag)/v0\.3\.0",
         re.IGNORECASE,
     )
-    for relative, text in public_docs.items():
-        validation.require(
-            not release_status_re.search(text),
-            f"{relative} 不应把内部研发状态写入当前公开发布文案",
-        )
     validation.require(
-        not release_status_re.search(current_changelog),
-        "CHANGELOG.md 当前发布段不应包含候选版或内部研发状态叙事",
+        not release_asset_re.search(readme_en) and not release_asset_re.search(readme_zh),
+        "README 不得在 v0.3.0 发布前链接候选 Release asset",
     )
-
-    runtime_markdown = sorted(
-        relative
-        for relative in EXPECTED_PACKAGE_FILES
-        if relative.endswith(".md")
-    )
-    for relative in runtime_markdown:
-        text = (SKILL_DIR / relative).read_text(encoding="utf-8")
-        validation.require(
-            not release_status_re.search(text),
-            f"运行时分发文档 {relative} 不应携带内部研发状态",
-        )
 
     for legacy_phrase in (
         "本轮确认：基础分析",
@@ -1966,10 +2199,16 @@ def validate_package_source(validation: Validation) -> None:
         or relative.startswith(".claude/")
     )
     validation.require(not forbidden, f"独立 Skill 源目录含禁止分发内容：{forbidden}")
-    distributable = actual - {relative for relative in actual if relative.startswith("evals/")}
-    validation.require(len(EXPECTED_PACKAGE_FILES) == 28, "预期分发集合必须明确为 28 个源文件")
-    validation.require(len(distributable) == 28, f"独立分发源文件应为 28 个，当前为 {len(distributable)}")
-    validation.require(distributable == EXPECTED_PACKAGE_FILES, f"独立分发文件集合不匹配：{sorted(distributable ^ EXPECTED_PACKAGE_FILES)}")
+    try:
+        _, manifest_files = load_manifest()
+        distributable = {
+            path.relative_to(SKILL_DIR).as_posix()
+            for path in source_files()
+        }
+    except (ValueError, json.JSONDecodeError) as error:
+        validation.require(False, f"分发 manifest 或源码不符合合同：{error}")
+        return
+    validation.require(distributable == set(manifest_files), "独立分发文件集合必须精确匹配 package manifest")
 
 
 def validate_required_open_source_files(validation: Validation) -> None:
@@ -1980,7 +2219,14 @@ def validate_required_open_source_files(validation: Validation) -> None:
         "CONTRIBUTING.md",
         "SECURITY.md",
         "docs/product-architecture-v0.2.0.md",
+        "docs/product-architecture-v0.3.0.md",
         "docs/third-party-audit.md",
+        "distribution/package-manifest.json",
+        "compatibility/profile.json",
+        "compatibility/runtime-support.schema.json",
+        "compatibility/runtime-support.json",
+        "compatibility/evidence.schema.json",
+        "requirements-validation.txt",
         "benchmarks/behavior-v0.1/README.md",
         "benchmarks/trigger-v0.1/README.md",
         "benchmarks/trigger-v0.1/summary.json",
@@ -1989,6 +2235,10 @@ def validate_required_open_source_files(validation: Validation) -> None:
         "assets/demo-flow.zh-CN.svg",
         "assets/social-preview.png",
         ".github/workflows/validate.yml",
+        ".github/workflows/runtime-smoke.yml",
+        "scripts/smoke_installer.py",
+        "scripts/run_runtime_smoke.py",
+        "scripts/test_runtime_smoke.py",
     ):
         validation.require((ROOT / relative).exists(), f"缺少开源交付文件：{relative}")
 
@@ -1999,6 +2249,7 @@ def main() -> int:
     validate_skill(validation)
     validate_json_yaml(validation, files)
     validate_core_schemas(validation)
+    validate_compatibility(validation)
     validate_links(validation, files)
     validate_legal(validation)
     validate_methods(validation)

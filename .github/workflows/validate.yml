@@ -22,14 +22,35 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install validation dependency
-        run: python -m pip install --disable-pip-version-check PyYAML
+      - name: Install validation dependencies
+        run: |
+          python -m pip install --disable-pip-version-check -r requirements-validation.txt
+          python -m pip install --disable-pip-version-check pipx
 
-      - name: Run contract grader tests
+      - name: Run contract and repository tests
         run: python -m unittest discover -s scripts -p 'test_*.py' -v
 
       - name: Validate repository
         run: python scripts/validate_repo.py
+
+      - name: Build and verify candidate archive
+        run: |
+          python scripts/build_distribution.py --output-dir dist/ci-candidate
+          unzip -t dist/ci-candidate/think-it-through.skill
+
+      - name: Validate fixed Agent Skills format reference
+        run: |
+          pipx run --spec \
+            'skills-ref @ git+https://github.com/agentskills/agentskills.git@69ef37e9424c0a7ea9dd2293b559e43ec8176379#subdirectory=skills-ref' \
+            skills-ref validate skills/think-it-through
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.20.0"
+
+      - name: Smoke fixed installer discovery and target copies
+        run: python scripts/smoke_installer.py --archive dist/ci-candidate/think-it-through.skill
 
       - name: Ensure checks do not modify tracked files
         run: git diff --exit-code

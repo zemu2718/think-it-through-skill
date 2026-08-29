@@ -26,7 +26,7 @@ Use the document that matches your task:
 | Product purpose, audience, or non-goals | [`PRODUCT.md`](PRODUCT.md) |
 | Behavior, safety, or acceptance criteria | [`REQUIREMENTS.md`](REQUIREMENTS.md) |
 | Runtime instructions | The relevant part of [`SKILL.md`](skills/think-it-through/SKILL.md) |
-| Architecture rationale or future evidence work | [`docs/product-architecture-v0.2.0.md`](docs/product-architecture-v0.2.0.md) |
+| Architecture rationale or future evidence work | [`docs/product-architecture-v0.3.0.md`](docs/product-architecture-v0.3.0.md) |
 
 Then:
 
@@ -41,6 +41,8 @@ Then:
 
 4. Keep English and Chinese README instructions synchronized when changing user-facing commands, compatibility, benchmarks, or security boundaries.
 5. Describe what changed, why it changes a decision, and how it was verified.
+
+Real Claude Code or Codex smoke is deliberately excluded from ordinary CI. Use the manual `Runtime smoke` workflow only after a person explicitly authorizes that one provider call and accepts the disclosed test prompt, four-turn limit, cost boundary, stop conditions, and fallback. The workflow injects only the selected provider secret and retains only redacted user/final-output artifacts; it does not promote `runtime-support.json` automatically.
 
 ## Third-party material
 
@@ -93,7 +95,7 @@ By contributing, you agree that your contribution is licensed under the reposito
 | 产品目的、目标用户或非目标 | [`PRODUCT.md`](PRODUCT.md) |
 | 行为、安全或验收标准 | [`REQUIREMENTS.md`](REQUIREMENTS.md) |
 | 运行时指令 | [`SKILL.md`](skills/think-it-through/SKILL.md) 的相关部分 |
-| 架构理由或后续实测路线 | [`docs/product-architecture-v0.2.0.md`](docs/product-architecture-v0.2.0.md) |
+| 架构理由或后续实测路线 | [`docs/product-architecture-v0.3.0.md`](docs/product-architecture-v0.3.0.md) |
 
 然后：
 
@@ -108,6 +110,8 @@ By contributing, you agree that your contribution is licensed under the reposito
 
 4. 修改用户命令、兼容性、benchmark 或安全边界时，同步英文和中文 README。
 5. 在 PR 中说明改了什么、为什么会改变决策，以及如何验证。
+
+真实 Claude Code 或 Codex smoke 刻意不进入普通 CI。只有在真人明确授权该次 provider 调用，并接受已披露的测试议题、四轮上限、成本边界、停止条件与失败降级后，才使用手动 `Runtime smoke` workflow。workflow 只注入所选 provider 的 secret，只保留脱敏后的用户输入与最终输出 artifact，也不会自动提升 `runtime-support.json`。
 
 ### 第三方材料
 
