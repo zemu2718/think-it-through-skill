@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zemu2718/think-it-through-skill/schemas/v0.2.0/intents.schema.json",
+  "title": "Think It Through v0.2.0 Core Intent",
+  "type": "object",
+  "required": ["kind", "stage", "body"],
+  "properties": {
+    "kind": {
+      "enum": [
+        "request_free_text",
+        "request_selection",
+        "present_method_recommendation",
+        "request_method_selection",
+        "present_decisive_question",
+        "request_research_consent",
+        "request_agent_consent",
+        "request_private_data_consent",
+        "request_external_action_consent",
+        "delegate_analysis",
+        "request_human_review",
+        "present_judgment",
+        "present_decision_snapshot",
+        "persist_decision_snapshot",
+        "request_feedback"
+      ]
+    },
+    "stage": {
+      "enum": [
+        "R-align",
+        "R-method",
+        "A",
+        "evidence-gate",
+        "participation-gate",
+        "B",
+        "feedback",
+        "complete"
+      ]
+    },
+    "request_id": {"type": "string", "minLength": 1},
+    "body": {}
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {"properties": {"kind": {"const": "request_free_text"}}},
+      "then": {"properties": {"body": {"$ref": "#/$defs/free_text_body"}}}
+    },
+    {
+      "if": {"properties": {"kind": {"enum": ["request_selection", "present_decisive_question", "request_feedback"]}}},
+      "then": {"properties": {"body": {"$ref": "#/$defs/selection_body"}}}
+    },
+    {
+      "if": {"properties": {"kind": {"enum": ["present_method_recommendation", "request_method_selection"]}}},
+      "then": {"properties": {"body": {"$ref": "#/$defs/method_body"}}}
+    },
+    {
+      "if": {"properties": {"kind": {"enum": ["request_research_consent", "request_agent_consent", "request_private_data_consent", "request_external_action_consent"]}}},
+      "then": {"properties": {"body": {"$ref": "#/$defs/consent_body"}}}
+    },
+    {
+      "if": {"properties": {"kind": {"const": "delegate_analysis"}}},
+      "then": {"properties": {"body": {"$ref": "#/$defs/delegation_body"}}}
+    },
+    {
+      "if": {"properties": {"kind": {"const": "request_human_review"}}},
+      "then": {"properties": {"body": {"$ref": "#/$defs/human_review_body"}}}
+    },
+    {
+      "if": {"properties": {"kind": {"const": "present_judgment"}}},
+      "then": {"properties": {"body": {"$ref": "#/$defs/judgment_body"}}}
+    },
+    {
+      "if": {"properties": {"kind": {"enum": ["present_decision_snapshot", "persist_decision_snapshot"]}}},
+      "then": {"properties": {"body": {"$ref": "#/$defs/snapshot_body"}}}
+    }
+  ],
+  "$defs": {
+    "option": {
+      "type": "object",
+      "required": ["id", "label"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "label": {"type": "string", "minLength": 1},
+        "description": {"type": "string", "minLength": 1},
+        "recommended": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "method_option": {
+      "type": "object",
+      "required": ["id", "label", "description", "recommended"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+        "label": {"type": "string", "minLength": 1},
+        "description": {"type": "string", "minLength": 12},
+        "recommended": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "free_text_body": {
+      "type": "object",
+      "required": ["prompt"],
+      "properties": {
+        "prompt": {"type": "string", "minLength": 1},
+        "guidance": {"type": "string"},
+        "wait_for_user": {"const": true}
+      },
+      "additionalProperties": false
+    },
+    "selection_body": {
+      "type": "object",
+      "required": ["prompt", "selection_mode", "options", "allow_free_text", "wait_for_user"],
+      "properties": {
+        "prompt": {"type": "string", "minLength": 1},
+        "selection_mode": {"enum": ["single", "multi"]},
+        "options": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 4,
+          "items": {"$ref": "#/$defs/option"}
+        },
+        "allow_free_text": {"type": "boolean"},
+        "wait_for_user": {"const": true},
+        "supplement_mode": {"enum": ["none", "native-note", "follow-up-message", "inline-text"]}
+      },
+      "additionalProperties": false
+    },
+    "method_body": {
+      "type": "object",
+      "required": ["prompt", "options", "basic_analysis_included", "allow_adjustment", "wait_for_user"],
+      "properties": {
+        "prompt": {"type": "string", "minLength": 1},
+        "options": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {"$ref": "#/$defs/method_option"}
+        },
+        "basic_analysis_included": {"const": true},
+        "allow_adjustment": {"const": true},
+        "wait_for_user": {"const": true}
+      },
+      "additionalProperties": false
+    },
+    "consent_body": {
+      "type": "object",
+      "required": ["consent_type", "reason", "scope", "valid_for", "wait_for_user"],
+      "properties": {
+        "consent_type": {"enum": ["capability_call", "participation_delegation", "private_data_access", "external_action"]},
+        "reason": {"type": "string", "minLength": 1},
+        "scope": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "valid_for": {"enum": ["this_action", "this_turn", "this_session", "saved_preference"]},
+        "data_boundary": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "cost_and_delay": {"type": "string"},
+        "fallback": {"type": "string", "minLength": 1},
+        "wait_for_user": {"const": true}
+      },
+      "additionalProperties": false
+    },
+    "delegation_task": {
+      "type": "object",
+      "required": ["id", "assigned_question", "data_scope"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "assigned_question": {"type": "string", "minLength": 1},
+        "data_scope": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "capabilities": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      },
+      "additionalProperties": false
+    },
+    "delegation_body": {
+      "type": "object",
+      "required": ["tasks", "main_agents", "additional_agents", "total_agents", "recursive_delegation", "consent_id"],
+      "properties": {
+        "tasks": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/delegation_task"}},
+        "main_agents": {"const": 1},
+        "additional_agents": {"type": "integer", "minimum": 1},
+        "total_agents": {"type": "integer", "minimum": 2},
+        "recursive_delegation": {"const": false},
+        "consent_id": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "human_review_body": {
+      "type": "object",
+      "required": ["why_needed", "question", "shared_context", "excluded_private_context", "decision_impact", "delivery_mode"],
+      "properties": {
+        "why_needed": {"type": "string", "minLength": 1},
+        "question": {"type": "string", "minLength": 1},
+        "shared_context": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "excluded_private_context": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "decision_impact": {"type": "string", "minLength": 1},
+        "delivery_mode": {"enum": ["draft_only", "authorized_send"]},
+        "external_action_consent_id": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "judgment_body": {
+      "type": "object",
+      "required": ["state", "recommendation", "rationale", "validity_conditions", "reversal_conditions", "experiment"],
+      "properties": {
+        "state": {"enum": ["hold", "small_test", "proceed_conditionally", "proceed", "continue", "adjust", "pause", "stop"]},
+        "recommendation": {"type": "string", "minLength": 1},
+        "rationale": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "validity_conditions": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "reversal_conditions": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "experiment": {"$ref": "#/$defs/experiment"}
+      },
+      "additionalProperties": false
+    },
+    "experiment": {
+      "type": "object",
+      "required": ["core_hypothesis", "action", "observation", "reassessment"],
+      "properties": {
+        "core_hypothesis": {"type": "string", "minLength": 1},
+        "action": {"type": "string", "minLength": 1},
+        "observation": {"type": "string", "minLength": 1},
+        "reassessment": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "snapshot_body": {
+      "type": "object",
+      "required": ["record", "persistence_mode"],
+      "properties": {
+        "record": {"$ref": "decision-record.schema.json"},
+        "persistence_mode": {"enum": ["conversation_only", "authorized_file", "authorized_remote"]},
+        "consent_id": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    }
+  }
+}

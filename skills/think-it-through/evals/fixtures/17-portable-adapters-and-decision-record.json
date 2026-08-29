@@ -1,0 +1,138 @@
+{
+  "contract_version": "0.2.0",
+  "id": "portable-adapters-and-decision-record",
+  "domain": "portable-core",
+  "decision_record": {
+    "contract_version": "0.2.0",
+    "topic": "是否继续开发当前产品",
+    "true_objectives": [
+      "验证陌生客户是否愿意付费"
+    ],
+    "decision": "继续开发还是先验证付费意愿",
+    "confirmed_methods": [
+      "two-sided-steelman"
+    ],
+    "judgment": {
+      "state": "small_test",
+      "recommendation": "先验证真实付款，再决定是否继续开发",
+      "rationale": [
+        "付费意愿仍是会改变决定的最大未知"
+      ],
+      "validity_conditions": [
+        "现有版本足以展示核心价值"
+      ]
+    },
+    "evidence": {
+      "confirmed_facts": [
+        "已有可展示版本"
+      ],
+      "inferences": [
+        "继续开发暂时无法减少最大未知"
+      ],
+      "assumptions": [
+        "陌生对象反馈比熟人反馈更能区分方向"
+      ],
+      "unknowns": [
+        "陌生对象是否愿意真实付款"
+      ],
+      "sources": []
+    },
+    "reversal_signals": [
+      "出现真实付款"
+    ],
+    "main_experiment": {
+      "core_hypothesis": "现有版本解决了足以付费的问题",
+      "action": "向符合画像的陌生对象展示现有版本并邀请真实付款",
+      "observation": "记录付款、明确拒绝与拒绝理由",
+      "reassessment": "出现真实付款时复判是否推进，否则停止新增投入",
+      "user_supplied_boundaries": [],
+      "suggested_boundaries": []
+    },
+    "reassessment_triggers": [
+      "出现真实付款或持续只有明确拒绝"
+    ],
+    "participation_and_capabilities": {
+      "main_agents": 1,
+      "additional_agents_planned": 0,
+      "additional_agents_started": 0,
+      "additional_agents_completed": 0,
+      "additional_agents_failed": 0,
+      "human_participants_requested": [],
+      "capabilities_used": [],
+      "private_data_accessed": false,
+      "external_action_executed": false,
+      "consent_ids": [],
+      "receipt_ids": [],
+      "conflicts_and_gaps": []
+    },
+    "persistence": {
+      "mode": "conversation_only",
+      "authorized": false
+    }
+  },
+  "adapter_cases": [
+    {
+      "id": "text-first-class-fallback",
+      "adapter": "text",
+      "available_capabilities": [
+        "interaction.free_text",
+        "fallback.text"
+      ],
+      "must_preserve": [
+        "state_semantics",
+        "formal_method_names",
+        "recommendation_state",
+        "current_value",
+        "consent_boundaries",
+        "decision_record",
+        "b_feedback_routes"
+      ],
+      "must_not_claim": [
+        "native_control_called",
+        "public_search_completed",
+        "agent_started",
+        "record_persisted"
+      ]
+    },
+    {
+      "id": "claude-code-maps-only-observed-capabilities",
+      "adapter": "claude-code",
+      "capability_status": {
+        "interaction.select_many": "available",
+        "search.public_web": "requires_approval",
+        "agents.subagent": "unknown",
+        "persistence.case": "unavailable"
+      },
+      "must_pass": [
+        "native_control_requires_actual_call",
+        "unknown_is_not_available",
+        "workflow_requires_explicit_choice",
+        "receipt_matches_actual_execution"
+      ]
+    },
+    {
+      "id": "chatgpt-skill-only-is-text-contract",
+      "adapter": "chatgpt",
+      "status": "not_run",
+      "guaranteed_surface": "text",
+      "must_not_claim": [
+        "universal_native_controls",
+        "search_available",
+        "subagents_available",
+        "persistence_available",
+        "chatgpt_compatibility_tested"
+      ]
+    },
+    {
+      "id": "authorized-persistence-requires-destination-and-consent",
+      "persistence": {
+        "mode": "authorized_file",
+        "authorized": true
+      },
+      "must_fail": [
+        "missing_destination",
+        "missing_consent_id"
+      ]
+    }
+  ]
+}

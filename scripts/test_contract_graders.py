@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""用合规和违规样本验证 v0.1.5 机械合同评分器。"""
+"""用合规和违规样本验证 v0.2.0 机械合同评分器。"""
 
 from __future__ import annotations
 
@@ -10,10 +10,15 @@ from tempfile import TemporaryDirectory
 
 from grade_contracts import (
     InteractionEvidence,
+    InteractionOption,
     extract_number_phrases,
     grade,
     grade_a,
     grade_b,
+    grade_decision_record,
+    grade_evidence_gate,
+    grade_human_review,
+    grade_participation_gate,
     grade_r,
     parse_interaction_evidence,
     resolve_b_feedback_route,
@@ -41,6 +46,23 @@ def native_single(question: str, *options: str) -> InteractionEvidence:
         options=options,
         host_free_text_available=True,
         question_text=question,
+    )
+
+
+def method_option(
+    method_id: str,
+    description: str,
+    recommended: bool,
+) -> InteractionOption:
+    return InteractionOption(
+        id=method_id,
+        label={
+            "two-sided-steelman": "双向钢人",
+            "pre-mortem": "失败预演",
+            "object-calibration": "对象校准",
+        }[method_id],
+        description=description,
+        recommended=recommended,
     )
 
 
@@ -136,11 +158,30 @@ class ContractGraderTests(unittest.TestCase):
 
     @staticmethod
     def r_method_interaction() -> InteractionEvidence:
-        return native_multi(
-            "当前组合已经包含基本梳理。\n\n可多选，也可以直接加入、取消、替换或纠正。\n\n这轮保留哪些思考角度？",
-            "双向钢人",
-            "失败预演",
-            "对象校准",
+        return InteractionEvidence(
+            host_control_status="available",
+            surface="native-control",
+            tool_call_observed=True,
+            selection_mode="multi",
+            options=(
+                method_option(
+                    "two-sided-steelman",
+                    "用相近证据标准比较当前方向与最强替代方向，帮助分清先开发还是先验证。",
+                    True,
+                ),
+                method_option(
+                    "pre-mortem",
+                    "沿具体失败机制找出早期信号，帮助限制继续投入前的下行风险。",
+                    False,
+                ),
+                method_option(
+                    "object-calibration",
+                    "分清使用者、付费者和代价承担者，帮助判断应该先验证谁的需求。",
+                    False,
+                ),
+            ),
+            host_free_text_available=True,
+            question_text="当前组合已经包含基本梳理。\n\n可多选，也可以直接加入、取消、替换或纠正。\n\n这轮保留哪些思考角度？",
         )
 
     def test_valid_r_align(self) -> None:
@@ -203,6 +244,73 @@ class ContractGraderTests(unittest.TestCase):
                 r_mode="method",
                 interaction=self.r_method_interaction(),
             )
+        )
+
+    def test_r_method_rejects_legacy_string_options_for_recommendation(self) -> None:
+        text = """你想决定的是要不要继续投入开发，而陌生客户是否愿意付费仍是最大未知。
+
+把当前方向和最强替代方向都认真想透，再用相近证据标准检验（双向钢人）——此刻能分清继续开发和先验证哪条路更服务收入目标。"""
+        interaction = native_multi(
+            "当前组合已经包含基本梳理。\n\n可多选，也可以直接加入、取消、替换或纠正。\n\n这轮保留哪些思考角度？",
+            "双向钢人",
+            "失败预演",
+        )
+        checks = grade_r(
+            text,
+            ["two-sided-steelman"],
+            r_mode="method",
+            interaction=interaction,
+        )
+        self.assert_has_failure(
+            checks,
+            "R-method 候选具有稳定 ID、正式名称、当前价值和推荐状态",
+        )
+
+    def test_r_method_rejects_wrong_recommended_marker(self) -> None:
+        interaction = self.r_method_interaction()
+        options = tuple(
+            InteractionOption(
+                id=option.id,
+                label=option.label,
+                description=option.description,
+                recommended=False,
+            )
+            for option in interaction.method_options
+        )
+        checks = grade_r(
+            "你想决定是否继续投入。双向钢人会比较最强替代方向。",
+            ["two-sided-steelman"],
+            r_mode="method",
+            interaction=InteractionEvidence(
+                host_control_status=interaction.host_control_status,
+                surface=interaction.surface,
+                tool_call_observed=interaction.tool_call_observed,
+                selection_mode=interaction.selection_mode,
+                options=options,
+                host_free_text_available=interaction.host_free_text_available,
+                question_text=interaction.question_text,
+            ),
+        )
+        self.assert_has_failure(
+            checks,
+            "R-method 推荐标记与本轮推荐集合一致且不冒充确认",
+        )
+
+    def test_r_method_rejects_duplicate_native_description(self) -> None:
+        interaction = self.r_method_interaction()
+        duplicated = interaction.method_options[0].description
+        text = f"""你想决定是否继续投入。
+
+{duplicated}"""
+        checks = grade_r(
+            text,
+            ["two-sided-steelman"],
+            r_mode="method",
+            interaction=interaction,
+        )
+        self.assert_has_failure(
+            checks,
+            "R-method 不在正文与原生选项中重复完整说明",
         )
 
     def test_fixed_four_routes_do_not_pass_current_r(self) -> None:
@@ -419,9 +527,32 @@ class ContractGraderTests(unittest.TestCase):
                 "supplement_mode": "none",
             }
         )
-        self.assertEqual(("获得收入", "做成作品"), evidence.options)
+        self.assertEqual(("获得收入", "做成作品"), evidence.option_labels)
         self.assertTrue(evidence.tool_call_observed)
         self.assertEqual("none", evidence.supplement_mode)
+
+    def test_interaction_evidence_accepts_structured_method_options(self) -> None:
+        evidence = InteractionEvidence.from_dict(
+            {
+                "host_control_status": "available",
+                "surface": "native-control",
+                "tool_call_observed": True,
+                "selection_mode": "multi",
+                "options": [
+                    {
+                        "id": "two-sided-steelman",
+                        "label": "双向钢人",
+                        "description": "用相近证据标准比较当前方向与最强替代方向，帮助分清先开发还是先验证。",
+                        "recommended": True,
+                    }
+                ],
+                "host_free_text_available": True,
+                "question_text": "可多选，也可以直接补充或纠正。\n\n这轮保留哪些思考角度？",
+            }
+        )
+        self.assertEqual(("双向钢人",), evidence.option_labels)
+        self.assertEqual("two-sided-steelman", evidence.method_options[0].id)
+        self.assertTrue(evidence.method_options[0].recommended)
 
     def test_interaction_evidence_rejects_invalid_types(self) -> None:
         invalid_cases = (
@@ -434,6 +565,37 @@ class ContractGraderTests(unittest.TestCase):
             {"tool_call_observed": "yes"},
             {"host_free_text_available": "yes"},
             {"question_text": ["问题"]},
+            {
+                "options": [
+                    {
+                        "id": "Two Sided",
+                        "label": "双向钢人",
+                        "description": "有足够长度的当前价值说明。",
+                        "recommended": True,
+                    }
+                ]
+            },
+            {
+                "options": [
+                    {
+                        "id": "two-sided-steelman",
+                        "label": "双向钢人",
+                        "description": "有足够长度的当前价值说明。",
+                        "recommended": "yes",
+                    }
+                ]
+            },
+            {
+                "options": [
+                    {
+                        "id": "two-sided-steelman",
+                        "label": "双向钢人",
+                        "description": "有足够长度的当前价值说明。",
+                        "recommended": True,
+                        "selected": True,
+                    }
+                ]
+            },
         )
         base = {
             "host_control_status": "available",
@@ -981,6 +1143,73 @@ class ContractGraderTests(unittest.TestCase):
         checks = grade_b(text, already_executed=False, interaction=native_b_feedback())
         self.assert_has_failure(checks, "阶段 B 不把一种授权推定为另一种")
 
+    def test_fixture_14_method_cases_execute_current_grader(self) -> None:
+        fixture_path = (
+            Path(__file__).resolve().parents[1]
+            / "skills"
+            / "think-it-through"
+            / "evals"
+            / "fixtures"
+            / "14-inline-method-recommendation.json"
+        )
+        fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+        cases = fixture["cases"][:2]
+        for case in cases:
+            with self.subTest(case=case["id"]):
+                interaction = InteractionEvidence.from_dict(case["observed_interaction"])
+                checks = grade_r(
+                    case["assistant_text"],
+                    case["recommended_methods"],
+                    r_mode=case["r_mode"],
+                    interaction=interaction,
+                    answer_shape=case["answer_shape"],
+                )
+                failed = [check.text for check in checks if not check.passed]
+                if case.get("must_pass"):
+                    self.assertEqual([], failed)
+                else:
+                    self.assertTrue(failed)
+
+    def test_fixture_15_valid_evidence_case_executes_current_grader(self) -> None:
+        fixture_path = (
+            Path(__file__).resolve().parents[1]
+            / "skills"
+            / "think-it-through"
+            / "evals"
+            / "fixtures"
+            / "15-evidence-gate.json"
+        )
+        case = json.loads(fixture_path.read_text(encoding="utf-8"))["cases"][0]
+        self.assert_all_pass(
+            grade_evidence_gate(case["record"], case["consent"], case["receipt"])
+        )
+
+    def test_fixture_16_valid_participation_case_executes_current_grader(self) -> None:
+        fixture_path = (
+            Path(__file__).resolve().parents[1]
+            / "skills"
+            / "think-it-through"
+            / "evals"
+            / "fixtures"
+            / "16-participation-and-human.json"
+        )
+        case = json.loads(fixture_path.read_text(encoding="utf-8"))["cases"][0]
+        self.assert_all_pass(
+            grade_participation_gate(case["record"], case["consent"], case["receipt"])
+        )
+
+    def test_fixture_17_decision_record_executes_current_grader(self) -> None:
+        fixture_path = (
+            Path(__file__).resolve().parents[1]
+            / "skills"
+            / "think-it-through"
+            / "evals"
+            / "fixtures"
+            / "17-portable-adapters-and-decision-record.json"
+        )
+        record = json.loads(fixture_path.read_text(encoding="utf-8"))["decision_record"]
+        self.assert_all_pass(grade_decision_record(record))
+
     def test_fixture_12_b_cases_execute_current_grader(self) -> None:
         fixture_path = (
             Path(__file__).resolve().parents[1]
@@ -1009,6 +1238,310 @@ class ContractGraderTests(unittest.TestCase):
                 else:
                     self.assertTrue(case.get("must_fail"))
                     self.assertTrue(failed, "负例必须由 current grader 拒绝")
+
+    @staticmethod
+    def capability_consent(consent_type: str = "capability_call") -> dict[str, object]:
+        return {
+            "consent_id": f"consent-{consent_type}",
+            "consent_type": consent_type,
+            "status": "granted",
+            "scope": {
+                "purpose": "回答会改变是否继续投入的关键问题",
+                "operations": ["只读公开检索" if consent_type == "capability_call" else "委派独立分析任务"],
+                "resources": ["公开网页" if consent_type == "capability_call" else "已列明的独立任务"],
+                "data_boundary": ["只使用本轮明确提供的最小上下文"],
+                "excluded": ["私有文件", "外部行动"],
+            },
+            "valid_for": "this_action",
+            "requested_by": "main_agent",
+            "granted_by": "user",
+        }
+
+    @staticmethod
+    def evidence_receipt(status: str = "completed") -> dict[str, object]:
+        return {
+            "contract_version": "0.2.0",
+            "capabilities": [
+                {
+                    "name": "search.public_web",
+                    "availability": "available",
+                    "readiness": "ready",
+                    "provider": "test-search",
+                    "limits": ["公开只读"],
+                    "evidence": "本轮 fixture 声明",
+                }
+            ],
+            "operations": [
+                {
+                    "receipt_id": "receipt-research",
+                    "kind": "research",
+                    "status": status,
+                    "provider": "test-search",
+                    "scope": ["中国市场", "2026 年"],
+                    "consent_ids": ["consent-capability_call"],
+                    "sources": (
+                        [
+                            {
+                                "title": "官方市场说明",
+                                "locator": "https://example.com/official",
+                                "retrieved_at": "2026-08-29T00:00:00Z",
+                                "source_type": "primary",
+                            }
+                        ]
+                        if status in {"completed", "partial"}
+                        else []
+                    ),
+                    "private_data_accessed": False,
+                    "external_action_executed": False,
+                    "fallback": "保留未知并转为现实实验" if status != "completed" else "",
+                }
+            ],
+        }
+
+    @staticmethod
+    def valid_evidence_record() -> dict[str, object]:
+        return {
+            "unknown_type": "external_verifiable_fact",
+            "decision_sensitive": True,
+            "bounded": True,
+            "value_exceeds_cost": True,
+            "decision": "是否继续投入该市场",
+            "question": "当前法规是否允许该交付模式",
+            "scope": ["中国市场", "2026 年"],
+            "stop_conditions": ["找到直接适用的官方条款"],
+            "source_requirements": ["一手官方来源优先", "主动寻找反对证据"],
+            "capability": {
+                "availability": "available",
+                "readiness": "ready",
+                "provider": "test-search",
+            },
+            "capability_called": True,
+            "supporting_evidence": ["官方条款支持有限场景"],
+            "opposing_evidence": ["部分地区要求额外许可"],
+            "conflicts_and_gaps": ["地区执行细则仍有差异"],
+            "evidence_date": "2026-08-29",
+            "impact_on_judgment": "changed",
+        }
+
+    def test_valid_evidence_gate(self) -> None:
+        self.assert_all_pass(
+            grade_evidence_gate(
+                self.valid_evidence_record(),
+                self.capability_consent(),
+                self.evidence_receipt(),
+            )
+        )
+
+    def test_evidence_gate_rejects_value_question_and_missing_consent(self) -> None:
+        record = {**self.valid_evidence_record(), "unknown_type": "user_value"}
+        checks = grade_evidence_gate(record, None, self.evidence_receipt())
+        self.assert_has_failure(checks, "Evidence Gate 只路由决定敏感的外部可验证事实")
+        self.assert_has_failure(checks, "Evidence Gate 能力可用且已取得本次能力授权")
+
+    def test_evidence_gate_failed_receipt_requires_fallback(self) -> None:
+        receipt = self.evidence_receipt("failed")
+        receipt["operations"][0]["fallback"] = ""
+        checks = grade_evidence_gate(
+            self.valid_evidence_record(),
+            self.capability_consent(),
+            receipt,
+        )
+        self.assert_has_failure(checks, "Evidence Gate 失败或拒绝后保留未知并给出降级")
+
+    @staticmethod
+    def participation_receipt() -> dict[str, object]:
+        return {
+            "contract_version": "0.2.0",
+            "capabilities": [
+                {
+                    "name": "agents.subagent",
+                    "availability": "available",
+                    "readiness": "ready",
+                    "provider": "test-host",
+                }
+            ],
+            "operations": [
+                {
+                    "receipt_id": "receipt-delegation",
+                    "kind": "delegation",
+                    "status": "completed",
+                    "provider": "test-host",
+                    "scope": ["两个不重复的独立任务"],
+                    "consent_ids": ["consent-participation_delegation"],
+                    "agent_counts": {
+                        "main": 1,
+                        "planned_additional": 2,
+                        "started_additional": 2,
+                        "completed_additional": 1,
+                        "failed_additional": 1,
+                        "actual_total": 3,
+                    },
+                    "completed_tasks": ["核验市场来源"],
+                    "failed_tasks": ["独立反证审计"],
+                    "conflicts_and_gaps": ["反证审计未完成"],
+                    "private_data_accessed": False,
+                    "external_action_executed": False,
+                    "fallback": "由主 Agent 基于已完成材料继续综合",
+                }
+            ],
+        }
+
+    @staticmethod
+    def valid_participation_record() -> dict[str, object]:
+        payload = {
+            "assigned_question": "核验一个独立问题",
+            "claims": ["存在一项可核验主张"],
+            "evidence_and_sources": ["来源与主张对应"],
+            "assumptions": ["市场范围不变"],
+            "uncertainties": ["地区执行差异"],
+            "conflicts": ["来源发布时间不同"],
+            "what_would_reverse_this": ["新官方条款"],
+        }
+        return {
+            "tasks": ["核验市场来源", "独立反证审计"],
+            "independent_task_count": 2,
+            "user_total_limit": 4,
+            "product_additional_limit": 3,
+            "host_additional_limit": 3,
+            "budget_additional_limit": 2,
+            "planned_additional": 2,
+            "data_boundaries": ["仅共享已确认事实"],
+            "excluded_data": ["完整私有会话"],
+            "relative_cost_and_latency": "模型调用与等待时间相对增加",
+            "failure_fallback": "任一任务失败仍由主 Agent 基于有效材料继续",
+            "consent_options": ["按建议启用", "降低数量", "保持单 Agent"],
+            "recursive_delegation_allowed": False,
+            "agent_payloads": [payload, {**payload, "assigned_question": "独立尝试推翻当前判断"}],
+            "aggregation": "synthesis_not_vote",
+            "synthesis": "去重来源、呈现冲突后形成一个综合判断",
+        }
+
+    def test_valid_participation_gate(self) -> None:
+        self.assert_all_pass(
+            grade_participation_gate(
+                self.valid_participation_record(),
+                self.capability_consent("participation_delegation"),
+                self.participation_receipt(),
+            )
+        )
+
+    def test_participation_gate_rejects_count_over_limit(self) -> None:
+        record = {**self.valid_participation_record(), "user_total_limit": 2}
+        checks = grade_participation_gate(
+            record,
+            self.capability_consent("participation_delegation"),
+            self.participation_receipt(),
+        )
+        self.assert_has_failure(checks, "Participation Gate Agent 数量遵守总上限公式")
+
+    def test_participation_gate_rejects_recursive_or_vote_aggregation(self) -> None:
+        record = {
+            **self.valid_participation_record(),
+            "recursive_delegation_allowed": True,
+            "aggregation": "majority_vote",
+        }
+        checks = grade_participation_gate(
+            record,
+            self.capability_consent("participation_delegation"),
+            self.participation_receipt(),
+        )
+        self.assert_has_failure(checks, "Participation Gate 额外 Agent 不递归委派且只收最小上下文")
+        self.assert_has_failure(checks, "Participation Gate 由主 Agent 综合且不按多数票")
+
+    def test_participation_receipt_rejects_inconsistent_counts(self) -> None:
+        receipt = self.participation_receipt()
+        receipt["operations"][0]["agent_counts"]["actual_total"] = 2
+        checks = grade_participation_gate(
+            self.valid_participation_record(),
+            self.capability_consent("participation_delegation"),
+            receipt,
+        )
+        self.assert_has_failure(checks, "Participation Gate 协作回执数量关系真实一致")
+
+    def test_human_review_defaults_to_forwardable_draft(self) -> None:
+        record = {
+            "why_needed": "只有负责人掌握预算承诺",
+            "question": "是否愿意承担本轮预算",
+            "minimal_context": "当前需要决定是否继续投入",
+            "excluded_private_context": "不共享其他人的私密意见",
+            "decision_impact": "拒绝承诺时转为小步验证",
+            "sender_and_collector": "由用户自行发送并收集",
+            "forwardable_draft": "我们正在判断是否继续投入，请只回答你愿意承担的预算边界。",
+            "external_action_executed": False,
+        }
+        self.assert_all_pass(grade_human_review(record))
+        checks = grade_human_review({**record, "external_action_executed": True})
+        self.assert_has_failure(checks, "真人参与默认只生成材料，不自动发送或联系")
+
+    @staticmethod
+    def valid_decision_record() -> dict[str, object]:
+        return {
+            "contract_version": "0.2.0",
+            "topic": "是否继续开发当前产品",
+            "true_objectives": ["验证陌生客户是否愿意付费"],
+            "decision": "继续开发还是先验证付费意愿",
+            "confirmed_methods": ["two-sided-steelman"],
+            "judgment": {
+                "state": "small_test",
+                "recommendation": "先验证真实付款，再决定是否继续开发",
+                "rationale": ["付费意愿仍是会改变决定的最大未知"],
+                "validity_conditions": ["现有版本足以展示核心价值"],
+            },
+            "evidence": {
+                "confirmed_facts": ["用户已有可展示版本"],
+                "inferences": ["继续开发可能暂时无法减少最大未知"],
+                "assumptions": ["陌生对象反馈比熟人反馈更能区分方向"],
+                "unknowns": ["陌生对象是否愿意真实付款"],
+                "sources": [],
+            },
+            "reversal_signals": ["出现真实付款"],
+            "main_experiment": {
+                "core_hypothesis": "现有版本解决了足以付费的问题",
+                "action": "向符合画像的陌生对象展示现有版本并邀请真实付款",
+                "observation": "记录付款、明确拒绝与拒绝理由",
+                "reassessment": "出现真实付款时复判是否推进，否则停止新增投入",
+                "user_supplied_boundaries": [],
+                "suggested_boundaries": [],
+            },
+            "reassessment_triggers": ["出现真实付款或持续只有明确拒绝"],
+            "participation_and_capabilities": {
+                "main_agents": 1,
+                "additional_agents_planned": 0,
+                "additional_agents_started": 0,
+                "additional_agents_completed": 0,
+                "additional_agents_failed": 0,
+                "human_participants_requested": [],
+                "capabilities_used": [],
+                "private_data_accessed": False,
+                "external_action_executed": False,
+                "consent_ids": [],
+                "receipt_ids": [],
+                "conflicts_and_gaps": [],
+            },
+            "persistence": {
+                "mode": "conversation_only",
+                "authorized": False,
+            },
+        }
+
+    def test_valid_decision_record(self) -> None:
+        self.assert_all_pass(grade_decision_record(self.valid_decision_record()))
+
+    def test_decision_record_requires_authorization_for_persistence(self) -> None:
+        record = self.valid_decision_record()
+        record["persistence"] = {
+            "mode": "authorized_file",
+            "authorized": True,
+        }
+        checks = grade_decision_record(record)
+        self.assert_has_failure(checks, "DecisionRecord 默认仅在对话中，持久化需明确授权")
+
+    def test_decision_record_rejects_inconsistent_agent_counts(self) -> None:
+        record = self.valid_decision_record()
+        record["participation_and_capabilities"]["additional_agents_planned"] = 1
+        record["participation_and_capabilities"]["additional_agents_started"] = 2
+        checks = grade_decision_record(record)
+        self.assert_has_failure(checks, "DecisionRecord 参与与能力记录数量一致")
 
     def test_b_feedback_routes(self) -> None:
         cases = (

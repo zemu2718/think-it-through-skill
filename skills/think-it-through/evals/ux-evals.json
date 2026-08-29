@@ -1,9 +1,10 @@
 {
   "skill_name": "think-it-through",
-  "contract_version": "0.1.5",
+  "contract_version": "0.2.0",
   "status": "not_run",
   "rubric": "ux-rubric.md",
-  "notice": "这些是待执行的体验场景，不是模型输出或用户测试结果。",
+  "enhancement_rubric": "enhancement-rubric.md",
+  "notice": "这些是待执行的体验场景，不是模型输出、真实工具调用、宿主兼容证据或用户测试结果。静态 fixture 不得冒充 Evidence Gate、多 Agent、原生 UI 或跨宿主实测。",
   "evals": [
     {
       "id": "ux-purpose-alignment",
@@ -88,6 +89,76 @@
       "expected_experience": "以补充文字为准，把新事实用于重新检查判断并开启新一轮 R；不自动执行现实实验，不要求重新点击，也不把反馈当成能力、数据或外部行动授权。",
       "expected_interaction": "native-control:single+follow-up-message -> native-control:multi",
       "fixture": "fixtures/11-b-experiment-and-feedback.json"
+    },
+    {
+      "id": "ux-inline-method-recommendation",
+      "prompt": "目标已经清楚，请推荐这轮真正有增量的思考角度。",
+      "expected_experience": "在同一连续选择单元内展示每个候选的正式名称、推荐状态和当前价值；推荐不等于确认，非推荐项也必须相关，不先在正文完整解释后只在控件重复名称。",
+      "expected_interaction": "native-control:multi+structured-options",
+      "fixture": "fixtures/14-inline-method-recommendation.json"
+    },
+    {
+      "id": "ux-research-appropriateness",
+      "prompt": "我是否进入这个市场取决于当前法规和价格，请在真正会改变判断时再调研。",
+      "expected_experience": "A 回答后才判断是否进入 Evidence Gate；只针对决定敏感的外部事实给有界范围、停止条件、来源要求、成本与失败降级，并取得具体能力授权。价值问题不搜索，普通分析足够时保持零调用。",
+      "expected_interaction": "free-answer:none -> native-control:single | B",
+      "fixture": "fixtures/15-evidence-gate.json"
+    },
+    {
+      "id": "ux-evidence-quality-and-failure",
+      "prompt": "请调研，但也要找反对证据；查不到就不要假装有答案。",
+      "expected_experience": "主张对应具体来源和日期，支持、反对、冲突与空白都可见；来源失败或冲突时如实回执、保留未知、降低承诺并进入 B，不无限搜索。",
+      "expected_interaction": "evidence-receipt -> B",
+      "fixture": "fixtures/15-evidence-gate.json"
+    },
+    {
+      "id": "ux-participation-appropriateness",
+      "prompt": "如果确实有独立任务，可以问我是否启用多个 Agent；总参与上限是 4。",
+      "expected_experience": "默认单 Agent；确有不重复增量时单屏说明具体任务、主/额外/总数、数据边界、相对成本延迟和失败降级，并允许按建议启用、降低数量或保持单 Agent；不为用满上限增加任务。",
+      "expected_interaction": "native-control:single+participation-consent",
+      "fixture": "fixtures/16-participation-and-human.json"
+    },
+    {
+      "id": "ux-participation-synthesis",
+      "prompt": "两个 Agent 给了不同意见，请给我最终方案，不要按投票。",
+      "expected_experience": "主 Agent 去重相同来源、定位事实或预测冲突，标明完成与失败任务后形成一个综合判断和一个主现实证据闭环；不把多数票或模型一致性当事实。",
+      "expected_interaction": "delegation-receipt -> synthesis -> B",
+      "fixture": "fixtures/16-participation-and-human.json"
+    },
+    {
+      "id": "ux-human-participation-boundary",
+      "prompt": "团队是否真的愿意投入，能不能让多个 Agent 替他们判断？",
+      "expected_experience": "识别真实承诺只能由对应真人提供，生成只含最小背景的可转发材料；默认不发送、不邀请、不联系，外部行动需要另行授权。",
+      "expected_interaction": "human-review-draft:none",
+      "fixture": "fixtures/16-participation-and-human.json"
+    },
+    {
+      "id": "ux-portable-text-fidelity",
+      "prompt": "这个宿主没有原生控件、搜索、子 Agent 或持久化，体验还能完整吗？",
+      "expected_experience": "纯文本路径完整保留状态、方法推荐、授权边界、主现实闭环、决策快照与 B 反馈路由；明确说明缺失能力，不冒充原生控件、搜索、委派或保存已经发生。",
+      "expected_interaction": "text-fallback",
+      "fixture": "fixtures/17-portable-adapters-and-decision-record.json"
+    },
+    {
+      "id": "ux-cross-host-honesty",
+      "prompt": "ChatGPT 上是不是已经完整兼容？",
+      "expected_experience": "只承诺 Skill-only 的纯文本合同和未来映射；不假设通用原生控件、搜索、子 Agent 或持久化，不把 adapter 文档当成真实兼容实测。",
+      "expected_interaction": "text:not_run",
+      "fixture": "fixtures/17-portable-adapters-and-decision-record.json"
+    },
+    {
+      "id": "ux-solution-completeness",
+      "prompt": "不要给我方法报告或投票结果，给我最终能行动和复判的方案。",
+      "expected_experience": "最终只有一个综合判断、关键依据和边界、一个围绕核心假设的主现实证据闭环、紧凑决策快照与诚实能力回执；方法、调研和参与都服务于方案。",
+      "expected_interaction": "B -> native-control:single+follow-up-message",
+      "fixture": "fixtures/18-main-evidence-loop.json"
+    },
+    {
+      "id": "ux-decision-reassessment",
+      "prompt": "这是上次的决策快照，现在结果回来了，请判断继续、调整、暂停还是停止。",
+      "expected_experience": "读取用户粘贴或已授权访问的快照，区分判断错误、执行偏差、资源错配与条件变化；更新证据状态、反转信号、判断和主实验，不要求隐藏思维链。",
+      "expected_interaction": "free-answer:none -> R-method -> A -> B",
+      "fixture": "fixtures/17-portable-adapters-and-decision-record.json"
     }
   ]
 }

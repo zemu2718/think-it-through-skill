@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.1.5",
+  "contract_version": "0.2.0",
   "id": "purpose-coexistence-and-priority",
   "domain": "purpose-sufficiency",
   "cases": [
@@ -18,7 +18,10 @@
         "surface": "native-control",
         "tool_call_observed": true,
         "selection_mode": "multi",
-        "product_option_count": {"min": 2, "max": 4},
+        "product_option_count": {
+          "min": 2,
+          "max": 4
+        },
         "host_free_text_available": true,
         "product_other_forbidden": true,
         "semantic_paragraphs": true,
@@ -67,7 +70,10 @@
         "surface": "native-control",
         "tool_call_observed": true,
         "selection_mode": "single",
-        "product_option_count": {"min": 2, "max": 4},
+        "product_option_count": {
+          "min": 2,
+          "max": 4
+        },
         "host_free_text_available": true,
         "product_other_forbidden": true,
         "semantic_paragraphs": true,

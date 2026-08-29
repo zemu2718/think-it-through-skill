@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.1.5",
+  "contract_version": "0.2.0",
   "id": "interactive-method-adjustment",
   "domain": "product",
   "already_executed": false,
@@ -30,7 +30,17 @@
         "current_combination_visible": true,
         "semantic_paragraphs": true,
         "question_is_last_paragraph": true,
-        "option_labels_parallel": true
+        "option_labels_parallel": true,
+        "method_option_schema": {
+          "required": [
+            "id",
+            "label",
+            "description",
+            "recommended"
+          ],
+          "description_inline": true,
+          "recommendation_not_confirmation": true
+        }
       },
       "mechanical": [
         "formal_method_names_visible",
@@ -73,7 +83,17 @@
         "current_combination_visible": true,
         "semantic_paragraphs": true,
         "question_is_last_paragraph": true,
-        "option_labels_parallel": true
+        "option_labels_parallel": true,
+        "method_option_schema": {
+          "required": [
+            "id",
+            "label",
+            "description",
+            "recommended"
+          ],
+          "description_inline": true,
+          "recommendation_not_confirmation": true
+        }
       },
       "mechanical": [
         "add_preserves_current_recommendation",

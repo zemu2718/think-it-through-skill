@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zemu2718/think-it-through-skill/schemas/v0.2.0/receipts.schema.json",
+  "title": "Think It Through v0.2.0 Capability and Execution Receipt Bundle",
+  "type": "object",
+  "required": ["contract_version", "capabilities", "operations"],
+  "properties": {
+    "contract_version": {"const": "0.2.0"},
+    "capabilities": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/capability"}
+    },
+    "operations": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/operation"}
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "capability": {
+      "type": "object",
+      "required": ["name", "availability", "readiness", "provider"],
+      "properties": {
+        "name": {
+          "enum": [
+            "interaction.free_text",
+            "interaction.select_one",
+            "interaction.select_many",
+            "search.public_web",
+            "search.private_corpus",
+            "tools.read",
+            "tools.write",
+            "agents.subagent",
+            "agents.parallel",
+            "humans.request_review",
+            "persistence.session",
+            "persistence.case",
+            "permissions.tool_call",
+            "permissions.private_data",
+            "permissions.external_action",
+            "fallback.text"
+          ]
+        },
+        "availability": {"enum": ["available", "unavailable", "unknown"]},
+        "readiness": {"enum": ["ready", "requires_approval", "requires_auth", "failed"]},
+        "provider": {"type": "string", "minLength": 1},
+        "limits": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "evidence": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "required": ["title", "locator", "retrieved_at"],
+      "properties": {
+        "title": {"type": "string", "minLength": 1},
+        "locator": {"type": "string", "minLength": 1},
+        "published_at": {"type": "string"},
+        "retrieved_at": {"type": "string", "format": "date-time"},
+        "source_type": {"enum": ["primary", "secondary", "user_provided", "private_authorized", "unknown"]}
+      },
+      "additionalProperties": false
+    },
+    "agent_counts": {
+      "type": "object",
+      "required": ["main", "planned_additional", "started_additional", "completed_additional", "failed_additional", "actual_total"],
+      "properties": {
+        "main": {"const": 1},
+        "planned_additional": {"type": "integer", "minimum": 0},
+        "started_additional": {"type": "integer", "minimum": 0},
+        "completed_additional": {"type": "integer", "minimum": 0},
+        "failed_additional": {"type": "integer", "minimum": 0},
+        "actual_total": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false
+    },
+    "operation": {
+      "type": "object",
+      "required": ["receipt_id", "kind", "status", "provider", "scope", "private_data_accessed", "external_action_executed"],
+      "properties": {
+        "receipt_id": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["research", "delegation", "human_review", "persistence", "external_action", "tool_call"]},
+        "status": {"enum": ["planned", "started", "completed", "partial", "failed", "declined", "cancelled", "unavailable"]},
+        "provider": {"type": "string", "minLength": 1},
+        "scope": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "consent_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
+        "agent_counts": {"$ref": "#/$defs/agent_counts"},
+        "completed_tasks": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "failed_tasks": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "conflicts_and_gaps": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "private_data_accessed": {"type": "boolean"},
+        "external_action_executed": {"type": "boolean"},
+        "fallback": {"type": "string"},
+        "started_at": {"type": "string", "format": "date-time"},
+        "completed_at": {"type": "string", "format": "date-time"}
+      },
+      "additionalProperties": false
+    }
+  }
+}

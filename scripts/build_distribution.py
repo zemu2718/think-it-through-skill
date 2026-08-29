@@ -13,7 +13,21 @@ SKILL_DIR = ROOT / "skills" / "think-it-through"
 EXCLUDED_ROOT_DIRS = {"evals"}
 EXCLUDED_PARTS = {"__pycache__", ".claude", "think-it-through-workspace"}
 EXCLUDED_SUFFIXES = {".pyc", ".html"}
-REQUIRED = {"SKILL.md", "LICENSE", "THIRD_PARTY_NOTICES.md"}
+REQUIRED = {
+    "SKILL.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "core/protocol.md",
+    "core/intents.schema.json",
+    "core/consent.schema.json",
+    "core/receipts.schema.json",
+    "core/decision-record.schema.json",
+    "policies/evidence-routing.md",
+    "policies/participation-routing.md",
+    "adapters/text.md",
+    "adapters/claude-code.md",
+    "adapters/chatgpt.md",
+}
 
 
 def source_files() -> list[Path]:

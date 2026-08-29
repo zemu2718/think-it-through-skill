@@ -1,0 +1,191 @@
+{
+  "contract_version": "0.2.0",
+  "id": "evidence-gate",
+  "domain": "evidence-routing",
+  "cases": [
+    {
+      "id": "decision-sensitive-public-fact-enters-gate",
+      "expected_stage": "Evidence Gate",
+      "record": {
+        "unknown_type": "external_verifiable_fact",
+        "decision_sensitive": true,
+        "bounded": true,
+        "value_exceeds_cost": true,
+        "decision": "是否进入当前市场",
+        "question": "当前法规是否允许这一交付模式",
+        "scope": [
+          "中国市场",
+          "2026 年",
+          "当前交付模式"
+        ],
+        "stop_conditions": [
+          "找到直接适用的官方条款",
+          "确认没有可靠公开答案"
+        ],
+        "source_requirements": [
+          "一手官方来源优先",
+          "主动寻找反对证据"
+        ],
+        "capability": {
+          "availability": "available",
+          "readiness": "ready",
+          "provider": "public-search"
+        },
+        "capability_called": true,
+        "supporting_evidence": [
+          "官方条款允许有限场景"
+        ],
+        "opposing_evidence": [
+          "部分地区要求额外许可"
+        ],
+        "conflicts_and_gaps": [
+          "地区执行细则仍有差异"
+        ],
+        "evidence_date": "2026-08-29",
+        "impact_on_judgment": "changed"
+      },
+      "consent": {
+        "consent_id": "consent-research-1",
+        "consent_type": "capability_call",
+        "status": "granted",
+        "scope": {
+          "purpose": "核验会改变是否进入市场的法规事实",
+          "operations": [
+            "只读公开检索"
+          ],
+          "resources": [
+            "官方法规网页"
+          ],
+          "data_boundary": [
+            "只使用公开信息"
+          ],
+          "excluded": [
+            "私有文件",
+            "外部行动"
+          ]
+        },
+        "valid_for": "this_action",
+        "requested_by": "main_agent",
+        "granted_by": "user"
+      },
+      "receipt": {
+        "contract_version": "0.2.0",
+        "capabilities": [
+          {
+            "name": "search.public_web",
+            "availability": "available",
+            "readiness": "ready",
+            "provider": "public-search",
+            "limits": [
+              "公开只读"
+            ],
+            "evidence": "本轮实际调用"
+          }
+        ],
+        "operations": [
+          {
+            "receipt_id": "receipt-research-1",
+            "kind": "research",
+            "status": "completed",
+            "provider": "public-search",
+            "scope": [
+              "中国市场",
+              "2026 年"
+            ],
+            "consent_ids": [
+              "consent-research-1"
+            ],
+            "sources": [
+              {
+                "title": "官方法规说明",
+                "locator": "https://example.com/official",
+                "retrieved_at": "2026-08-29T00:00:00Z",
+                "source_type": "primary"
+              }
+            ],
+            "conflicts_and_gaps": [
+              "地区执行细则仍有差异"
+            ],
+            "private_data_accessed": false,
+            "external_action_executed": false,
+            "fallback": ""
+          }
+        ]
+      },
+      "must_pass": [
+        "bounded_research",
+        "specific_capability_consent",
+        "support_and_opposition",
+        "source_date",
+        "honest_receipt"
+      ]
+    },
+    {
+      "id": "user-value-does-not-enter-gate",
+      "expected_stage": "B",
+      "record": {
+        "unknown_type": "user_value",
+        "decision_sensitive": true,
+        "bounded": true,
+        "value_exceeds_cost": true,
+        "decision": "是否进入当前市场",
+        "question": "用户愿意承担多大风险",
+        "scope": [
+          "用户本人"
+        ],
+        "stop_conditions": [
+          "获得用户明确回答"
+        ],
+        "source_requirements": [
+          "用户本人"
+        ],
+        "capability": {
+          "availability": "available",
+          "readiness": "ready",
+          "provider": "public-search"
+        },
+        "capability_called": false,
+        "supporting_evidence": [],
+        "opposing_evidence": [],
+        "conflicts_and_gaps": [
+          "价值问题不能由搜索代答"
+        ],
+        "evidence_date": "2026-08-29",
+        "impact_on_judgment": "uncertain"
+      },
+      "must_fail_if_called": [
+        "external_fact_only",
+        "search_cannot_answer_user_value"
+      ]
+    },
+    {
+      "id": "failed-research-degrades-to-b",
+      "expected_stage": "B",
+      "operation_status": "failed",
+      "required_outcome": {
+        "preserve_unknown": true,
+        "lower_commitment": true,
+        "continue_to_b": true,
+        "fabricate_result": false,
+        "fallback": "转为现实实验"
+      },
+      "must_pass": [
+        "honest_failure_receipt",
+        "no_hidden_infinite_research",
+        "failure_does_not_block_b"
+      ]
+    },
+    {
+      "id": "public-search-does-not-authorize-private-or-external",
+      "expected_stage": "Evidence Gate",
+      "granted": [
+        "capability_call:public_search"
+      ],
+      "must_not_infer": [
+        "private_data_access",
+        "external_action",
+        "participation_delegation"
+      ]
+    }
+  ]
+}

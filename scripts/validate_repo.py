@@ -18,10 +18,75 @@ SKILL_MD = SKILL_DIR / "SKILL.md"
 
 TEXT_SUFFIXES = {".md", ".json", ".yaml", ".yml", ".py", ".svg", ".txt"}
 IGNORED_SCAN_PARTS = {".git", ".claude", "dist", "review", "think-it-through-workspace", "__pycache__"}
-CURRENT_CONTRACT_VERSION = "0.1.5"
+CURRENT_CONTRACT_VERSION = "0.2.0"
 LEGACY_BEHAVIOR_PROFILE = "legacy-v0.1"
-EXPECTED_FIXTURE_STAGES = {"R", "A", "B", "direct", "emergency"}
+EXPECTED_FIXTURE_STAGES = {"R", "A", "B", "Gate-routing", "direct", "emergency"}
 INTERACTIVE_FIXTURE_STAGES = {"R", "A", "B"}
+SPECIALIZED_FIXTURE_FILES = {
+    "14-inline-method-recommendation.json",
+    "15-evidence-gate.json",
+    "16-participation-and-human.json",
+    "17-portable-adapters-and-decision-record.json",
+    "18-main-evidence-loop.json",
+}
+SCHEMA_DRAFT_2020_12 = "https://json-schema.org/draft/2020-12/schema"
+CORE_INTENT_KINDS = {
+    "request_free_text",
+    "request_selection",
+    "present_method_recommendation",
+    "request_method_selection",
+    "present_decisive_question",
+    "request_research_consent",
+    "request_agent_consent",
+    "request_private_data_consent",
+    "request_external_action_consent",
+    "delegate_analysis",
+    "request_human_review",
+    "present_judgment",
+    "present_decision_snapshot",
+    "persist_decision_snapshot",
+    "request_feedback",
+}
+CORE_STAGES = {
+    "R-align",
+    "R-method",
+    "A",
+    "evidence-gate",
+    "participation-gate",
+    "B",
+    "feedback",
+    "complete",
+}
+CONSENT_TYPES = {
+    "capability_call",
+    "participation_delegation",
+    "private_data_access",
+    "external_action",
+}
+CAPABILITY_NAMES = {
+    "interaction.free_text",
+    "interaction.select_one",
+    "interaction.select_many",
+    "search.public_web",
+    "search.private_corpus",
+    "tools.read",
+    "tools.write",
+    "agents.subagent",
+    "agents.parallel",
+    "humans.request_review",
+    "persistence.session",
+    "persistence.case",
+    "permissions.tool_call",
+    "permissions.private_data",
+    "permissions.external_action",
+    "fallback.text",
+}
+CAPABILITY_AVAILABILITY = {"available", "unavailable", "unknown"}
+CAPABILITY_READINESS = {"ready", "requires_approval", "requires_auth", "failed"}
+OPERATION_KINDS = {"research", "delegation", "human_review", "persistence", "external_action", "tool_call"}
+OPERATION_STATUSES = {"planned", "started", "completed", "partial", "failed", "declined", "cancelled", "unavailable"}
+DECISION_STATES = {"hold", "small_test", "proceed_conditionally", "proceed", "continue", "adjust", "pause", "stop"}
+PERSISTENCE_MODES = {"conversation_only", "authorized_file", "authorized_remote"}
 EXPECTED_HOST_CONTROL_STATUSES = {"available", "unavailable", "failed", "rejected"}
 EXPECTED_INTERACTION_SURFACES = {
     "R": {"native-control", "text-fallback", "free-answer"},
@@ -46,8 +111,18 @@ EXPECTED_PACKAGE_FILES = {
     "LICENSE",
     "SKILL.md",
     "THIRD_PARTY_NOTICES.md",
+    "adapters/chatgpt.md",
+    "adapters/claude-code.md",
+    "adapters/text.md",
+    "core/consent.schema.json",
+    "core/decision-record.schema.json",
+    "core/intents.schema.json",
+    "core/protocol.md",
+    "core/receipts.schema.json",
     "examples/partnership-boundary.md",
     "examples/saas-validation.md",
+    "policies/evidence-routing.md",
+    "policies/participation-routing.md",
     "references/core-analysis.md",
     "references/external-validation.md",
     "references/interaction-ux.md",
@@ -177,40 +252,47 @@ def validate_skill(validation: Validation) -> None:
     for phrase in (
         "R-align",
         "R-method",
-        "优先实际调用原生控件",
-        "不得仅因 Markdown",
-        "自由文字为准",
-        "初次收集可并存目的时使用原生多选",
-        "使用原生多选提交最终组合",
+        "Gate-routing",
+        "Evidence Gate",
+        "Participation Gate",
+        "推荐不等于确认",
+        "稳定 ID",
+        "当前议题中的独特价值",
+        "同一选项内展示",
+        "若答案可并存",
+        "使用原生多选",
         "原生单选",
-        "开放答案不得调用选择控件",
-        "产品不得自行创建“其他”或 `Other` 选项",
+        "答案开放",
+        "不调用选择工具",
+        "宿主自动提供的 `Other` 只是自由输入",
         "加入 X",
         "自然回显",
         "一个答案槽",
         "不得自行植入",
-        "先做这一件事",
-        "动作 / 观察 / 复判",
-        "建议边界",
-        "不自称朋友、导师或教练",
-        "先合并能够并存的目的，不默认排序",
-        "真实排他约束",
-        "目的、价值底线、第一版范围和证据顺序保持同层",
+        "用户已回答 A，正在判断是否需要证据或参与升级",
+        "A 回答后的 Gate 路由",
+        "可用额外上限 = max(0, 用户总参与上限 - 1)",
+        "不得递归委派",
+        "不按多数票",
+        "四类授权互不继承",
+        "available / unavailable / unknown",
+        "ready / requires_approval / requires_auth / failed",
+        "主现实证据闭环",
+        "决策快照",
+        "默认仅在对话中呈现",
         "一意一段",
-        "不要按固定字符数手工折行",
-        "选项保持短、平行、同层级",
-        "随后调用一次原生单选",
+        "不按固定字符数硬折行",
         "方向符合我",
         "调整下一步",
         "不同意这个判断",
         "暂时先放一放",
-        "选中后可以再发一条普通消息补充、纠正或提供新事实",
-        "宿主自动提供的 `Other` 是替代式自由输入",
-        "使用普通编号列出四个方向",
+        "follow-up-message",
+        "inline-text",
         "冲突时以文字为准",
-        "不构成执行、能力调用、数据访问或外部行动授权",
+        "反馈不执行实验，也不授权能力、委派、私有数据、持久化或外部行动",
+        "真实兼容状态为 `not_run`",
     ):
-        validation.require(phrase in body, f"SKILL.md 缺少 v0.1.5 交互合同：{phrase}")
+        validation.require(phrase in body, f"SKILL.md 缺少 v0.2.0 合同：{phrase}")
     for forbidden in (
         "本轮确认：基础分析",
         "本轮使用：基础分析",
@@ -225,45 +307,55 @@ def validate_skill(validation: Validation) -> None:
         for phrase in (
             "一个稳定交互单元",
             "优先实际调用原生控件",
-            "不得仅因为 Markdown",
-            "初次收集可并存目的使用多选",
-            "用户回答后先合并，不默认排序",
-            "真实排他约束",
+            "Markdown 线框不能冒充实际调用",
             "控件由答案形态决定",
-            "R-method 的方法天然可组合",
-            "A 的答案天然有限且互斥时使用单选",
-            "开放答案不调用选择控件",
-            "B 先完成判断和一个现实实验，再使用原生单选",
-            "产品不得自行创建名为“其他”或 `Other`",
-            "宿主自动提供的 `Other` 是替代式自由输入",
-            "选择和自由文字冲突时，以自由文字为准",
+            "用户选择多个结果后先用其语言合并",
+            "可并存时不排唯一第一名",
+            "真实排他约束",
+            "方法推荐：单屏内联",
+            "推荐状态",
+            "当前议题中的独特价值",
+            "推荐` 不等于确认",
+            "信息关系驱动的版式",
             "一意一段",
-            "正式问题独立作为最后一个非空段落",
-            "不在固定字符数处切断句子",
-            "保持短、平行、同层级",
-            "选中后仍可再发一条普通消息补充",
-            "只有宿主实际显示并返回与选择并存的附注时",
-            "B 的文本降级使用普通编号",
-            "不构成执行、能力调用、数据访问或外部行动授权",
-            "不形成第四阶段",
+            "不按固定字符宽度硬折行",
+            "正式问题是最后一个非空段落",
+            "Evidence Gate",
+            "Participation Gate",
+            "主现实证据闭环",
+            "决策快照",
+            "四项原生单选",
+            "独立附注实际并存",
+            "再发普通消息",
+            "文本降级",
+            "纯文本编号",
+            "反馈不执行实验，也不授权能力、委派、私有数据、持久化或外部行动",
+            "静态线框写成真实 UI、搜索、Agent 或兼容证据",
         ):
-            validation.require(phrase in interaction, f"interaction-ux.md 缺少 v0.1.5 交互规则：{phrase}")
+            validation.require(phrase in interaction, f"interaction-ux.md 缺少 v0.2.0 交互规则：{phrase}")
 
     method_selection_path = SKILL_DIR / "references" / "method-selection.md"
     validation.require(method_selection_path.exists(), "缺少 references/method-selection.md")
     if method_selection_path.exists():
         method_selection = method_selection_path.read_text(encoding="utf-8")
         for phrase in (
-            "优先实际调用该工具提交最终组合",
-            "2～4 个相关方法作为原生多选候选",
-            "基础分析是唯一有效路径",
-            "工具不可用、调用失败或被拒绝时不重试",
-            "宿主自动提供的 `Other` 是自由输入能力",
-            "正式问题分别写成短段落",
-            "正式问题独立位于最后",
-            "短、平行、同层级",
+            "调研、多 Agent、真人参与、持久化和宿主适配不进入方法注册表",
+            "结构化方法候选",
+            '"id": "object-calibration"',
+            '"description"',
+            '"recommended": true',
+            "推荐标记没有被当作确认",
+            "同一个原生多选项",
+            "基本分析之外保留 0～3 项",
+            "基本分析始终包含",
+            "工具不可用、失败或被拒绝时不重试",
+            "普通编号",
+            "加入 X",
+            "取消 X",
+            "用 X 替换 Y",
+            "Gate 能力没有被混入方法组合",
         ):
-            validation.require(phrase in method_selection, f"method-selection.md 缺少 v0.1.4 规则：{phrase}")
+            validation.require(phrase in method_selection, f"method-selection.md 缺少 v0.2.0 规则：{phrase}")
 
 
 def validate_json_yaml(validation: Validation, files: list[Path]) -> None:
@@ -278,6 +370,139 @@ def validate_json_yaml(validation: Validation, files: list[Path]) -> None:
         else:
             if path.suffix in {".json", ".yaml", ".yml"}:
                 validation.require(True, f"{path.relative_to(ROOT)} 可解析")
+
+
+def _schema_enum(schema: dict[str, Any], *path: str) -> set[str]:
+    value: object = schema
+    for key in path:
+        if not isinstance(value, dict):
+            return set()
+        value = value.get(key)
+    return set(value) if isinstance(value, list) and all(isinstance(item, str) for item in value) else set()
+
+
+def _object_schemas(schema: object) -> list[dict[str, Any]]:
+    objects: list[dict[str, Any]] = []
+    if isinstance(schema, dict):
+        if schema.get("type") == "object":
+            objects.append(schema)
+        for value in schema.values():
+            objects.extend(_object_schemas(value))
+    elif isinstance(schema, list):
+        for value in schema:
+            objects.extend(_object_schemas(value))
+    return objects
+
+
+def _is_nonempty_string(value: object) -> bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
+def _is_string_list(value: object, *, min_items: int = 0, unique: bool = False) -> bool:
+    if not isinstance(value, list) or len(value) < min_items:
+        return False
+    if not all(_is_nonempty_string(item) for item in value):
+        return False
+    return not unique or len(value) == len(set(value))
+
+
+def _required_keys(value: object, required: set[str]) -> bool:
+    return isinstance(value, dict) and required <= set(value)
+
+
+def validate_core_schemas(validation: Validation) -> None:
+    schema_files = {
+        "intents.schema.json": "intents",
+        "consent.schema.json": "consent",
+        "receipts.schema.json": "receipts",
+        "decision-record.schema.json": "decision-record",
+    }
+    schemas: dict[str, dict[str, Any]] = {}
+    for file_name, key in schema_files.items():
+        path = SKILL_DIR / "core" / file_name
+        validation.require(path.exists(), f"缺少 core/{file_name}")
+        if not path.exists():
+            continue
+        data = json.loads(path.read_text(encoding="utf-8"))
+        validation.require(isinstance(data, dict), f"core/{file_name} 顶层必须是对象")
+        if not isinstance(data, dict):
+            continue
+        schemas[key] = data
+        validation.require(data.get("$schema") == SCHEMA_DRAFT_2020_12, f"core/{file_name} 必须使用 Draft 2020-12")
+        validation.require(f"/v{CURRENT_CONTRACT_VERSION}/" in str(data.get("$id", "")), f"core/{file_name} 的 $id 必须包含 v{CURRENT_CONTRACT_VERSION}")
+        validation.require(data.get("type") == "object", f"core/{file_name} 顶层必须声明 type=object")
+        validation.require(data.get("additionalProperties") is False, f"core/{file_name} 顶层必须禁止额外字段")
+        object_schemas = _object_schemas(data)
+        validation.require(bool(object_schemas), f"core/{file_name} 至少需要一个对象 schema")
+        validation.require(
+            all(item.get("additionalProperties") is False for item in object_schemas),
+            f"core/{file_name} 的每个显式对象 schema 都必须 additionalProperties=false",
+        )
+
+    intents = schemas.get("intents", {})
+    validation.require(_schema_enum(intents, "properties", "kind", "enum") == CORE_INTENT_KINDS, "intent kind 稳定枚举不匹配")
+    validation.require(_schema_enum(intents, "properties", "stage", "enum") == CORE_STAGES, "intent stage 稳定枚举不匹配")
+    method_option = intents.get("$defs", {}).get("method_option", {}) if isinstance(intents.get("$defs"), dict) else {}
+    validation.require(
+        isinstance(method_option, dict)
+        and set(method_option.get("required", [])) == {"id", "label", "description", "recommended"}
+        and method_option.get("properties", {}).get("description", {}).get("minLength") == 12,
+        "intent method_option 必须完整要求四字段并保持最短 description",
+    )
+    delegation = intents.get("$defs", {}).get("delegation_body", {}) if isinstance(intents.get("$defs"), dict) else {}
+    delegation_properties = delegation.get("properties", {}) if isinstance(delegation, dict) else {}
+    validation.require(
+        delegation_properties.get("main_agents", {}).get("const") == 1
+        and delegation_properties.get("recursive_delegation", {}).get("const") is False
+        and delegation_properties.get("additional_agents", {}).get("minimum") == 1
+        and delegation_properties.get("total_agents", {}).get("minimum") == 2,
+        "intent delegation 必须固定一个主 Agent、禁止递归并区分额外数与总数",
+    )
+
+    consent = schemas.get("consent", {})
+    validation.require(_schema_enum(consent, "properties", "consent_type", "enum") == CONSENT_TYPES, "consent 四类授权枚举不匹配")
+    validation.require(
+        set(consent.get("required", [])) == {"consent_id", "consent_type", "status", "scope", "valid_for", "requested_by", "granted_by"},
+        "consent 顶层必要字段不匹配",
+    )
+    validation.require(
+        "saved_preference" in json.dumps(consent.get("allOf", []), ensure_ascii=False)
+        and "private_data_access" not in json.dumps(consent.get("allOf", []), ensure_ascii=False)
+        and "external_action" not in json.dumps(consent.get("allOf", []), ensure_ascii=False),
+        "saved_preference 只能适用于能力或参与授权",
+    )
+
+    receipts = schemas.get("receipts", {})
+    validation.require(_schema_enum(receipts, "$defs", "capability", "properties", "name", "enum") == CAPABILITY_NAMES, "receipt capability name 稳定枚举不匹配")
+    validation.require(_schema_enum(receipts, "$defs", "capability", "properties", "availability", "enum") == CAPABILITY_AVAILABILITY, "receipt availability 稳定枚举不匹配")
+    validation.require(_schema_enum(receipts, "$defs", "capability", "properties", "readiness", "enum") == CAPABILITY_READINESS, "receipt readiness 稳定枚举不匹配")
+    validation.require(_schema_enum(receipts, "$defs", "operation", "properties", "kind", "enum") == OPERATION_KINDS, "receipt operation kind 稳定枚举不匹配")
+    validation.require(_schema_enum(receipts, "$defs", "operation", "properties", "status", "enum") == OPERATION_STATUSES, "receipt operation status 稳定枚举不匹配")
+    agent_counts = receipts.get("$defs", {}).get("agent_counts", {}) if isinstance(receipts.get("$defs"), dict) else {}
+    validation.require(
+        set(agent_counts.get("required", [])) == {"main", "planned_additional", "started_additional", "completed_additional", "failed_additional", "actual_total"}
+        and agent_counts.get("properties", {}).get("main", {}).get("const") == 1,
+        "receipt agent_counts 必须记录主、计划、启动、完成、失败与实际总数",
+    )
+
+    decision = schemas.get("decision-record", {})
+    validation.require(_schema_enum(decision, "properties", "judgment", "properties", "state", "enum") == DECISION_STATES, "DecisionRecord judgment state 稳定枚举不匹配")
+    validation.require(_schema_enum(decision, "properties", "persistence", "properties", "mode", "enum") == PERSISTENCE_MODES, "DecisionRecord persistence mode 稳定枚举不匹配")
+    experiment = decision.get("properties", {}).get("main_experiment", {}) if isinstance(decision.get("properties"), dict) else {}
+    validation.require(
+        set(experiment.get("required", [])) == {"core_hypothesis", "action", "observation", "reassessment"},
+        "DecisionRecord 主实验必须包含核心假设、动作、观察和复判",
+    )
+    persistence = decision.get("properties", {}).get("persistence", {}) if isinstance(decision.get("properties"), dict) else {}
+    persistence_rules = json.dumps(persistence.get("allOf", []), ensure_ascii=False)
+    validation.require(
+        "conversation_only" in persistence_rules
+        and "authorized_file" in persistence_rules
+        and "authorized_remote" in persistence_rules
+        and "destination" in persistence_rules
+        and "consent_id" in persistence_rules,
+        "DecisionRecord 必须约束默认不持久化与授权持久化目标",
+    )
 
 
 def validate_links(validation: Validation, files: list[Path]) -> None:
@@ -364,6 +589,296 @@ def validate_methods(validation: Validation) -> None:
             )
 
 
+def _consent_example_valid(consent: object, expected_type: str) -> bool:
+    if not _required_keys(
+        consent,
+        {"consent_id", "consent_type", "status", "scope", "valid_for", "requested_by", "granted_by"},
+    ):
+        return False
+    if consent.get("consent_type") != expected_type or expected_type not in CONSENT_TYPES:
+        return False
+    if consent.get("status") != "granted" or consent.get("granted_by") != "user":
+        return False
+    if consent.get("requested_by") != "main_agent":
+        return False
+    scope = consent.get("scope")
+    return bool(
+        _required_keys(scope, {"purpose", "operations", "resources"})
+        and _is_nonempty_string(scope.get("purpose"))
+        and _is_string_list(scope.get("operations"), min_items=1)
+        and _is_string_list(scope.get("resources"))
+    )
+
+
+def _receipt_example_valid(receipt: object, expected_kind: str) -> bool:
+    if not _required_keys(receipt, {"contract_version", "capabilities", "operations"}):
+        return False
+    if receipt.get("contract_version") != CURRENT_CONTRACT_VERSION:
+        return False
+    capabilities = receipt.get("capabilities")
+    operations = receipt.get("operations")
+    if not isinstance(capabilities, list) or not isinstance(operations, list) or not operations:
+        return False
+    capabilities_valid = all(
+        _required_keys(capability, {"name", "availability", "readiness", "provider"})
+        and capability.get("name") in CAPABILITY_NAMES
+        and capability.get("availability") in CAPABILITY_AVAILABILITY
+        and capability.get("readiness") in CAPABILITY_READINESS
+        and _is_nonempty_string(capability.get("provider"))
+        for capability in capabilities
+    )
+    matching = [operation for operation in operations if isinstance(operation, dict) and operation.get("kind") == expected_kind]
+    if not capabilities_valid or len(matching) != 1:
+        return False
+    operation = matching[0]
+    if not (
+        _required_keys(
+            operation,
+            {"receipt_id", "kind", "status", "provider", "scope", "private_data_accessed", "external_action_executed"},
+        )
+        and operation.get("kind") in OPERATION_KINDS
+        and operation.get("status") in OPERATION_STATUSES
+        and _is_nonempty_string(operation.get("receipt_id"))
+        and _is_nonempty_string(operation.get("provider"))
+        and _is_string_list(operation.get("scope"))
+        and isinstance(operation.get("private_data_accessed"), bool)
+        and isinstance(operation.get("external_action_executed"), bool)
+    ):
+        return False
+    counts = operation.get("agent_counts")
+    if counts is None:
+        return True
+    required_counts = {
+        "main",
+        "planned_additional",
+        "started_additional",
+        "completed_additional",
+        "failed_additional",
+        "actual_total",
+    }
+    if not _required_keys(counts, required_counts):
+        return False
+    values = [counts.get(key) for key in required_counts]
+    if not all(isinstance(value, int) and not isinstance(value, bool) and value >= 0 for value in values):
+        return False
+    return bool(
+        counts.get("main") == 1
+        and counts.get("started_additional") <= counts.get("planned_additional")
+        and counts.get("completed_additional") + counts.get("failed_additional") <= counts.get("started_additional")
+        and counts.get("actual_total") == 1 + counts.get("started_additional")
+    )
+
+
+def validate_specialized_fixtures(validation: Validation, fixture_dir: Path) -> None:
+    try:
+        from grade_contracts import (
+            InteractionEvidence,
+            grade_decision_record,
+            grade_evidence_gate,
+            grade_human_review,
+            grade_participation_gate,
+            grade_r,
+        )
+    except ImportError as error:
+        validation.require(False, f"无法导入 v0.2.0 当前评分器：{error}")
+        return
+
+    def load(name: str) -> dict[str, Any]:
+        path = fixture_dir / name
+        data = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+        validation.require(isinstance(data, dict), f"fixture {name} 顶层必须是对象")
+        return data if isinstance(data, dict) else {}
+
+    method_data = load("14-inline-method-recommendation.json")
+    method_cases = method_data.get("cases", [])
+    validation.require(isinstance(method_cases, list) and len(method_cases) >= 3, "fixture 14 至少需要结构化正例、旧字符串负例和推荐未确认场景")
+    method_by_id = {case.get("id"): case for case in method_cases if isinstance(case, dict)} if isinstance(method_cases, list) else {}
+    required_method_ids = {"native-structured-options-pass", "legacy-name-only-options-fail", "recommendation-marker-does-not-confirm"}
+    validation.require(required_method_ids <= set(method_by_id), f"fixture 14 缺少场景：{sorted(required_method_ids - set(method_by_id))}")
+    for case_id, case in method_by_id.items():
+        observed = case.get("observed_interaction")
+        try:
+            interaction = InteractionEvidence.from_dict(observed) if isinstance(observed, dict) else None
+        except ValueError as error:
+            validation.require(False, f"fixture 14 case {case_id} 交互证据非法：{error}")
+            continue
+        validation.require(interaction is not None, f"fixture 14 case {case_id} 缺少交互证据")
+    method_positive = method_by_id.get("native-structured-options-pass", {})
+    if isinstance(method_positive, dict) and isinstance(method_positive.get("observed_interaction"), dict):
+        interaction = InteractionEvidence.from_dict(method_positive["observed_interaction"])
+        options = method_positive["observed_interaction"].get("options", [])
+        ids = [option.get("id") for option in options if isinstance(option, dict)] if isinstance(options, list) else []
+        labels = [option.get("label") for option in options if isinstance(option, dict)] if isinstance(options, list) else []
+        validation.require(
+            isinstance(options, list)
+            and 1 <= len(options) <= 3
+            and all(
+                isinstance(option, dict)
+                and set(option) == {"id", "label", "description", "recommended"}
+                and _is_nonempty_string(option.get("id"))
+                and _is_nonempty_string(option.get("label"))
+                and isinstance(option.get("description"), str)
+                and len(option["description"].strip()) >= 12
+                and isinstance(option.get("recommended"), bool)
+                for option in options
+            )
+            and len(ids) == len(set(ids))
+            and len(labels) == len(set(labels)),
+            "fixture 14 正例必须使用唯一、完整的结构化方法 options",
+        )
+        checks = grade_r(
+            str(method_positive.get("assistant_text", "")),
+            list(method_positive.get("recommended_methods", [])),
+            r_mode="method",
+            interaction=interaction,
+            answer_shape=str(method_positive.get("answer_shape", "compatible-set")),
+        )
+        validation.require(all(check.passed for check in checks), "fixture 14 结构化方法正例必须通过当前 R grader")
+    legacy_case = method_by_id.get("legacy-name-only-options-fail", {})
+    if isinstance(legacy_case, dict) and isinstance(legacy_case.get("observed_interaction"), dict):
+        legacy_interaction = InteractionEvidence.from_dict(legacy_case["observed_interaction"])
+        legacy_checks = grade_r(
+            str(legacy_case.get("assistant_text", "")),
+            list(legacy_case.get("recommended_methods", [])),
+            r_mode="method",
+            interaction=legacy_interaction,
+            answer_shape=str(legacy_case.get("answer_shape", "compatible-set")),
+        )
+        validation.require(any(not check.passed for check in legacy_checks), "fixture 14 旧 name-only 方法 options 必须被当前 R grader 拒绝")
+
+    evidence_data = load("15-evidence-gate.json")
+    evidence_cases = evidence_data.get("cases", [])
+    evidence_by_id = {case.get("id"): case for case in evidence_cases if isinstance(case, dict)} if isinstance(evidence_cases, list) else {}
+    required_evidence_ids = {
+        "decision-sensitive-public-fact-enters-gate",
+        "user-value-does-not-enter-gate",
+        "failed-research-degrades-to-b",
+        "public-search-does-not-authorize-private-or-external",
+    }
+    validation.require(required_evidence_ids <= set(evidence_by_id), f"fixture 15 缺少场景：{sorted(required_evidence_ids - set(evidence_by_id))}")
+    evidence_positive = evidence_by_id.get("decision-sensitive-public-fact-enters-gate", {})
+    if isinstance(evidence_positive, dict):
+        consent = evidence_positive.get("consent")
+        receipt = evidence_positive.get("receipt")
+        validation.require(_consent_example_valid(consent, "capability_call"), "fixture 15 正例 consent 不符合四类授权合同")
+        validation.require(_receipt_example_valid(receipt, "research"), "fixture 15 正例 receipt 不符合研究回执合同")
+        checks = grade_evidence_gate(evidence_positive.get("record", {}), consent, receipt)
+        validation.require(all(check.passed for check in checks), "fixture 15 正例必须通过 Evidence Gate grader")
+    value_case = evidence_by_id.get("user-value-does-not-enter-gate", {})
+    validation.require(
+        isinstance(value_case, dict)
+        and value_case.get("expected_stage") == "B"
+        and value_case.get("record", {}).get("unknown_type") == "user_value"
+        and value_case.get("record", {}).get("capability_called") is False,
+        "fixture 15 必须证明用户价值不进入 Evidence Gate",
+    )
+    failed_case = evidence_by_id.get("failed-research-degrades-to-b", {})
+    required_outcome = failed_case.get("required_outcome", {}) if isinstance(failed_case, dict) else {}
+    validation.require(
+        failed_case.get("expected_stage") == "B"
+        and failed_case.get("operation_status") == "failed"
+        and required_outcome.get("preserve_unknown") is True
+        and required_outcome.get("continue_to_b") is True
+        and required_outcome.get("fabricate_result") is False
+        and _is_nonempty_string(required_outcome.get("fallback")),
+        "fixture 15 必须覆盖研究失败后保留未知并降级到 B",
+    )
+
+    participation_data = load("16-participation-and-human.json")
+    participation_cases = participation_data.get("cases", [])
+    participation_by_id = {case.get("id"): case for case in participation_cases if isinstance(case, dict)} if isinstance(participation_cases, list) else {}
+    required_participation_ids = {
+        "two-independent-tasks-within-total-limit",
+        "total-limit-one-keeps-single-agent",
+        "extra-agent-cannot-delegate-recursively",
+        "human-value-cannot-be-replaced-by-agents",
+        "agent-consent-does-not-authorize-search-data-or-action",
+    }
+    validation.require(required_participation_ids <= set(participation_by_id), f"fixture 16 缺少场景：{sorted(required_participation_ids - set(participation_by_id))}")
+    participation_positive = participation_by_id.get("two-independent-tasks-within-total-limit", {})
+    if isinstance(participation_positive, dict):
+        consent = participation_positive.get("consent")
+        receipt = participation_positive.get("receipt")
+        validation.require(_consent_example_valid(consent, "participation_delegation"), "fixture 16 正例 consent 不符合参与授权合同")
+        validation.require(_receipt_example_valid(receipt, "delegation"), "fixture 16 正例 receipt 不符合协作回执合同")
+        checks = grade_participation_gate(participation_positive.get("record", {}), consent, receipt)
+        validation.require(all(check.passed for check in checks), "fixture 16 正例必须通过 Participation Gate grader")
+    single_case = participation_by_id.get("total-limit-one-keeps-single-agent", {})
+    validation.require(
+        isinstance(single_case, dict)
+        and single_case.get("user_total_limit") == 1
+        and single_case.get("expected_additional") == 0
+        and single_case.get("expected_total") == 1,
+        "fixture 16 必须证明总上限 1 保持单 Agent",
+    )
+    recursive_case = participation_by_id.get("extra-agent-cannot-delegate-recursively", {})
+    validation.require(
+        isinstance(recursive_case, dict)
+        and recursive_case.get("recursive_delegation_allowed") is True
+        and "recursive_delegation_forbidden" in recursive_case.get("must_fail", []),
+        "fixture 16 必须包含递归委派负例",
+    )
+    human_case = participation_by_id.get("human-value-cannot-be-replaced-by-agents", {})
+    if isinstance(human_case, dict):
+        human_checks = grade_human_review(human_case.get("human_review", {}))
+        validation.require(all(check.passed for check in human_checks), "fixture 16 真人参与正例必须通过 Human grader")
+
+    adapter_data = load("17-portable-adapters-and-decision-record.json")
+    record = adapter_data.get("decision_record", {})
+    record_checks = grade_decision_record(record)
+    validation.require(all(check.passed for check in record_checks), "fixture 17 DecisionRecord 正例必须通过当前 grader")
+    adapters = adapter_data.get("adapter_cases", [])
+    adapter_by_id = {case.get("id"): case for case in adapters if isinstance(case, dict)} if isinstance(adapters, list) else {}
+    required_adapter_ids = {
+        "text-first-class-fallback",
+        "claude-code-maps-only-observed-capabilities",
+        "chatgpt-skill-only-is-text-contract",
+        "authorized-persistence-requires-destination-and-consent",
+    }
+    validation.require(required_adapter_ids <= set(adapter_by_id), f"fixture 17 缺少场景：{sorted(required_adapter_ids - set(adapter_by_id))}")
+    text_case = adapter_by_id.get("text-first-class-fallback", {})
+    validation.require(
+        isinstance(text_case, dict)
+        and {"state_semantics", "formal_method_names", "recommendation_state", "current_value", "consent_boundaries", "decision_record", "b_feedback_routes"} <= set(text_case.get("must_preserve", []))
+        and {"native_control_called", "public_search_completed", "agent_started", "record_persisted"} <= set(text_case.get("must_not_claim", [])),
+        "fixture 17 纯文本 Adapter 必须完整保真且不虚构能力",
+    )
+    chatgpt_case = adapter_by_id.get("chatgpt-skill-only-is-text-contract", {})
+    validation.require(
+        isinstance(chatgpt_case, dict)
+        and chatgpt_case.get("status") == "not_run"
+        and chatgpt_case.get("guaranteed_surface") == "text"
+        and "chatgpt_compatibility_tested" in chatgpt_case.get("must_not_claim", []),
+        "fixture 17 ChatGPT Adapter 必须保持 text / not_run 证据边界",
+    )
+    persistence_case = adapter_by_id.get("authorized-persistence-requires-destination-and-consent", {})
+    validation.require(
+        isinstance(persistence_case, dict)
+        and persistence_case.get("persistence", {}).get("mode") == "authorized_file"
+        and {"missing_destination", "missing_consent_id"} <= set(persistence_case.get("must_fail", [])),
+        "fixture 17 必须覆盖授权持久化缺少目标或 consent 的负例",
+    )
+
+    loop_data = load("18-main-evidence-loop.json")
+    loop_cases = loop_data.get("cases", [])
+    loop_by_id = {case.get("id"): case for case in loop_cases if isinstance(case, dict)} if isinstance(loop_cases, list) else {}
+    positive_loop = loop_by_id.get("one-hypothesis-can-use-required-sequence", {})
+    experiment = positive_loop.get("main_experiment", {}) if isinstance(positive_loop, dict) else {}
+    validation.require(
+        all(_is_nonempty_string(experiment.get(field)) for field in ("core_hypothesis", "action", "observation", "reassessment"))
+        and "three_actions" in positive_loop.get("must_not_fail_as", []),
+        "fixture 18 必须允许同一假设下的必要连续操作",
+    )
+    negative_loop = loop_by_id.get("unrelated-projects-are-not-one-loop", {})
+    validation.require(
+        isinstance(negative_loop, dict)
+        and len(negative_loop.get("actions", [])) >= 2
+        and len(negative_loop.get("hypotheses", [])) >= 2
+        and {"multiple_independent_hypotheses", "multiple_unrelated_projects"} <= set(negative_loop.get("must_fail", [])),
+        "fixture 18 必须拒绝把无关项目包装为一个证据闭环",
+    )
+
+
 def validate_evals(validation: Validation) -> None:
     evals_path = SKILL_DIR / "evals" / "evals.json"
     validation.require(evals_path.exists(), "缺少 evals/evals.json")
@@ -427,6 +942,11 @@ def validate_evals(validation: Validation) -> None:
         (11, "b-experiment-and-feedback.json"),
         (12, "native-control-and-fallback.json"),
         (13, "purpose-coexistence-and-priority.json"),
+        (14, "inline-method-recommendation.json"),
+        (15, "evidence-gate.json"),
+        (16, "participation-and-human.json"),
+        (17, "portable-adapters-and-decision-record.json"),
+        (18, "main-evidence-loop.json"),
     )}
     actual_fixtures = {path.name for path in fixture_paths}
     validation.require(
@@ -439,6 +959,8 @@ def validate_evals(validation: Validation) -> None:
             data.get("contract_version") == CURRENT_CONTRACT_VERSION,
             f"fixture {path.name} 的 contract_version 必须为 {CURRENT_CONTRACT_VERSION}",
         )
+        if path.name in SPECIALIZED_FIXTURE_FILES:
+            continue
         turns = data.get("turns", data.get("cases", []))
         validation.require(isinstance(turns, list) and bool(turns), f"fixture {path.name} 没有 turns 或 cases")
         if not isinstance(turns, list):
@@ -762,14 +1284,20 @@ def validate_evals(validation: Validation) -> None:
             "fixture 11 的反馈转移不得扩张授权",
         )
 
+    validate_specialized_fixtures(validation, trigger_dir / "fixtures")
+
     ux_evals_path = trigger_dir / "ux-evals.json"
     ux_rubric_path = trigger_dir / "ux-rubric.md"
+    enhancement_rubric_path = trigger_dir / "enhancement-rubric.md"
     validation.require(ux_evals_path.exists(), "缺少 evals/ux-evals.json")
     validation.require(ux_rubric_path.exists(), "缺少 evals/ux-rubric.md")
+    validation.require(enhancement_rubric_path.exists(), "缺少 evals/enhancement-rubric.md")
     if ux_evals_path.exists():
         ux_data = json.loads(ux_evals_path.read_text(encoding="utf-8"))
         validation.require(ux_data.get("contract_version") == CURRENT_CONTRACT_VERSION, "ux-evals.json 版本不匹配")
         validation.require(ux_data.get("status") == "not_run", "未执行体验评测时 ux-evals.json 必须标记 not_run")
+        validation.require(ux_data.get("rubric") == "ux-rubric.md", "ux-evals.json 必须绑定核心 UX rubric")
+        validation.require(ux_data.get("enhancement_rubric") == "enhancement-rubric.md", "ux-evals.json 必须绑定增强 UX rubric")
         ux_evals = ux_data.get("evals", [])
         validation.require(isinstance(ux_evals, list) and len(ux_evals) >= 5, "ux-evals.json 至少需要 5 个体验场景")
         if isinstance(ux_evals, list):
@@ -800,6 +1328,12 @@ def validate_evals(validation: Validation) -> None:
             "native-control:single+follow-up-message",
             "native-control:single+native-note",
             "text-fallback:single+inline-text",
+            "native-control:multi+structured-options",
+            "native-control:single+participation-consent",
+            "evidence-receipt -> B",
+            "delegation-receipt -> synthesis -> B",
+            "human-review-draft:none",
+            "text:not_run",
         ):
             validation.require(
                 required_interaction in ux_interactions,
@@ -821,8 +1355,19 @@ def validate_evals(validation: Validation) -> None:
             "普通编号",
             "以补充文字为准",
             "不构成执行或授权",
+            "正式名称、推荐状态和当前价值",
+            "Evidence Gate",
+            "支持、反对、冲突与空白",
+            "默认单 Agent",
+            "主/额外/总数",
+            "不把多数票或模型一致性当事实",
+            "对应真人提供",
+            "纯文本路径完整保留",
+            "Skill-only 的纯文本合同",
+            "一个综合判断",
+            "判断错误、执行偏差、资源错配与条件变化",
         ):
-            validation.require(phrase in ux_experience, f"ux-evals.json 缺少 v0.1.5 体验场景：{phrase}")
+            validation.require(phrase in ux_experience, f"ux-evals.json 缺少 v0.2.0 体验场景：{phrase}")
     if ux_rubric_path.exists():
         rubric = ux_rubric_path.read_text(encoding="utf-8")
         for dimension in (
@@ -858,7 +1403,35 @@ def validate_evals(validation: Validation) -> None:
             "真实用户体验：未实测 / not_run",
             "`真实目的对齐`、`终端可读性`、`可纠错性`、`问题可回答性`、`用户自主权` 均不得低于 2",
         ):
-            validation.require(phrase in rubric, f"UX rubric 缺少 v0.1.5 证据或体验规则：{phrase}")
+            validation.require(phrase in rubric, f"UX rubric 缺少核心体验或证据规则：{phrase}")
+
+    if enhancement_rubric_path.exists():
+        enhancement = enhancement_rubric_path.read_text(encoding="utf-8")
+        for dimension in (
+            "调研适当性",
+            "证据质量",
+            "参与适当性",
+            "成本与权限透明",
+            "综合责任",
+            "跨宿主保真",
+            "解决方案完整性",
+            "复判能力",
+        ):
+            validation.require(dimension in enhancement, f"增强 UX rubric 缺少维度：{dimension}")
+        for phrase in (
+            "每个维度按 0～2 分，共 16 分",
+            "14/16",
+            "未实测 / not_run",
+            "四类授权互不继承",
+            "额外 Agent 递归委派",
+            "不按多数票",
+            "ChatGPT 或其他宿主未经真实运行不宣称兼容",
+            "一个综合判断",
+            "主现实证据闭环",
+            "严重失败为 0",
+            "真实 transcript、能力 trace 或用户评审证据",
+        ):
+            validation.require(phrase in enhancement, f"增强 UX rubric 缺少 v0.2.0 规则：{phrase}")
 
     legacy_rubric_path = trigger_dir / "rubric.md"
     if legacy_rubric_path.exists():
@@ -968,11 +1541,13 @@ def validate_contract_graders(validation: Validation) -> None:
             f'"contract_version": "{CURRENT_CONTRACT_VERSION}"' in current_text,
             f"当前评分器必须输出 contract_version {CURRENT_CONTRACT_VERSION}",
         )
+        validation.require("class InteractionOption:" in current_text, "当前评分器缺少 InteractionOption")
         validation.require("class InteractionEvidence:" in current_text, "当前评分器缺少 InteractionEvidence")
         validation.require("def parse_interaction_evidence(" in current_text, "当前评分器缺少交互证据解析函数")
         validation.require(
-            'parser.add_argument("--interaction-json", type=Path, required=True' in current_text,
-            "当前评分器必须把 --interaction-json 设为必填",
+            'parser.add_argument("--interaction-json", type=Path' in current_text
+            and 'parser.error("R/A/B 阶段必须提供 --interaction-json")' in current_text,
+            "当前评分器必须只对 R/A/B 动态要求 --interaction-json",
         )
         for token in (
             '"native-control"',
@@ -1004,10 +1579,25 @@ def validate_contract_graders(validation: Validation) -> None:
             "PRODUCT_OTHER_RE",
             "host_free_text_available",
             "supplement_mode",
+            "_method_option_contract",
+            "_method_recommendations_match",
+            "_method_descriptions_duplicated_in_body",
+            "grade_evidence_gate",
+            "grade_participation_gate",
+            "grade_human_review",
+            "grade_decision_record",
+            "CONSENT_TYPES",
+            "CAPABILITY_AVAILABILITY",
+            "CAPABILITY_READINESS",
+            "_agent_counts_valid",
+            '"EVIDENCE"',
+            '"PARTICIPATION"',
+            '"HUMAN"',
+            '"DECISION_RECORD"',
             '"阶段 B 的动作、观察和复判分别成段"',
             '"阶段 B 只提出一个反馈问题，不追加决策信息问题"',
         ):
-            validation.require(token in current_text, f"当前评分器缺少 v0.1.5 交互合同：{token}")
+            validation.require(token in current_text, f"当前评分器缺少 v0.2.0 合同：{token}")
         validation.require(
             '"declarative-feedback"' not in current_text,
             "当前评分器不得继续接受 declarative-feedback",
@@ -1037,62 +1627,105 @@ def validate_public_docs(validation: Validation) -> None:
     readme_zh = (ROOT / "README.zh-CN.md").read_text(encoding="utf-8")
     requirements = (ROOT / "REQUIREMENTS.md").read_text(encoding="utf-8")
     product = (ROOT / "PRODUCT.md").read_text(encoding="utf-8")
+    claude_md = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
     for name, text in (("README.md", readme_en), ("README.zh-CN.md", readme_zh)):
         validation.require(f"v{CURRENT_CONTRACT_VERSION}" in text, f"{name} 缺少当前版本说明")
         validation.require("not_run" in text, f"{name} 必须如实说明 v{CURRENT_CONTRACT_VERSION} 体验未实测")
         validation.require("/think-it-through" in text, f"{name} 缺少显式调用命令")
         validation.require("assets/demo-flow.svg" in text, f"{name} 缺少用户流程图")
         validation.require("R-align" in text and "R-method" in text, f"{name} 缺少后台状态边界")
+        for concept in (
+            "Evidence Gate",
+            "Participation Gate",
+            "Decision snapshot" if name == "README.md" else "决策快照",
+            "ChatGPT",
+            "not_run",
+        ):
+            validation.require(concept in text, f"{name} 缺少 v0.2.0 公开语义：{concept}")
+
     for phrase in (
-        "原生控件",
-        "Markdown",
-        "多选",
-        "单选",
-        "开放",
-        "Other",
-        "一个现实实验",
-        "先合并可并存目的、不默认排序",
-        "真实排他约束",
-        "概念同层",
-        "一意一段",
-        "正式问题独立位于最后一个非空段落",
-        "不按固定字符数硬折行",
-        "四个稳定方向",
-        "与选择并存的附注",
-        "再发一条普通消息补充",
-        "明确的反馈分节和普通编号",
-        "反馈问题不是信息问题",
-        "冲突时以文字为准",
-        "不形成第四阶段",
-        "不构成能力、数据或外部行动授权",
-        "十维",
-        "17/20",
+        "v0.2.0 的唯一正式行为、安全与验收依据",
+        "结构化方法 option",
+        "推荐不等于确认",
+        "Evidence Gate",
+        "Participation Gate",
+        "用户总参与上限",
+        "额外 Agent 不得递归委派",
+        "不按多数票",
+        "四类授权互不继承",
+        "available / unavailable / unknown",
+        "ready / requires_approval / requires_auth / failed",
+        "主现实证据闭环",
+        "DecisionRecord",
+        "conversation_only",
+        "四项反馈",
+        "纯文本保真",
+        "ChatGPT Adapter",
+        "静态 Adapter 不被描述为兼容实测",
+        "八维 16 分 rubric",
+        "14/16",
+        "Draft 2020-12",
+        "不改变外部世界",
+        "v0.2.0 真实模型多轮行为：未实测 / not_run",
+        "v0.2.0 方法 option UI：未实测 / not_run",
+        "v0.2.0 Evidence Gate：未实测 / not_run",
+        "v0.2.0 原生反馈单选 UI：未实测 / not_run",
+        "v0.2.0 独立附注呈现：未实测 / not_run",
+        "v0.2.0 多 Agent：未实测 / not_run",
+        "v0.2.0 真人参与体验：未实测 / not_run",
+        "v0.2.0 ChatGPT / 其他宿主：未实测 / not_run",
+        "v0.2.0 解决方案与复判体验：未实测 / not_run",
+        "v0.2.0 真实用户体验：未实测 / not_run",
     ):
-        validation.require(phrase in requirements, f"REQUIREMENTS.md 缺少 v0.1.5 规则：{phrase}")
-    validation.require("先接住我" in product and "思考搭档" in product, "PRODUCT.md 缺少用户可感知体验与稳定身份")
+        validation.require(phrase in requirements, f"REQUIREMENTS.md 缺少 v0.2.0 规则：{phrase}")
+
+    validation.require("思考搭档" in product, "PRODUCT.md 缺少稳定用户体验定位")
     for phrase in (
-        "优先实际调用",
-        "原生多选",
-        "原生单选",
-        "不调用选择控件",
-        "这个问句不是新的决策信息问题",
-        "宿主 `Other` 是替代式自由回答",
-        "先合并能够同时成立或相互包含的目的，不默认排序",
-        "真实排他约束",
-        "必须保持同层",
-        "一意一段",
-        "按固定字符数手工折行",
-        "再发一条普通消息补充、纠正或提供新事实",
-        "明确的反馈分节和普通编号",
-        "冲突时以文字为准",
-        "不形成第四阶段",
-        "不构成能力调用、数据访问或外部行动授权",
-        "原生反馈单选 UI、独立附注呈现和真实用户体验",
-        "未实测 / not_run",
+        "重要行动前后的**决策与证据协议**",
+        "首要 ICP",
+        "JTBD",
+        "四层模型",
+        "只有用户本轮提交的集合或明确文字形成唯一最终组合",
+        "Evidence Gate",
+        "Participation Gate",
+        "可用额外上限 = max(0, 用户总参与上限 - 1)",
+        "四类，彼此不继承",
+        "主现实证据闭环",
+        "决策快照",
+        "纯文本仍保留完整状态",
+        "没有真实运行证据前，不宣称兼容",
+        "v0.2.0 真实模型多轮行为：未实测 / not_run",
+        "v0.2.0 方法 option UI：未实测 / not_run",
+        "v0.2.0 Evidence Gate：未实测 / not_run",
+        "v0.2.0 原生反馈单选 UI：未实测 / not_run",
+        "v0.2.0 独立附注呈现：未实测 / not_run",
+        "v0.2.0 多 Agent：未实测 / not_run",
+        "v0.2.0 ChatGPT / 其他宿主：未实测 / not_run",
+        "v0.2.0 真实用户体验：未实测 / not_run",
     ):
-        validation.require(phrase in product, f"PRODUCT.md 缺少 v0.1.5 原生交互或证据边界：{phrase}")
-    for legacy_phrase in ("本轮确认：基础分析", "本轮使用：基础分析"):
-        validation.require(legacy_phrase not in readme_zh and legacy_phrase not in requirements, f"公开当前规范仍含旧版回显：{legacy_phrase}")
+        validation.require(phrase in product, f"PRODUCT.md 缺少 v0.2.0 产品或证据边界：{phrase}")
+
+    for phrase in (
+        "当前 v0.2.0 状态与交互合同",
+        "Evidence Gate",
+        "Participation Gate",
+        "四类授权互不继承",
+        "DecisionRecord",
+        "scripts/grade_contracts.py` 是 v0.2.0 当前评分器",
+        "v0.2.0 真实模型多轮行为：未实测 / not_run",
+    ):
+        validation.require(phrase in claude_md, f"CLAUDE.md 缺少 v0.2.0 维护规则：{phrase}")
+
+    for legacy_phrase in (
+        "本轮确认：基础分析",
+        "本轮使用：基础分析",
+        "三类授权",
+        "declarative-feedback",
+    ):
+        validation.require(
+            legacy_phrase not in readme_zh and legacy_phrase not in requirements and legacy_phrase not in product,
+            f"公开当前规范仍含旧版合同：{legacy_phrase}",
+        )
 
 
 def validate_trigger_benchmark(validation: Validation) -> None:
@@ -1163,6 +1796,7 @@ def main() -> int:
     files = all_repo_files()
     validate_skill(validation)
     validate_json_yaml(validation, files)
+    validate_core_schemas(validation)
     validate_links(validation, files)
     validate_legal(validation)
     validate_methods(validation)

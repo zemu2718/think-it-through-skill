@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zemu2718/think-it-through-skill/schemas/v0.2.0/consent.schema.json",
+  "title": "Think It Through v0.2.0 Consent Record",
+  "type": "object",
+  "required": ["consent_id", "consent_type", "status", "scope", "valid_for", "requested_by", "granted_by"],
+  "properties": {
+    "consent_id": {"type": "string", "minLength": 1},
+    "consent_type": {
+      "enum": ["capability_call", "participation_delegation", "private_data_access", "external_action"]
+    },
+    "status": {"enum": ["granted", "denied", "unknown", "revoked", "expired"]},
+    "scope": {
+      "type": "object",
+      "required": ["purpose", "operations", "resources"],
+      "properties": {
+        "purpose": {"type": "string", "minLength": 1},
+        "operations": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "resources": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "tasks": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "data_boundary": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "excluded": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      },
+      "additionalProperties": false
+    },
+    "valid_for": {"enum": ["this_action", "this_turn", "this_session", "saved_preference"]},
+    "requested_by": {"const": "main_agent"},
+    "granted_by": {"enum": ["user", "none"]},
+    "requested_at": {"type": "string", "format": "date-time"},
+    "resolved_at": {"type": "string", "format": "date-time"},
+    "notes": {"type": "string"}
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "granted"}}},
+      "then": {"properties": {"granted_by": {"const": "user"}}}
+    },
+    {
+      "if": {"properties": {"valid_for": {"const": "saved_preference"}}},
+      "then": {
+        "properties": {
+          "consent_type": {"enum": ["capability_call", "participation_delegation"]},
+          "status": {"const": "granted"}
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "contract_version": "0.2.0",
+  "id": "inline-method-recommendation",
+  "domain": "method-interaction",
+  "cases": [
+    {
+      "id": "native-structured-options-pass",
+      "expected_stage": "R",
+      "r_mode": "method",
+      "recommended_methods": [
+        "object-calibration",
+        "two-sided-steelman"
+      ],
+      "answer_shape": "compatible-set",
+      "assistant_text": "当前需要决定先找一个具体场景验证，还是继续做通用聊天工具。基本分析始终包含。",
+      "observed_interaction": {
+        "host_control_status": "available",
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "multi",
+        "options": [
+          {
+            "id": "object-calibration",
+            "label": "对象校准",
+            "description": "分清使用者、付费者和代价承担者，帮助判断应该先验证谁的需求。",
+            "recommended": true
+          },
+          {
+            "id": "two-sided-steelman",
+            "label": "双向钢人",
+            "description": "用相近证据标准比较当前方向与最强替代方向，帮助分清先做通用工具还是先找具体场景。",
+            "recommended": true
+          },
+          {
+            "id": "pre-mortem",
+            "label": "失败预演",
+            "description": "沿具体失败机制寻找早期信号，帮助限制正式投入前的下行风险。",
+            "recommended": false
+          }
+        ],
+        "host_free_text_available": true,
+        "question_text": "当前组合已经包含基本梳理；推荐只是建议，不等于确认。\n\n可多选，也可以直接加入、取消、替换或纠正。\n\n这轮保留哪些思考角度？",
+        "supplement_mode": "none"
+      },
+      "must_pass": [
+        "stable_method_ids",
+        "formal_labels",
+        "inline_current_value",
+        "boolean_recommendation",
+        "recommendation_not_confirmation",
+        "single_continuous_choice_unit"
+      ]
+    },
+    {
+      "id": "legacy-name-only-options-fail",
+      "expected_stage": "R",
+      "r_mode": "method",
+      "recommended_methods": [
+        "two-sided-steelman"
+      ],
+      "answer_shape": "compatible-set",
+      "assistant_text": "把当前方向和最强替代方向都认真想透，再用相近证据标准检验（双向钢人），能帮助区分继续开发和先验证。",
+      "observed_interaction": {
+        "host_control_status": "available",
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "multi",
+        "options": [
+          "双向钢人",
+          "失败预演"
+        ],
+        "host_free_text_available": true,
+        "question_text": "当前组合已经包含基本梳理。\n\n可多选，也可以直接加入、取消、替换或纠正。\n\n这轮保留哪些思考角度？",
+        "supplement_mode": "none"
+      },
+      "must_fail": [
+        "missing_method_id",
+        "missing_inline_description",
+        "missing_recommended_state"
+      ]
+    },
+    {
+      "id": "recommendation-marker-does-not-confirm",
+      "expected_stage": "R",
+      "r_mode": "method",
+      "recommended_methods": [
+        "object-calibration"
+      ],
+      "confirmed_methods": [],
+      "answer_shape": "compatible-set",
+      "observed_interaction": {
+        "host_control_status": "available",
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "multi",
+        "options": [
+          {
+            "id": "object-calibration",
+            "label": "对象校准",
+            "description": "分清使用者、付费者和代价承担者，帮助判断应该先验证谁的需求。",
+            "recommended": true
+          },
+          {
+            "id": "pre-mortem",
+            "label": "失败预演",
+            "description": "沿具体失败机制寻找早期信号，帮助限制正式投入前的下行风险。",
+            "recommended": false
+          }
+        ],
+        "host_free_text_available": true,
+        "question_text": "推荐只表示当前建议，不构成确认。\n\n可单选，也可以直接补充或纠正。\n\n这轮是否加入对象校准？",
+        "supplement_mode": "none"
+      },
+      "must_pass": [
+        "recommendation_visible"
+      ],
+      "must_not_infer": [
+        "method_confirmation",
+        "capability_authorization",
+        "participation_authorization"
+      ]
+    }
+  ]
+}

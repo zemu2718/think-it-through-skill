@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""对“想清楚”v0.1.5 的阶段输出执行确定性合同检查。"""
+"""对“想清楚”v0.2.0 的阶段输出与 Gate 记录执行确定性合同检查。"""
 
 from __future__ import annotations
 
@@ -101,7 +101,37 @@ INTERACTION_SURFACES = {"native-control", "text-fallback", "free-answer"}
 SELECTION_MODES = {"multi", "single", "none"}
 SUPPLEMENT_MODES = {"none", "native-note", "follow-up-message", "inline-text"}
 ANSWER_SHAPES = {"compatible-set", "finite-mutually-exclusive", "open"}
+METHOD_ID_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+METHOD_DESCRIPTION_MIN_LENGTH = 12
 A_ANSWER_SHAPES = {"finite-mutually-exclusive", "open"}
+CONSENT_TYPES = {
+    "capability_call",
+    "participation_delegation",
+    "private_data_access",
+    "external_action",
+}
+CAPABILITY_AVAILABILITY = {"available", "unavailable", "unknown"}
+CAPABILITY_READINESS = {"ready", "requires_approval", "requires_auth", "failed"}
+OPERATION_STATUSES = {
+    "planned",
+    "started",
+    "completed",
+    "partial",
+    "failed",
+    "declined",
+    "cancelled",
+    "unavailable",
+}
+DECISION_STATES = {
+    "hold",
+    "small_test",
+    "proceed_conditionally",
+    "proceed",
+    "continue",
+    "adjust",
+    "pause",
+    "stop",
+}
 FEEDBACK_DIRECTION_IDS = (
     "accept",
     "adjust-next-step",
@@ -184,21 +214,79 @@ class FeedbackRoute:
 
 
 @dataclass(frozen=True)
+class InteractionOption:
+    label: str
+    id: str | None = None
+    description: str = ""
+    recommended: bool | None = None
+
+    @classmethod
+    def from_value(cls, value: object) -> InteractionOption:
+        if isinstance(value, str):
+            if not value.strip():
+                raise ValueError("interaction option 字符串不能为空")
+            return cls(label=value)
+        if not isinstance(value, dict):
+            raise ValueError("interaction option 必须是字符串或对象")
+        if set(value) != {"id", "label", "description", "recommended"}:
+            raise ValueError("结构化 interaction option 必须且只能包含 id、label、description、recommended")
+        option_id = value["id"]
+        label = value["label"]
+        description = value["description"]
+        recommended = value["recommended"]
+        if not isinstance(option_id, str) or not METHOD_ID_RE.fullmatch(option_id):
+            raise ValueError("interaction option id 必须是稳定 kebab-case 字符串")
+        if not isinstance(label, str) or not label.strip():
+            raise ValueError("interaction option label 必须是非空字符串")
+        if not isinstance(description, str) or not description.strip():
+            raise ValueError("interaction option description 必须是非空字符串")
+        if not isinstance(recommended, bool):
+            raise ValueError("interaction option recommended 必须是布尔值")
+        return cls(
+            id=option_id,
+            label=label,
+            description=description,
+            recommended=recommended,
+        )
+
+    @property
+    def visible_text(self) -> str:
+        marker = "（推荐）" if self.recommended else ""
+        return "\n".join(part for part in (f"{self.label}{marker}", self.description) if part)
+
+
+@dataclass(frozen=True)
 class InteractionEvidence:
     host_control_status: str
     surface: str
     tool_call_observed: bool
     selection_mode: str
-    options: tuple[str, ...] = ()
+    options: tuple[InteractionOption | str, ...] = ()
     host_free_text_available: bool = False
     question_text: str = ""
     supplement_mode: str = "none"
 
+    def __post_init__(self) -> None:
+        normalized = tuple(
+            option if isinstance(option, InteractionOption) else InteractionOption.from_value(option)
+            for option in self.options
+        )
+        object.__setattr__(self, "options", normalized)
+
+    @property
+    def option_labels(self) -> tuple[str, ...]:
+        return tuple(option.label for option in self.options)
+
+    @property
+    def method_options(self) -> tuple[InteractionOption, ...]:
+        return tuple(option for option in self.options if option.id is not None)
+
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> InteractionEvidence:
         options = data.get("options", [])
-        if not isinstance(options, list) or any(not isinstance(option, str) for option in options):
-            raise ValueError("interaction options 必须是字符串数组")
+        if not isinstance(options, list):
+            raise ValueError("interaction options 必须是数组")
+        normalized_options = tuple(InteractionOption.from_value(option) for option in options)
         values = {
             "host_control_status": data.get("host_control_status"),
             "surface": data.get("surface"),
@@ -227,7 +315,7 @@ class InteractionEvidence:
             surface=str(values["surface"]),
             tool_call_observed=tool_call_observed,
             selection_mode=str(values["selection_mode"]),
-            options=tuple(options),
+            options=normalized_options,
             host_free_text_available=host_free_text_available,
             question_text=question_text,
             supplement_mode=str(values["supplement_mode"]),
@@ -239,6 +327,13 @@ def parse_interaction_evidence(path: Path) -> InteractionEvidence:
     if not isinstance(data, dict):
         raise ValueError("interaction evidence 必须是 JSON 对象")
     return InteractionEvidence.from_dict(data)
+
+
+def parse_json_object(path: Path, label: str) -> dict[str, object]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError(f"{label} 必须是 JSON 对象")
+    return data
 
 
 def _matches_any(text: str, patterns: tuple[str, ...]) -> list[str]:
@@ -271,12 +366,13 @@ def _has_free_expression(text: str) -> bool:
 def _visible_interaction_text(text: str, interaction: InteractionEvidence | None) -> str:
     if interaction is None:
         return text
-    return "\n".join((text, interaction.question_text, *interaction.options))
+    option_text = tuple(option.visible_text for option in interaction.options)
+    return "\n".join((text, interaction.question_text, *option_text))
 
 
 def _interaction_choices(text: str, interaction: InteractionEvidence | None) -> list[str]:
     if interaction is not None and interaction.surface == "native-control":
-        return list(interaction.options)
+        return list(interaction.option_labels)
     return _choice_lines(text)
 
 
@@ -406,6 +502,79 @@ def _method_detail(text: str, label: str) -> bool:
         if opening_position >= 0 and closing_positions and len(line.strip()) >= len(label) + 18:
             return True
     return False
+
+
+def _method_option_contract(
+    interaction: InteractionEvidence | None,
+) -> tuple[bool, dict[str, object]]:
+    if interaction is None or interaction.surface != "native-control":
+        return False, {"reason": "缺少原生方法候选证据"}
+    options = interaction.method_options
+    all_structured = len(options) == len(interaction.options)
+    ids = [option.id for option in options]
+    labels = [option.label for option in options]
+    descriptions = [option.description.strip() for option in options]
+    ids_valid = all(option_id and METHOD_ID_RE.fullmatch(option_id) for option_id in ids)
+    labels_valid = all(
+        option.id in METHOD_LABELS and METHOD_LABELS[option.id] == option.label
+        for option in options
+    )
+    descriptions_valid = all(
+        len(description) >= METHOD_DESCRIPTION_MIN_LENGTH
+        and option.label not in description
+        for option, description in zip(options, descriptions)
+    )
+    recommended_valid = all(isinstance(option.recommended, bool) for option in options)
+    unique = len(ids) == len(set(ids)) and len(labels) == len(set(labels))
+    passed = bool(
+        options
+        and all_structured
+        and ids_valid
+        and labels_valid
+        and descriptions_valid
+        and recommended_valid
+        and unique
+    )
+    return passed, {
+        "all_structured": all_structured,
+        "ids": ids,
+        "labels": labels,
+        "descriptions_valid": descriptions_valid,
+        "recommended": [option.recommended for option in options],
+        "unique": unique,
+    }
+
+
+def _method_recommendations_match(
+    interaction: InteractionEvidence | None,
+    recommended_methods: list[str],
+) -> tuple[bool, dict[str, object]]:
+    if interaction is None:
+        return False, {"reason": "缺少交互证据"}
+    option_ids = [option.id for option in interaction.method_options]
+    marked = [option.id for option in interaction.method_options if option.recommended]
+    unknown = [method_id for method_id in recommended_methods if method_id not in METHOD_LABELS]
+    passed = not unknown and marked == recommended_methods and set(recommended_methods) <= set(option_ids)
+    return passed, {
+        "expected": recommended_methods,
+        "marked": marked,
+        "option_ids": option_ids,
+        "unknown": unknown,
+    }
+
+
+def _method_descriptions_duplicated_in_body(
+    text: str,
+    interaction: InteractionEvidence | None,
+) -> list[str]:
+    if interaction is None or interaction.surface != "native-control":
+        return []
+    normalized_body = re.sub(r"\s+", "", text)
+    return [
+        option.id or option.label
+        for option in interaction.method_options
+        if re.sub(r"\s+", "", option.description) in normalized_body
+    ]
 
 
 def _chinese_to_decimal(text: str) -> Decimal | None:
@@ -542,6 +711,12 @@ def grade_r(
     labels_present = [label for label in METHOD_LABELS.values() if label in visible_text]
     found_labels = [label for label in expected_labels if label in visible_text]
     recommendation_details = {label: _method_detail(visible_text, label) for label in expected_labels}
+    method_option_passed, method_option_evidence = _method_option_contract(interaction)
+    recommendation_match_passed, recommendation_match_evidence = _method_recommendations_match(
+        interaction,
+        recommended_methods,
+    )
+    duplicated_method_descriptions = _method_descriptions_duplicated_in_body(text, interaction)
     choices = _interaction_choices(text, interaction)
     expected_selection_mode = {
         "compatible-set": "multi",
@@ -668,6 +843,16 @@ def grade_r(
             ),
         ])
     else:
+        native_method_options = bool(
+            interaction
+            and interaction.surface == "native-control"
+            and (interaction.method_options or recommended_methods)
+        )
+        details_passed = (
+            method_option_passed
+            if native_method_options
+            else all(recommendation_details.values())
+        )
         checks.extend([
             _check(
                 "R-method 显示推荐方法的正式名称",
@@ -676,9 +861,34 @@ def grade_r(
                 severe=True,
             ),
             _check(
-                "R-method 使用白话在前并解释当前价值",
-                all(recommendation_details.values()),
-                f"方法说明：{recommendation_details}",
+                "R-method 候选具有稳定 ID、正式名称、当前价值和推荐状态",
+                method_option_passed if native_method_options else True,
+                (
+                    str(method_option_evidence)
+                    if native_method_options
+                    else "文本降级由相邻方法说明合同覆盖"
+                ),
+                severe=True,
+            ),
+            _check(
+                "R-method 推荐标记与本轮推荐集合一致且不冒充确认",
+                recommendation_match_passed if native_method_options else not unknown_methods,
+                str(recommendation_match_evidence),
+                severe=True,
+            ),
+            _check(
+                "R-method 使用白话解释每个候选的当前价值",
+                details_passed,
+                (
+                    str(method_option_evidence)
+                    if native_method_options
+                    else f"方法说明：{recommendation_details}"
+                ),
+            ),
+            _check(
+                "R-method 不在正文与原生选项中重复完整说明",
+                not duplicated_method_descriptions,
+                f"重复说明：{duplicated_method_descriptions}",
             ),
         ])
     return checks
@@ -778,7 +988,7 @@ def grade_a(
                 else (
                     f"answer_shape={answer_shape}；host={interaction.host_control_status}；"
                     f"surface={interaction.surface}；tool_call={interaction.tool_call_observed}；"
-                    f"mode={interaction.selection_mode}；options={list(interaction.options)}；"
+                    f"mode={interaction.selection_mode}；options={list(interaction.option_labels)}；"
                     f"host_free_text={interaction.host_free_text_available}"
                 )
             ),
@@ -935,7 +1145,7 @@ def _b_feedback_layout_valid(text: str, interaction: InteractionEvidence | None)
             and _last_paragraph_is_only_question(interaction.question_text, require_prior_paragraph=True)
             and len(QUESTION_MARK_RE.findall(interaction.question_text)) == 1
             and FEEDBACK_QUESTION_RE.search(interaction.question_text) is not None
-            and not _options_have_questions(interaction.options)
+            and not _options_have_questions(interaction.option_labels)
             and not _native_feedback_repeated(text)
             and PSEUDO_FEEDBACK_RE.search(text) is None
         )
@@ -1022,7 +1232,7 @@ def grade_b(
     if interaction is None:
         feedback_options: tuple[str, ...] = ()
     elif interaction.surface == "native-control":
-        feedback_options = interaction.options
+        feedback_options = interaction.option_labels
     else:
         feedback_options = _numbered_feedback_options(text)
     feedback_options_passed = _feedback_options_valid(feedback_options)
@@ -1127,6 +1337,558 @@ def grade_b(
     ]
 
 
+def _nonempty_string(value: object) -> bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
+def _string_list(
+    value: object,
+    *,
+    min_items: int = 0,
+    unique: bool = False,
+) -> bool:
+    if not isinstance(value, list) or len(value) < min_items:
+        return False
+    if not all(_nonempty_string(item) for item in value):
+        return False
+    return not unique or len(value) == len(set(value))
+
+
+def _required_keys(data: object, required: set[str]) -> bool:
+    return isinstance(data, dict) and required <= set(data)
+
+
+def _consent_contract(
+    consent: dict[str, object] | None,
+    expected_type: str,
+) -> tuple[bool, dict[str, object]]:
+    if expected_type not in CONSENT_TYPES:
+        raise ValueError(f"不支持的授权类型：{expected_type}")
+    if consent is None:
+        return False, {"reason": "缺少授权记录"}
+    scope = consent.get("scope")
+    required = {
+        "consent_id",
+        "consent_type",
+        "status",
+        "scope",
+        "valid_for",
+        "requested_by",
+        "granted_by",
+    }
+    scope_valid = bool(
+        _required_keys(scope, {"purpose", "operations", "resources"})
+        and _nonempty_string(scope.get("purpose"))
+        and _string_list(scope.get("operations"), min_items=1)
+        and _string_list(scope.get("resources"))
+    )
+    valid = bool(
+        _required_keys(consent, required)
+        and _nonempty_string(consent.get("consent_id"))
+        and consent.get("consent_type") == expected_type
+        and consent.get("status") == "granted"
+        and consent.get("requested_by") == "main_agent"
+        and consent.get("granted_by") == "user"
+        and consent.get("valid_for") in {"this_action", "this_turn", "this_session", "saved_preference"}
+        and scope_valid
+    )
+    return valid, {
+        "type": consent.get("consent_type"),
+        "status": consent.get("status"),
+        "valid_for": consent.get("valid_for"),
+        "scope_valid": scope_valid,
+    }
+
+
+def _find_operation(
+    receipt_bundle: dict[str, object] | None,
+    kind: str,
+) -> dict[str, object] | None:
+    if receipt_bundle is None:
+        return None
+    operations = receipt_bundle.get("operations")
+    if not isinstance(operations, list):
+        return None
+    matches = [
+        operation
+        for operation in operations
+        if isinstance(operation, dict) and operation.get("kind") == kind
+    ]
+    return matches[0] if len(matches) == 1 else None
+
+
+def _capabilities_valid(receipt_bundle: dict[str, object] | None) -> bool:
+    if receipt_bundle is None:
+        return False
+    capabilities = receipt_bundle.get("capabilities")
+    if not isinstance(capabilities, list):
+        return False
+    for capability in capabilities:
+        if not _required_keys(capability, {"name", "availability", "readiness", "provider"}):
+            return False
+        if capability.get("availability") not in CAPABILITY_AVAILABILITY:
+            return False
+        if capability.get("readiness") not in CAPABILITY_READINESS:
+            return False
+        if not _nonempty_string(capability.get("name")) or not _nonempty_string(capability.get("provider")):
+            return False
+    return True
+
+
+def grade_evidence_gate(
+    record: dict[str, object],
+    consent: dict[str, object] | None,
+    receipt_bundle: dict[str, object] | None,
+) -> list[Check]:
+    decision = record.get("decision")
+    question = record.get("question")
+    scope = record.get("scope")
+    stop_conditions = record.get("stop_conditions")
+    source_requirements = record.get("source_requirements")
+    supporting = record.get("supporting_evidence")
+    opposing = record.get("opposing_evidence")
+    conflicts = record.get("conflicts_and_gaps")
+    evidence_date = record.get("evidence_date")
+    impact = record.get("impact_on_judgment")
+    unknown_type = record.get("unknown_type")
+    decision_sensitive = record.get("decision_sensitive")
+    bounded = record.get("bounded")
+    value_exceeds_cost = record.get("value_exceeds_cost")
+    capability = record.get("capability")
+    capability_ready = bool(
+        isinstance(capability, dict)
+        and capability.get("availability") == "available"
+        and capability.get("readiness") in {"ready", "requires_approval"}
+        and _nonempty_string(capability.get("provider"))
+    )
+    consent_valid, consent_evidence = _consent_contract(consent, "capability_call")
+    operation = _find_operation(receipt_bundle, "research")
+    operation_status = operation.get("status") if operation else None
+    operation_valid = bool(
+        operation
+        and operation_status in OPERATION_STATUSES
+        and _nonempty_string(operation.get("receipt_id"))
+        and _nonempty_string(operation.get("provider"))
+        and _string_list(operation.get("scope"), min_items=1)
+        and isinstance(operation.get("private_data_accessed"), bool)
+        and isinstance(operation.get("external_action_executed"), bool)
+    )
+    capability_called = bool(record.get("capability_called"))
+    route_allowed = bool(
+        unknown_type == "external_verifiable_fact"
+        and decision_sensitive is True
+        and bounded is True
+        and value_exceeds_cost is True
+        and capability_ready
+        and consent_valid
+    )
+    sources = operation.get("sources", []) if operation else []
+    source_records_valid = bool(
+        not capability_called
+        or (
+            operation_status in {"completed", "partial"}
+            and isinstance(sources, list)
+            and all(
+                _required_keys(source, {"title", "locator", "retrieved_at"})
+                and _nonempty_string(source.get("title"))
+                and _nonempty_string(source.get("locator"))
+                and _nonempty_string(source.get("retrieved_at"))
+                for source in sources
+            )
+        )
+        or operation_status in {"failed", "declined", "cancelled", "unavailable"}
+    )
+    failed_or_declined = operation_status in {"failed", "declined", "cancelled", "unavailable"}
+    fallback = operation.get("fallback") if operation else ""
+    failure_degraded = not failed_or_declined or _nonempty_string(fallback)
+    return [
+        _check(
+            "Evidence Gate 只路由决定敏感的外部可验证事实",
+            unknown_type == "external_verifiable_fact" and decision_sensitive is True,
+            f"unknown_type={unknown_type!r}；decision_sensitive={decision_sensitive!r}",
+            severe=True,
+        ),
+        _check(
+            "Evidence Gate 具有有界范围、停止条件和来源要求",
+            bool(
+                _nonempty_string(decision)
+                and _nonempty_string(question)
+                and _string_list(scope, min_items=1)
+                and _string_list(stop_conditions, min_items=1)
+                and _string_list(source_requirements, min_items=1)
+                and bounded is True
+            ),
+            f"decision={decision!r}；scope={scope!r}；stop={stop_conditions!r}；sources={source_requirements!r}",
+            severe=True,
+        ),
+        _check(
+            "Evidence Gate 能力可用且已取得本次能力授权",
+            route_allowed,
+            f"capability_ready={capability_ready}；consent={consent_evidence}；value_exceeds_cost={value_exceeds_cost!r}",
+            severe=True,
+        ),
+        _check(
+            "Evidence Gate 真实调用具有研究回执且状态诚实",
+            (not capability_called and not operation) or (capability_called and operation_valid),
+            f"capability_called={capability_called}；operation_status={operation_status!r}；operation_valid={operation_valid}",
+            severe=True,
+        ),
+        _check(
+            "Evidence Gate 记录支持、反对、冲突、日期和判断影响",
+            bool(
+                _string_list(supporting)
+                and _string_list(opposing)
+                and _string_list(conflicts)
+                and _nonempty_string(evidence_date)
+                and impact in {"changed", "unchanged", "uncertain"}
+                and source_records_valid
+            ),
+            f"supporting={supporting!r}；opposing={opposing!r}；conflicts={conflicts!r}；date={evidence_date!r}；impact={impact!r}",
+            severe=True,
+        ),
+        _check(
+            "Evidence Gate 失败或拒绝后保留未知并给出降级",
+            failure_degraded,
+            f"status={operation_status!r}；fallback={fallback!r}",
+            severe=True,
+        ),
+        _check(
+            "Evidence Gate 回执能力状态使用稳定枚举",
+            _capabilities_valid(receipt_bundle),
+            f"capabilities={(receipt_bundle.get('capabilities') if receipt_bundle else None)!r}",
+        ),
+    ]
+
+
+def _agent_counts_valid(counts: object) -> tuple[bool, dict[str, object]]:
+    if not isinstance(counts, dict):
+        return False, {"reason": "缺少 agent_counts"}
+    keys = (
+        "main",
+        "planned_additional",
+        "started_additional",
+        "completed_additional",
+        "failed_additional",
+        "actual_total",
+    )
+    if not all(isinstance(counts.get(key), int) and not isinstance(counts.get(key), bool) for key in keys):
+        return False, {"reason": "数量字段必须为整数", "counts": counts}
+    main = counts["main"]
+    planned = counts["planned_additional"]
+    started = counts["started_additional"]
+    completed = counts["completed_additional"]
+    failed = counts["failed_additional"]
+    actual_total = counts["actual_total"]
+    passed = bool(
+        main == 1
+        and min(planned, started, completed, failed, actual_total) >= 0
+        and started <= planned
+        and completed + failed <= started
+        and actual_total == 1 + started
+    )
+    return passed, dict(counts)
+
+
+def grade_participation_gate(
+    record: dict[str, object],
+    consent: dict[str, object] | None,
+    receipt_bundle: dict[str, object] | None,
+) -> list[Check]:
+    tasks = record.get("tasks")
+    independent_task_count = record.get("independent_task_count")
+    user_total_limit = record.get("user_total_limit")
+    product_additional_limit = record.get("product_additional_limit")
+    host_additional_limit = record.get("host_additional_limit")
+    budget_additional_limit = record.get("budget_additional_limit")
+    planned_additional = record.get("planned_additional")
+    numeric_inputs = (
+        independent_task_count,
+        user_total_limit,
+        product_additional_limit,
+        host_additional_limit,
+        budget_additional_limit,
+        planned_additional,
+    )
+    numbers_valid = all(
+        isinstance(value, int) and not isinstance(value, bool) and value >= 0
+        for value in numeric_inputs
+    )
+    expected_additional = None
+    if numbers_valid:
+        expected_additional = min(
+            independent_task_count,
+            max(0, user_total_limit - 1),
+            product_additional_limit,
+            host_additional_limit,
+            budget_additional_limit,
+        )
+    formula_valid = numbers_valid and planned_additional == expected_additional
+    consent_valid, consent_evidence = _consent_contract(consent, "participation_delegation")
+    operation = _find_operation(receipt_bundle, "delegation")
+    counts_valid, counts_evidence = _agent_counts_valid(
+        operation.get("agent_counts") if operation else None
+    )
+    count_matches_plan = bool(
+        operation
+        and isinstance(operation.get("agent_counts"), dict)
+        and operation["agent_counts"].get("planned_additional") == planned_additional
+    )
+    no_recursive = record.get("recursive_delegation_allowed") is False
+    task_payloads = record.get("agent_payloads")
+    payloads_valid = bool(
+        isinstance(task_payloads, list)
+        and len(task_payloads) == planned_additional
+        and all(
+            _required_keys(
+                payload,
+                {
+                    "assigned_question",
+                    "claims",
+                    "evidence_and_sources",
+                    "assumptions",
+                    "uncertainties",
+                    "conflicts",
+                    "what_would_reverse_this",
+                },
+            )
+            and _nonempty_string(payload.get("assigned_question"))
+            and all(
+                _string_list(payload.get(field))
+                for field in (
+                    "claims",
+                    "evidence_and_sources",
+                    "assumptions",
+                    "uncertainties",
+                    "conflicts",
+                    "what_would_reverse_this",
+                )
+            )
+            for payload in task_payloads
+        )
+    )
+    data_boundaries = record.get("data_boundaries")
+    excluded_data = record.get("excluded_data")
+    options = record.get("consent_options")
+    no_vote = record.get("aggregation") == "synthesis_not_vote"
+    return [
+        _check(
+            "Participation Gate 只为不重复的独立增量任务升级",
+            bool(
+                _string_list(tasks, min_items=1, unique=True)
+                and isinstance(independent_task_count, int)
+                and independent_task_count == len(tasks)
+            ),
+            f"tasks={tasks!r}；independent_task_count={independent_task_count!r}",
+            severe=True,
+        ),
+        _check(
+            "Participation Gate Agent 数量遵守总上限公式",
+            formula_valid,
+            f"expected_additional={expected_additional!r}；planned_additional={planned_additional!r}；user_total_limit={user_total_limit!r}",
+            severe=True,
+        ),
+        _check(
+            "Participation Gate 启用前说明数据边界、成本延迟和失败降级",
+            bool(
+                _string_list(data_boundaries, min_items=1)
+                and _string_list(excluded_data)
+                and _nonempty_string(record.get("relative_cost_and_latency"))
+                and _nonempty_string(record.get("failure_fallback"))
+                and _string_list(options, min_items=3)
+            ),
+            f"data={data_boundaries!r}；excluded={excluded_data!r}；options={options!r}",
+            severe=True,
+        ),
+        _check(
+            "Participation Gate 已取得本次参与委派授权",
+            consent_valid,
+            str(consent_evidence),
+            severe=True,
+        ),
+        _check(
+            "Participation Gate 额外 Agent 不递归委派且只收最小上下文",
+            no_recursive and payloads_valid,
+            f"recursive_allowed={record.get('recursive_delegation_allowed')!r}；payloads_valid={payloads_valid}",
+            severe=True,
+        ),
+        _check(
+            "Participation Gate 协作回执数量关系真实一致",
+            counts_valid and count_matches_plan,
+            f"counts={counts_evidence}；count_matches_plan={count_matches_plan}",
+            severe=True,
+        ),
+        _check(
+            "Participation Gate 由主 Agent 综合且不按多数票",
+            no_vote and _nonempty_string(record.get("synthesis")),
+            f"aggregation={record.get('aggregation')!r}；synthesis={record.get('synthesis')!r}",
+            severe=True,
+        ),
+        _check(
+            "Participation Gate 回执区分私有数据与外部行动",
+            bool(
+                operation
+                and isinstance(operation.get("private_data_accessed"), bool)
+                and isinstance(operation.get("external_action_executed"), bool)
+            ),
+            f"private_data={operation.get('private_data_accessed') if operation else None!r}；external_action={operation.get('external_action_executed') if operation else None!r}",
+            severe=True,
+        ),
+    ]
+
+
+def grade_human_review(record: dict[str, object]) -> list[Check]:
+    required_text = (
+        "why_needed",
+        "question",
+        "minimal_context",
+        "excluded_private_context",
+        "decision_impact",
+        "sender_and_collector",
+        "forwardable_draft",
+    )
+    return [
+        _check(
+            "真人参与请求具有最小可转发合同",
+            all(_nonempty_string(record.get(field)) for field in required_text),
+            f"fields={{field: bool(record.get(field)) for field in {required_text!r}}}",
+            severe=True,
+        ),
+        _check(
+            "真人参与默认只生成材料，不自动发送或联系",
+            record.get("external_action_executed") is False,
+            f"external_action_executed={record.get('external_action_executed')!r}",
+            severe=True,
+        ),
+    ]
+
+
+def grade_decision_record(record: dict[str, object]) -> list[Check]:
+    required = {
+        "contract_version",
+        "topic",
+        "true_objectives",
+        "decision",
+        "judgment",
+        "evidence",
+        "reversal_signals",
+        "main_experiment",
+        "reassessment_triggers",
+        "participation_and_capabilities",
+        "persistence",
+    }
+    judgment = record.get("judgment")
+    evidence = record.get("evidence")
+    experiment = record.get("main_experiment")
+    participation = record.get("participation_and_capabilities")
+    persistence = record.get("persistence")
+    evidence_valid = bool(
+        _required_keys(evidence, {"confirmed_facts", "inferences", "assumptions", "unknowns", "sources"})
+        and all(
+            _string_list(evidence.get(field))
+            for field in ("confirmed_facts", "inferences", "assumptions", "unknowns")
+        )
+        and isinstance(evidence.get("sources"), list)
+        and all(
+            _required_keys(source, {"title", "locator", "evidence_date"})
+            and all(_nonempty_string(source.get(field)) for field in ("title", "locator", "evidence_date"))
+            for source in evidence.get("sources", [])
+        )
+    )
+    judgment_valid = bool(
+        _required_keys(judgment, {"state", "recommendation", "rationale", "validity_conditions"})
+        and judgment.get("state") in DECISION_STATES
+        and _nonempty_string(judgment.get("recommendation"))
+        and _string_list(judgment.get("rationale"), min_items=1)
+        and _string_list(judgment.get("validity_conditions"))
+    )
+    experiment_valid = bool(
+        _required_keys(experiment, {"core_hypothesis", "action", "observation", "reassessment"})
+        and all(
+            _nonempty_string(experiment.get(field))
+            for field in ("core_hypothesis", "action", "observation", "reassessment")
+        )
+    )
+    participation_required = {
+        "main_agents",
+        "additional_agents_planned",
+        "additional_agents_started",
+        "additional_agents_completed",
+        "additional_agents_failed",
+        "private_data_accessed",
+        "external_action_executed",
+        "consent_ids",
+        "receipt_ids",
+    }
+    participation_valid = bool(
+        _required_keys(participation, participation_required)
+        and participation.get("main_agents") == 1
+        and all(
+            isinstance(participation.get(field), int)
+            and not isinstance(participation.get(field), bool)
+            and participation.get(field) >= 0
+            for field in (
+                "additional_agents_planned",
+                "additional_agents_started",
+                "additional_agents_completed",
+                "additional_agents_failed",
+            )
+        )
+        and participation.get("additional_agents_started") <= participation.get("additional_agents_planned")
+        and participation.get("additional_agents_completed") + participation.get("additional_agents_failed") <= participation.get("additional_agents_started")
+        and isinstance(participation.get("private_data_accessed"), bool)
+        and isinstance(participation.get("external_action_executed"), bool)
+        and _string_list(participation.get("consent_ids"))
+        and _string_list(participation.get("receipt_ids"))
+    )
+    persistence_valid = bool(
+        _required_keys(persistence, {"mode", "authorized"})
+        and (
+            (
+                persistence.get("mode") == "conversation_only"
+                and persistence.get("authorized") is False
+                and "destination" not in persistence
+                and "consent_id" not in persistence
+            )
+            or (
+                persistence.get("mode") in {"authorized_file", "authorized_remote"}
+                and persistence.get("authorized") is True
+                and _nonempty_string(persistence.get("destination"))
+                and _nonempty_string(persistence.get("consent_id"))
+            )
+        )
+    )
+    return [
+        _check(
+            "DecisionRecord 使用 v0.2.0 且包含全部核心字段",
+            _required_keys(record, required) and record.get("contract_version") == "0.2.0",
+            f"缺少字段={sorted(required - set(record))}；version={record.get('contract_version')!r}",
+            severe=True,
+        ),
+        _check(
+            "DecisionRecord 记录议题、真实目的和本轮决定",
+            bool(
+                _nonempty_string(record.get("topic"))
+                and _string_list(record.get("true_objectives"), min_items=1)
+                and _nonempty_string(record.get("decision"))
+            ),
+            f"topic={record.get('topic')!r}；objectives={record.get('true_objectives')!r}；decision={record.get('decision')!r}",
+            severe=True,
+        ),
+        _check("DecisionRecord 判断结构完整", judgment_valid, f"judgment={judgment!r}", severe=True),
+        _check("DecisionRecord 区分事实、推断、假设、未知与来源", evidence_valid, f"evidence={evidence!r}", severe=True),
+        _check(
+            "DecisionRecord 包含反转信号和复判触发",
+            _string_list(record.get("reversal_signals"), min_items=1)
+            and _string_list(record.get("reassessment_triggers"), min_items=1),
+            f"reversal={record.get('reversal_signals')!r}；triggers={record.get('reassessment_triggers')!r}",
+            severe=True,
+        ),
+        _check("DecisionRecord 主实验围绕一个核心假设", experiment_valid, f"experiment={experiment!r}", severe=True),
+        _check("DecisionRecord 参与与能力记录数量一致", participation_valid, f"participation={participation!r}", severe=True),
+        _check("DecisionRecord 默认仅在对话中，持久化需明确授权", persistence_valid, f"persistence={persistence!r}", severe=True),
+    ]
+
+
 def grade(
     stage: str,
     text: str,
@@ -1166,8 +1928,12 @@ def grade(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--stage", required=True, choices=("R", "A", "B"))
-    parser.add_argument("--input", required=True, type=Path, help="待评分的 Markdown 或文本文件")
+    parser.add_argument(
+        "--stage",
+        required=True,
+        choices=("R", "A", "B", "EVIDENCE", "PARTICIPATION", "HUMAN", "DECISION_RECORD"),
+    )
+    parser.add_argument("--input", required=True, type=Path, help="待评分的 Markdown、文本或 JSON 文件")
     parser.add_argument("--already-executed", action="store_true")
     parser.add_argument("--r-mode", choices=("align", "method"), default="method")
     parser.add_argument(
@@ -1176,7 +1942,9 @@ def main() -> int:
         default=None,
         help="答案形态；未提供时 R 默认 compatible-set，A 默认 open",
     )
-    parser.add_argument("--interaction-json", type=Path, required=True, help="本轮结构化交互证据 JSON")
+    parser.add_argument("--interaction-json", type=Path, help="R/A/B 的本轮结构化交互证据 JSON")
+    parser.add_argument("--consent-json", type=Path, help="Evidence / Participation 的授权记录 JSON")
+    parser.add_argument("--receipt-json", type=Path, help="Evidence / Participation 的能力回执 JSON")
     parser.add_argument("--cancelled-method", action="append", default=[])
     parser.add_argument("--confirmed-method", action="append", default=[])
     parser.add_argument("--recommended-method", action="append", default=[])
@@ -1184,23 +1952,42 @@ def main() -> int:
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
 
-    text = args.input.read_text(encoding="utf-8")
-    interaction = parse_interaction_evidence(args.interaction_json)
-    checks = grade(
-        args.stage,
-        text,
-        args.already_executed,
-        args.cancelled_method,
-        args.confirmed_method,
-        args.recommended_method,
-        args.user_number,
-        args.r_mode,
-        interaction,
-        args.answer_shape,
-    )
+    if args.stage in {"R", "A", "B"}:
+        if args.interaction_json is None:
+            parser.error("R/A/B 阶段必须提供 --interaction-json")
+        text = args.input.read_text(encoding="utf-8")
+        interaction = parse_interaction_evidence(args.interaction_json)
+        checks = grade(
+            args.stage,
+            text,
+            args.already_executed,
+            args.cancelled_method,
+            args.confirmed_method,
+            args.recommended_method,
+            args.user_number,
+            args.r_mode,
+            interaction,
+            args.answer_shape,
+        )
+    else:
+        record = parse_json_object(args.input, args.stage)
+        if args.stage in {"EVIDENCE", "PARTICIPATION"}:
+            if args.consent_json is None or args.receipt_json is None:
+                parser.error(f"{args.stage} 必须同时提供 --consent-json 和 --receipt-json")
+            consent = parse_json_object(args.consent_json, "consent")
+            receipt = parse_json_object(args.receipt_json, "receipt")
+            checks = (
+                grade_evidence_gate(record, consent, receipt)
+                if args.stage == "EVIDENCE"
+                else grade_participation_gate(record, consent, receipt)
+            )
+        elif args.stage == "HUMAN":
+            checks = grade_human_review(record)
+        else:
+            checks = grade_decision_record(record)
     passed = sum(check.passed for check in checks)
     result = {
-        "contract_version": "0.1.5",
+        "contract_version": "0.2.0",
         "stage": args.stage,
         "expectations": [
             {key: value for key, value in asdict(check).items() if key != "severe"}

@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.1.5",
+  "contract_version": "0.2.0",
   "id": "product-misalignment",
   "domain": "business-product",
   "already_executed": false,
@@ -30,7 +30,17 @@
         "current_combination_visible": true,
         "semantic_paragraphs": true,
         "question_is_last_paragraph": true,
-        "option_labels_parallel": true
+        "option_labels_parallel": true,
+        "method_option_schema": {
+          "required": [
+            "id",
+            "label",
+            "description",
+            "recommended"
+          ],
+          "description_inline": true,
+          "recommendation_not_confirmation": true
+        }
       },
       "mechanical": [
         "no_external_calls",
@@ -110,7 +120,7 @@
         "one_reality_experiment",
         "action_observe_review",
         "local_numeric_provenance",
-        "judgment_before_external_validation",
+        "gate_routing_before_final_judgment_when_needed",
         "supplement_via_follow_up_message"
       ]
     }

@@ -1,0 +1,220 @@
+{
+  "contract_version": "0.2.0",
+  "id": "participation-and-human",
+  "domain": "participation-routing",
+  "cases": [
+    {
+      "id": "two-independent-tasks-within-total-limit",
+      "expected_stage": "Participation Gate",
+      "record": {
+        "tasks": [
+          "核验市场来源",
+          "独立尝试推翻当前判断"
+        ],
+        "independent_task_count": 2,
+        "user_total_limit": 4,
+        "product_additional_limit": 3,
+        "host_additional_limit": 3,
+        "budget_additional_limit": 2,
+        "planned_additional": 2,
+        "data_boundaries": [
+          "只共享已确认事实和各自任务"
+        ],
+        "excluded_data": [
+          "完整私有会话",
+          "与任务无关的第三方信息"
+        ],
+        "relative_cost_and_latency": "模型调用与等待时间相对增加",
+        "failure_fallback": "任一任务失败仍由主 Agent 基于有效材料继续",
+        "consent_options": [
+          "按建议启用",
+          "降低数量",
+          "保持单 Agent"
+        ],
+        "recursive_delegation_allowed": false,
+        "agent_payloads": [
+          {
+            "assigned_question": "核验市场来源",
+            "claims": [
+              "存在一项可核验主张"
+            ],
+            "evidence_and_sources": [
+              "来源与主张对应"
+            ],
+            "assumptions": [
+              "市场范围不变"
+            ],
+            "uncertainties": [
+              "地区执行差异"
+            ],
+            "conflicts": [
+              "来源发布时间不同"
+            ],
+            "what_would_reverse_this": [
+              "新官方条款"
+            ]
+          },
+          {
+            "assigned_question": "独立尝试推翻当前判断",
+            "claims": [
+              "当前判断仍依赖需求强度"
+            ],
+            "evidence_and_sources": [
+              "反证来源与主张对应"
+            ],
+            "assumptions": [
+              "现有版本可被目标对象理解"
+            ],
+            "uncertainties": [
+              "真实付费行为未知"
+            ],
+            "conflicts": [
+              "访谈意愿与付款行为不一致"
+            ],
+            "what_would_reverse_this": [
+              "出现稳定真实付款"
+            ]
+          }
+        ],
+        "aggregation": "synthesis_not_vote",
+        "synthesis": "主 Agent 去重来源、呈现冲突后形成一个综合判断"
+      },
+      "consent": {
+        "consent_id": "consent-agents-1",
+        "consent_type": "participation_delegation",
+        "status": "granted",
+        "scope": {
+          "purpose": "并行完成两个不重复的独立任务",
+          "operations": [
+            "委派两项分析任务"
+          ],
+          "resources": [
+            "本轮已确认事实"
+          ],
+          "tasks": [
+            "核验市场来源",
+            "独立尝试推翻当前判断"
+          ],
+          "data_boundary": [
+            "每个 Agent 只获得各自任务所需最小上下文"
+          ],
+          "excluded": [
+            "完整私有会话",
+            "外部行动"
+          ]
+        },
+        "valid_for": "this_action",
+        "requested_by": "main_agent",
+        "granted_by": "user"
+      },
+      "receipt": {
+        "contract_version": "0.2.0",
+        "capabilities": [
+          {
+            "name": "agents.subagent",
+            "availability": "available",
+            "readiness": "ready",
+            "provider": "host-agent"
+          }
+        ],
+        "operations": [
+          {
+            "receipt_id": "receipt-agents-1",
+            "kind": "delegation",
+            "status": "partial",
+            "provider": "host-agent",
+            "scope": [
+              "两项不重复任务"
+            ],
+            "consent_ids": [
+              "consent-agents-1"
+            ],
+            "agent_counts": {
+              "main": 1,
+              "planned_additional": 2,
+              "started_additional": 2,
+              "completed_additional": 1,
+              "failed_additional": 1,
+              "actual_total": 3
+            },
+            "completed_tasks": [
+              "核验市场来源"
+            ],
+            "failed_tasks": [
+              "独立尝试推翻当前判断"
+            ],
+            "conflicts_and_gaps": [
+              "独立反证任务未完成"
+            ],
+            "private_data_accessed": false,
+            "external_action_executed": false,
+            "fallback": "由主 Agent 基于已完成材料继续综合"
+          }
+        ]
+      },
+      "must_pass": [
+        "total_and_additional_counts_visible",
+        "hard_limit_formula",
+        "non_recursive_delegation",
+        "minimal_context",
+        "honest_partial_receipt",
+        "synthesis_not_vote"
+      ]
+    },
+    {
+      "id": "total-limit-one-keeps-single-agent",
+      "expected_stage": "B",
+      "independent_task_count": 3,
+      "user_total_limit": 1,
+      "expected_additional": 0,
+      "expected_total": 1,
+      "must_pass": [
+        "user_total_limit_includes_main_agent",
+        "no_agent_created_to_fill_quota"
+      ]
+    },
+    {
+      "id": "extra-agent-cannot-delegate-recursively",
+      "expected_stage": "Participation Gate",
+      "planned_additional": 1,
+      "recursive_delegation_allowed": true,
+      "must_fail": [
+        "recursive_delegation_forbidden",
+        "hard_limit_cannot_be_bypassed"
+      ]
+    },
+    {
+      "id": "human-value-cannot-be-replaced-by-agents",
+      "expected_stage": "Participation Gate",
+      "unknown_type": "real_commitment",
+      "required_participant": "budget-owner",
+      "human_review": {
+        "why_needed": "只有预算负责人掌握真实承诺",
+        "question": "是否愿意承担本轮预算",
+        "minimal_context": "当前需要决定是否继续投入",
+        "excluded_private_context": "不共享其他人的私密意见",
+        "decision_impact": "拒绝承诺时转为小步验证",
+        "sender_and_collector": "由用户自行发送并收集",
+        "forwardable_draft": "我们正在判断是否继续投入，请只回答你愿意承担的预算边界。",
+        "external_action_executed": false
+      },
+      "must_pass": [
+        "real_person_for_real_commitment",
+        "forwardable_draft_only",
+        "no_automatic_contact"
+      ]
+    },
+    {
+      "id": "agent-consent-does-not-authorize-search-data-or-action",
+      "expected_stage": "Participation Gate",
+      "granted": [
+        "participation_delegation"
+      ],
+      "must_not_infer": [
+        "capability_call:public_search",
+        "private_data_access",
+        "external_action"
+      ]
+    }
+  ]
+}

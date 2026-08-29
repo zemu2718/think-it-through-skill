@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.1.5",
+  "contract_version": "0.2.0",
   "id": "b-experiment-and-feedback",
   "domain": "judgment-experiment-feedback",
   "already_executed": false,

@@ -1,0 +1,44 @@
+{
+  "contract_version": "0.2.0",
+  "id": "main-evidence-loop",
+  "domain": "solution-delivery",
+  "cases": [
+    {
+      "id": "one-hypothesis-can-use-required-sequence",
+      "expected_stage": "B",
+      "main_experiment": {
+        "core_hypothesis": "现有版本解决了足以让陌生对象付费的问题",
+        "action": "展示现有版本、说明当前价格并邀请真实付款，不新增功能",
+        "observation": "记录真实付款、明确拒绝与拒绝理由",
+        "reassessment": "出现真实付款时复判是否推进；持续只有拒绝时停止新增投入"
+      },
+      "must_pass": [
+        "single_core_hypothesis",
+        "shared_resource_boundary",
+        "shared_observation_standard",
+        "single_reassessment_point"
+      ],
+      "must_not_fail_as": [
+        "three_actions"
+      ]
+    },
+    {
+      "id": "unrelated-projects-are-not-one-loop",
+      "expected_stage": "B",
+      "actions": [
+        "访谈客户验证需求",
+        "重写品牌首页验证表达",
+        "招聘销售验证渠道"
+      ],
+      "hypotheses": [
+        "需求存在",
+        "表达有效",
+        "销售渠道可行"
+      ],
+      "must_fail": [
+        "multiple_independent_hypotheses",
+        "multiple_unrelated_projects"
+      ]
+    }
+  ]
+}

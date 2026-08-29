@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.1.5",
+  "contract_version": "0.2.0",
   "id": "native-control-and-fallback",
   "domain": "interaction-evidence",
   "cases": [
@@ -160,8 +160,18 @@
         "tool_call_observed": true,
         "selection_mode": "multi",
         "options": [
-          "对象校准",
-          "双向钢人"
+          {
+            "id": "object-calibration",
+            "label": "对象校准",
+            "description": "分清使用者、付费者和代价承担者，帮助判断应该先验证谁的需求。",
+            "recommended": true
+          },
+          {
+            "id": "two-sided-steelman",
+            "label": "双向钢人",
+            "description": "用相近证据标准比较当前方向与最强替代方向，帮助分清哪条路更服务真实目的。",
+            "recommended": true
+          }
         ],
         "host_free_text_available": true,
         "question_text": "当前组合已经包含基本梳理。\n\n可多选，也可以直接加入、取消、替换或纠正。\n\n这轮保留哪些思考角度？",
@@ -173,7 +183,9 @@
         "method_selection_only",
         "no_capability_authorization",
         "no_private_data_authorization",
-        "no_external_action_authorization"
+        "no_external_action_authorization",
+        "structured_method_options",
+        "recommendation_not_confirmation"
       ],
       "answer_shape": "compatible-set"
     },
