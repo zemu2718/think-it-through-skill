@@ -18,7 +18,7 @@
 - **Skill 命令**：`/think-it-through`
 - **仓库名**：`think-it-through-skill`
 - **产品形态**：面向 AI 使用者的开源思考、证据与决策支持 Skill
-- **当前可靠宿主**：Claude Code 显式调用；其他宿主按 Adapter 和实测证据单独声明
+- **当前发布入口**：Claude Code 中显式调用；纯文本协议是跨宿主基线，其他宿主能力按 Adapter 与对应运行证据单独声明
 
 ### 1.2 一句话定位
 
@@ -59,8 +59,8 @@ v0.2.0 必须做到：
 - 区分能力调用、参与 / 委派、私有数据访问和外部行动四类授权；
 - 逐项协商能力，`unknown` 不得当作可用，真实执行产生诚实 receipt；
 - B 给一个判断、一个主现实证据闭环、一个决策快照和四项反馈入口；
-- 纯文本路径完整保留核心语义；Claude Code 和 ChatGPT 只映射真实能力；
-- 实现状态、静态合同、真实模型行为、原生 UI、多 Agent、跨宿主和真实 UX 分开报告。
+- 纯文本路径完整保留核心语义；Claude Code 和 ChatGPT Adapter 只映射当前会话观察到的真实能力；
+- 发布支持范围、内部评测状态与具体会话执行记录分层管理，不让任何一层替另一层作证。
 
 ### 1.5 非目标
 
@@ -73,7 +73,7 @@ v0.2.0 不建设：
 - 以人物、作者、思想流派、角色数量、Agent 数量、调用次数或报告长度证明价值；
 - 默认读取全部私有数据、保存长期人格画像或隐藏思维链；
 - 未经授权自动发送、发布、购买、删除、联系或修改外部世界；
-- 把 ChatGPT 或其他宿主的静态 Adapter 描述为兼容实测；
+- 把 ChatGPT 或其他宿主的 Adapter 当作原生兼容认证，或由宿主名称推定当前会话能力；
 - 医疗、心理、法律、投资等持证专业意见替代品；
 - 泛化的人生顾问、操控工具或对第三方内心的确定性推断器。
 
@@ -751,7 +751,9 @@ Skill 表现为有经验、值得信赖的思考搭档：
 
 ### 7.3 ChatGPT Adapter
 
-当前只承诺 Skill-only / 纯文本保真合同，状态为 `not_run`。不得假设通用原生控件、宿主搜索、MCP、私有连接器、子 Agent、自定义 UI 或持久化。只有真实运行保留能力、交互、授权、执行、B 与降级证据后，才能更新兼容声明。
+v0.2.0 的支持范围是 Skill-only / 纯文本语义映射。Adapter 的存在不构成 ChatGPT 原生兼容认证，也不得据此假设通用原生控件、宿主搜索、MCP、私有连接器、子 Agent、自定义 UI 或持久化。
+
+当前会话未观察到某项能力时使用纯文本路径；观察到额外能力时，仍须逐项记录 provider、可用性、就绪状态、对应授权、实际 trace、receipt 与失败降级。扩大宿主原生兼容声明必须有对应版本化运行证据。
 
 ## 8. 功能需求
 
@@ -875,7 +877,7 @@ Core 不依赖特定模型、平台、工具名、固定 Agent 数量、联网�
 
 ### NFR-08 证据诚实
 
-静态规范、schema、fixture、测试和线框只证明合同定义，不证明真实模型、UI、搜索、Agent、跨宿主或用户体验。各类状态必须分别报告。
+静态规范、schema、fixture、测试和线框只证明合同定义，不证明某次真实模型行为、原生 UI、搜索、Agent、跨宿主能力或用户体验。发布支持范围、内部评测状态和具体会话执行记录必须分层管理；实际能力调用只由当前会话 trace 与 receipt 建立。
 
 ### NFR-09 体验评测独立
 
@@ -910,7 +912,6 @@ skills/think-it-through/
 │   │   ├── registry.yaml
 │   │   └── *.md
 │   └── *.md
-├── examples/
 ├── evals/
 ├── LICENSE
 └── THIRD_PARTY_NOTICES.md
@@ -931,20 +932,21 @@ v0.2.0 schema 必须：
 
 ### 10.3 分发包
 
-独立 `.skill` 包必须包含 `SKILL.md`、core、policies、adapters、必要 references、examples、MIT 许可证和第三方通知；排除 evals、benchmarks、workspace、缓存、私有数据和本机配置。构建必须使用新的空目录，并解包复验文件集合与字节内容。
+独立 `.skill` 包必须包含 `SKILL.md`、core、policies、adapters、必要 references、MIT 许可证和第三方通知；排除 evals、benchmarks、历史 transcript、workspace、缓存、私有数据和本机配置。当前分发集合为 28 个源文件。构建必须使用新的空目录，并解包复验文件集合与字节内容。
 
 ### 10.4 冻结历史证据
 
 不得用 v0.2.0 当前合同重新评分或改写：
 
 - `scripts/grade_contracts_v0_1.py`；
-- `scripts/grade_behavior_runs.py` 的 legacy 导入；
-- `scripts/test_legacy_behavior_grader.py`；
+- `scripts/grade_behavior_runs.py` 的 legacy 导入与评分语义；
 - `benchmarks/behavior-v0.1/`；
 - `benchmarks/trigger-v0.1/`；
 - 冻结 transcript、评分、语义 rubric 和 description。
 
-当前可靠调用仍为 `/think-it-through`。冻结 discovery holdout 为 9/16：正例 1/8、负例 8/8。不得把自然语言自动加载描述为已通过。
+`scripts/test_legacy_behavior_grader.py` 是保护上述冻结语义的可维护回归测试，可适配 canonical benchmark 的只读输入布局；任何调整都不得改变 transcript、冻结评分重现、legacy import 或受保护哈希。
+
+当前发布入口仍为 `/think-it-through`。冻结 discovery holdout 为 9/16：正例 1/8、负例 8/8。不得把自然语言自动加载描述为已通过。
 
 ## 11. 验收标准
 
@@ -1076,9 +1078,9 @@ B 只有一个核心假设，动作、观察和复判共享资源边界与复判
 
 只使用当前会话观察到的工具；失败或拒绝保留 trace 并降级；Workflow 只在用户明确选择时使用；冻结 discovery 结果被准确陈述。
 
-### AC-33 ChatGPT 声明诚实
+### AC-33 ChatGPT 支持边界
 
-静态 Adapter 不被描述为兼容实测；没有真实证据时状态保持 `not_run`，不假设通用 UI、搜索、MCP、Agent 或持久化。
+Adapter 只保证 Skill-only / 纯文本语义映射，不被描述为 ChatGPT 原生兼容认证。当前会话没有能力证据时使用文本路径；任何原生 UI、搜索、MCP、私有连接器、Agent 或持久化调用都必须逐项记录 provider、状态、授权、trace、receipt 与降级。
 
 ### AC-34 跨场景、安全与用户拍板
 
@@ -1090,7 +1092,7 @@ current schema、fixtures、grader、UX 和公开文档均为 v0.2.0；legacy gr
 
 ### AC-36 分发集合
 
-打包文件包含 core、policies、adapters、references、examples、许可证和第三方通知；不包含 evals、benchmarks、workspace、缓存或本机配置；解包内容与源码逐字节一致。
+打包文件包含 `SKILL.md`、core、policies、adapters、必要 references、许可证和第三方通知，当前严格为 28 个源文件；不包含 evals、benchmarks、examples、workspace、缓存或本机配置；解包内容与源码逐字节一致。
 
 ## 12. 严重失败判定
 
@@ -1166,23 +1168,15 @@ v0.2.0 current fixtures 至少覆盖：
 
 没有真实 transcript、工具 trace 或用户评审时，不得评分或宣称通过。
 
-### 13.4 当前证据状态
+### 13.4 发布支持范围与证据发布规则
 
-v0.2.0 发布前后均必须按实际验证分别记录：
+v0.2.0 可以对外声明：当前正式协议版本、Claude Code 中显式 `/think-it-through` 入口、纯文本跨宿主基线、仓库机械校验事实，以及条件能力所遵守的路由、授权和回执合同。
 
-```text
-v0.2.0 实现状态：按实际完成情况记录
-v0.2.0 静态合同：按实际测试结果记录
-v0.2.0 真实模型多轮行为：未实测 / not_run
-v0.2.0 方法 option UI：未实测 / not_run
-v0.2.0 Evidence Gate：未实测 / not_run
-v0.2.0 原生反馈单选 UI：未实测 / not_run
-v0.2.0 独立附注呈现：未实测 / not_run
-v0.2.0 多 Agent：未实测 / not_run
-v0.2.0 真人参与体验：未实测 / not_run
-v0.2.0 ChatGPT / 其他宿主：未实测 / not_run
-v0.2.0 解决方案与复判体验：未实测 / not_run
-v0.2.0 真实用户体验：未实测 / not_run
-```
+以下信息必须分层维护：
 
-冻结 v0.1 行为快照和 discovery holdout 只证明当时固定版本与场景，不证明 v0.2.0。
+- **发布支持范围**：写入 README、正式合同和版本记录，说明当前支持入口、纯文本基线与条件能力边界；
+- **内部评测状态**：只在 `skills/think-it-through/evals/` 的机器文件与 rubric 中记录，不复制到公开文档或运行时分发包；
+- **具体会话执行事实**：只由当次 capability observation、consent、工具 trace、receipt 和失败降级记录建立；
+- **宿主原生兼容声明**：扩大范围前必须有对应版本的加载、能力、交互、授权、执行与降级证据。
+
+正式发布不把 Adapter、schema、fixture、单元测试或线框转化为某次真实调用、原生 UI、Agent 启动、持久化或真实用户体验声明。冻结 v0.1 行为快照和 discovery holdout 只证明当时固定版本与场景，不证明 v0.2.0。

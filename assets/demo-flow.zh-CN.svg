@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
-  <title id="title">Think It Through decision journey</title>
-  <desc id="desc">Share one consequential issue, align the real objective and decision, answer one decisive question, optionally add bounded evidence or participation after explicit authorization, then receive a judgment, primary real-world evidence loop, decision snapshot, and reassessment path.</desc>
+  <title id="title">想清楚的用户决策流程</title>
+  <desc id="desc">说出一个重要议题，对齐真实目的与当前决定，只回答一个最可能改变判断的问题；只有必要且明确授权时才补充有界证据或参与，最后获得判断、主现实证据闭环、决策快照和复判入口。</desc>
   <defs>
     <style>
       .bg { fill: #f7f3ea; }
@@ -12,11 +12,11 @@
       .line { fill: none; stroke: #8290a2; stroke-width: 3; stroke-linecap: round; }
       .accent-line { fill: none; stroke: #ef7457; stroke-width: 4; stroke-linecap: round; }
       .gate-line { fill: none; stroke: #6b8fa3; stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 7 6; }
-      .number { font: 700 18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      .title { font: 700 25px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      .heading { font: 700 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      .body { font: 400 17px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      .small { font: 600 15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .number { font: 700 18px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
+      .title { font: 700 25px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
+      .heading { font: 700 22px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
+      .body { font: 400 17px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
+      .small { font: 600 15px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
     </style>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#8290a2"/>
@@ -31,8 +31,8 @@
 
   <rect class="bg" width="1200" height="520" rx="28"/>
 
-  <text class="title ink" x="48" y="52">From an important issue to a decision you can reassess</text>
-  <text class="body muted" x="48" y="82">The default path uses one main agent, zero external calls, and no external action.</text>
+  <text class="title ink" x="48" y="52">从一个重要议题，走到可以被现实修正的决定</text>
+  <text class="body muted" x="48" y="82">默认只使用当前主 Agent、零外部调用，也不改变外部世界。</text>
 
   <path class="line" d="M280 218 H304" marker-end="url(#arrow)"/>
   <path class="line" d="M568 218 H592" marker-end="url(#arrow)"/>
@@ -42,49 +42,49 @@
     <rect class="card" width="256" height="204" rx="22"/>
     <circle cx="36" cy="36" r="18" fill="#14243a"/>
     <text class="number" x="31" y="43" fill="#fffdf8">1</text>
-    <text class="heading ink" x="66" y="45">Share one issue</text>
-    <text class="body muted" x="24" y="91">A consequential choice,</text>
-    <text class="body muted" x="24" y="120">plan, conflict, or idea.</text>
-    <text class="small" x="24" y="164" fill="#526176">One core issue per round.</text>
+    <text class="heading ink" x="66" y="45">说出一个议题</text>
+    <text class="body muted" x="24" y="91">可以是重要选择、计划、</text>
+    <text class="body muted" x="24" y="120">冲突、想法或不确定感。</text>
+    <text class="small" x="24" y="164" fill="#526176">每轮只处理一个核心议题。</text>
   </g>
 
   <g transform="translate(304 116)">
     <rect class="card" width="264" height="204" rx="22"/>
     <circle cx="36" cy="36" r="18" fill="#14243a"/>
     <text class="number" x="31" y="43" fill="#fffdf8">2</text>
-    <text class="heading ink" x="66" y="45">Align the decision</text>
-    <text class="body muted" x="24" y="91">Clarify the real objective.</text>
-    <text class="body muted" x="24" y="120">Confirm useful angles.</text>
-    <text class="small" x="24" y="164" fill="#526176">Your words override controls.</text>
+    <text class="heading ink" x="66" y="45">对齐真正决定</text>
+    <text class="body muted" x="24" y="91">说清真实目的，确认本轮</text>
+    <text class="body muted" x="24" y="120">最小必要的思考角度。</text>
+    <text class="small" x="24" y="164" fill="#526176">文字与选择冲突时以文字为准。</text>
   </g>
 
   <g transform="translate(592 116)">
     <rect class="accent-card" width="264" height="204" rx="22"/>
     <circle cx="36" cy="36" r="18" fill="#ef7457"/>
     <text class="number" x="31" y="43" fill="#fffdf8">3</text>
-    <text class="heading ink" x="66" y="45">Answer one thing</text>
-    <text class="body muted" x="24" y="91">One answer most likely to</text>
-    <text class="body muted" x="24" y="120">change ranking or direction.</text>
-    <text class="small" x="24" y="164" fill="#d9573c">Then the Skill stops and waits.</text>
+    <text class="heading ink" x="66" y="45">只回答一个问题</text>
+    <text class="body muted" x="24" y="91">找出最可能改变排序、</text>
+    <text class="body muted" x="24" y="120">方向或是否继续的答案。</text>
+    <text class="small" x="24" y="164" fill="#d9573c">问后停止并等待。</text>
   </g>
 
   <g transform="translate(880 116)">
     <rect class="card" width="296" height="204" rx="22"/>
     <circle cx="36" cy="36" r="18" fill="#14243a"/>
     <text class="number" x="31" y="43" fill="#fffdf8">4</text>
-    <text class="heading ink" x="66" y="45">Judge and reassess</text>
-    <text class="body muted" x="24" y="91">Judgment + evidence loop</text>
-    <text class="body muted" x="24" y="120">+ copyable decision snapshot.</text>
-    <text class="small" x="24" y="164" fill="#526176">No automatic execution.</text>
+    <text class="heading ink" x="66" y="45">判断、验证、复判</text>
+    <text class="body muted" x="24" y="91">获得判断、主现实证据闭环</text>
+    <text class="body muted" x="24" y="120">和可复制的决策快照。</text>
+    <text class="small" x="24" y="164" fill="#526176">不会自动执行外部行动。</text>
   </g>
 
   <path class="gate-line" d="M724 320 V350 H1028 V320" marker-end="url(#gate-arrow)"/>
   <g transform="translate(706 354)">
     <rect class="gate-card" width="340" height="76" rx="18"/>
-    <text class="small ink" x="22" y="30">Optional Gate · only if it can change the judgment</text>
-    <text class="body muted" x="22" y="56">Bounded evidence or participation, explicitly authorized</text>
+    <text class="small ink" x="22" y="30">可选 Gate · 只有会改变判断时才进入</text>
+    <text class="body muted" x="22" y="56">明确授权后，补充有界证据或独立参与</text>
   </g>
 
   <path class="line" d="M1028 442 C1028 492 448 493 448 330" marker-end="url(#arrow)"/>
-  <text class="small muted" x="510" y="485">Correction, new evidence, or real results start a new round</text>
+  <text class="small muted" x="500" y="485">纠正、新证据或现实结果出现后，开启新一轮</text>
 </svg>

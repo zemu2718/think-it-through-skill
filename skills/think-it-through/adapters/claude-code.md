@@ -76,6 +76,8 @@ Claude Code 子 Agent 的隔离上下文、工具约束和并行能力不证明�
 
 工具调用被拒绝后不原样重试；能力不可用时不声称已完成；部分 Agent 失败时保留有效材料并继续 B。
 
-## 证据边界
+## 执行声明边界
 
-此 Adapter、单元测试和 synthetic fixture 不能证明真实 Claude Code 模型已遵守方法 option UI、Evidence Gate、原生反馈 UI、独立附注或多 Agent 合同。没有真实工具 trace 和运行记录时，这些状态仍为 `not_run`。
+此 Adapter 定义映射语义，不保证任意 Claude Code 客户端版本或会话具有相同工具。原生选择、搜索、文件、Agent、Workflow 或持久化是否实际发生，只由当前会话观察到的能力、具体授权、工具 trace 与 receipt 建立。
+
+文档、单元测试和 synthetic fixture 不生成一次实际调用的完成回执。没有调用记录时不得写成已执行；被拒绝、失败或能力不可用时保留 trace，使用纯文本路径或已有材料继续。

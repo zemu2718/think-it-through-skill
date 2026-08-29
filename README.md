@@ -12,7 +12,7 @@ An open Agent Skill that clarifies what you are actually trying to resolve, find
 </div>
 
 > [!IMPORTANT]
-> The current source contract is **v0.2.0**. Static-contract status must follow actual repository test results. Real multi-turn model behavior, method-option UI, the Evidence Gate, native feedback single-select UI, separate-note rendering, multi-agent execution, human-participation UX, ChatGPT and other hosts, solution reassessment, and real-user UX are all `not_run`. Specifications, schemas, fixtures, Markdown wireframes, and unit tests are not substitutes for observed calls and UI evidence. The frozen v0.1 discovery holdout remains 9/16 (1/8 positive recall; 8/8 negative specificity), so invoke `/think-it-through` explicitly.
+> **v0.2.0 is the current release.** The reliable entry point is explicit `/think-it-through` invocation in Claude Code. The text protocol is the cross-host baseline. Native controls, search, additional agents, private data, persistence, and external actions are used only when the current session exposes the capability, routing conditions are met, and the corresponding consent is granted; actual execution is established by traces and receipts. An Adapter defines protocol mapping, not native compatibility certification for that host.
 
 ## The problem
 
@@ -38,7 +38,7 @@ It does not decide values for you, and it does not treat process, methods, or ag
 
 ## See the experience before installing
 
-<img src="assets/demo-flow.svg" alt="Share the issue, align the objective, confirm a small set of thinking angles, answer one decisive question, add evidence or participation only when needed, then receive a judgment, real-world evidence loop, and reassessment entry." width="100%">
+<img src="assets/demo-flow.svg" alt="Share the issue, align the objective, answer one decisive question, add evidence or participation only when needed and authorized, then receive a judgment, decision snapshot, and reassessment entry." width="100%">
 
 ```text
 R-align: clarify what you want to achieve or protect
@@ -236,7 +236,7 @@ The question only routes feedback on completed content; it does not ask for a bu
 Feedback never executes the experiment or authorizes a capability, participation/delegation, private data, persistence, or external action. If the native control is unavailable, fails, or is declined, the fallback uses ordinary numbered text—not fake checkboxes or radio controls.
 
 > [!NOTE]
-> The interaction above is a **v0.2.0 specification wireframe**, not a real-model transcript. Static content cannot prove native controls, separate notes, search, agents, human participation, or persistence ran.
+> The interaction above is a readable protocol illustration. In an actual session, the Skill uses only the controls and capabilities that the host exposes, and records capability calls through traces and receipts.
 
 ## Four permissions remain independent
 
@@ -253,11 +253,11 @@ An agent cannot answer a real person's values, authority, commitment, customer b
 
 ## How it works across hosts
 
-| Adapter | Current contract |
+| Adapter | v0.2.0 support boundary |
 | --- | --- |
-| Text | First-class reference implementation; preserves the core without controls, search, agents, or persistence |
-| Claude Code | Maps only capabilities observed in the current session; the reliable entry remains `/think-it-through` |
-| ChatGPT | Defines Skill-only and text fidelity; real execution and compatibility acceptance remain `not_run` |
+| Text | Cross-host baseline; preserves the complete core without native controls, search, agents, or persistence |
+| Claude Code | Official release entry via explicit `/think-it-through`; maps only capabilities observed in the current session |
+| ChatGPT | Skill-only and text semantic mapping; does not certify native controls, tools, agents, or persistence |
 
 An Adapter may change the interaction surface, not the state, authorization, waiting, judgment, or fallback semantics. A capability that a product may support is not proof that it is enabled in this session.
 
@@ -277,7 +277,7 @@ Usually no more than one specialist card is recommended; zero is valid. Research
 
 ## When to use it
 
-The most reliable current invocation is:
+The v0.2.0 release entry point is:
 
 ```text
 /think-it-through
@@ -318,7 +318,7 @@ cp -R /path/to/think-it-through-skill/skills/think-it-through .claude/skills/
 
 If it is already installed, remove or rename the old directory instead of merging versions. Restart Claude Code if the top-level Skill directory did not exist when the session started.
 
-The core Skill needs no network access, API key, account, or executable script. It can use an existing host's search, private-data, agent, or persistence capability only when the current issue passes the Gate and the user grants the corresponding consent. End-to-end client installation of the `.skill` archive is not yet claimed.
+The core Skill needs no network access, API key, account, or executable script. It can use an existing host's search, private-data, agent, or persistence capability only when the current issue passes the Gate and the user grants the corresponding consent. The release archive contains the same 28 runtime source files described under [Project structure](#project-structure); source-directory installation remains the documented Claude Code path.
 
 Official Claude Code reference: [Extend Claude with skills](https://code.claude.com/docs/en/slash-commands).
 
@@ -343,9 +343,9 @@ These results bind only three fixed v0.1 scenarios and do not establish v0.2.0 b
 
 Exact transcripts, scores, and SHA-256 bindings are in [`benchmarks/behavior-v0.1/`](benchmarks/behavior-v0.1/). The frozen discovery holdout is **9/16**; see [`benchmarks/trigger-v0.1/`](benchmarks/trigger-v0.1/).
 
-### v0.2.0 static contract
+### v0.2.0 contract validation
 
-The v0.2.0 current grader, versioned fixtures, ten-dimension 20-point core UX rubric, and eight-dimension 16-point enhancement rubric define and regress the contract. They are not real-model or UI evidence:
+The current grader, versioned fixtures, ten-dimension 20-point core UX rubric, and eight-dimension 16-point enhancement rubric keep the release contract mechanically reviewable:
 
 - [`ux-evals.json`](skills/think-it-through/evals/ux-evals.json)
 - [`ux-rubric.md`](skills/think-it-through/evals/ux-rubric.md)
@@ -356,21 +356,7 @@ uv run --python 3.12 --with pyyaml python -m unittest discover -s scripts -p 'te
 uv run --python 3.12 --with pyyaml python scripts/validate_repo.py
 ```
 
-Until corresponding real evidence exists, status remains:
-
-```text
-v0.2.0 static contract: report actual validation results
-v0.2.0 real multi-turn model behavior: not_run
-v0.2.0 method option UI: not_run
-v0.2.0 Evidence Gate: not_run
-v0.2.0 native feedback single-select UI: not_run
-v0.2.0 separate-note rendering: not_run
-v0.2.0 multi-agent execution: not_run
-v0.2.0 human-participation UX: not_run
-v0.2.0 ChatGPT / other hosts: not_run
-v0.2.0 solution and reassessment UX: not_run
-v0.2.0 real-user UX: not_run
-```
+Contract validation and session execution are intentionally separate: repository checks establish the packaged protocol, while a capability call in a particular session is established only by its observation, consent, trace, and receipt. New native-host compatibility claims require versioned loading, interaction, execution, and fallback evidence.
 
 ## Safety and privacy
 
@@ -397,7 +383,6 @@ skills/think-it-through/
 ├── policies/                   # Evidence and participation routing
 ├── adapters/                   # Text, Claude Code, and ChatGPT
 ├── references/                 # Analysis, interaction, methods, safety, provenance
-├── examples/                   # Frozen v0.1 exact transcripts
 ├── evals/                      # Current fixtures, UX, and trigger definitions; not packaged
 ├── LICENSE
 └── THIRD_PARTY_NOTICES.md
@@ -410,7 +395,7 @@ assets/                         # Original project visuals
 CHANGELOG.md                    # Release status and version history
 ```
 
-The single maintenance source is `skills/think-it-through/`. A project-level `.claude/skills/think-it-through/` is only a local installation copy. Distribution includes core, policies, adapters, required references, examples, licenses, and notices; it excludes evals, benchmarks, workspaces, caches, and local configuration.
+The single maintenance source is `skills/think-it-through/`. A project-level `.claude/skills/think-it-through/` is only a local installation copy. Distribution contains 28 source files: the runtime entry, core, policies, adapters, required references, licenses, and notices. It excludes evals, benchmarks, historical transcripts, workspaces, caches, and local configuration.
 
 ## Contributing
 

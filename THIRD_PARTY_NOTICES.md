@@ -19,7 +19,7 @@ Adapted source files:
 - `references/methods/communication-calibration.md`
 - `references/methods/review-loop.md`
 
-The material was rewritten as compact, neutral decision-method cards. Character imitation, political or military framing, mobilization language, coercive tactics, unsupported authority claims, and multi-step execution plans were removed. The adaptations add explicit applicability limits, observable-evidence requirements, safety boundaries, overlap rules, reversible validation, and the Think It Through R → A → B interaction contract.
+The material was rewritten as compact, neutral decision-method cards. Character imitation, political or military framing, mobilization language, coercive tactics, unsupported authority claims, and multi-step execution plans were removed. The adaptations add explicit applicability limits, observable-evidence requirements, safety boundaries, overlap rules, reversible validation, and the current Think It Through decision, evidence, participation, and authorization contract.
 
 ### MIT License
 

@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目定位
 
-本仓库发布纯指令型 Agent Skill“想清楚 · Think It Through”。v0.2.0 将其定义为重要行动前后的决策与证据协议：先把“表面任务 → 真实目的 → 决策问题”收敛为 R-align / R-method / A；用户回答后才按需要路由有界 Evidence / Participation Gate；最终 B 交付一个综合判断、一个主现实证据闭环、可复制的决策快照和四项反馈。产品原则以 `PRODUCT.md` 为准，正式行为、验收和安全合同以 `REQUIREMENTS.md` 为唯一依据。
+本仓库发布纯指令型 Agent Skill“想清楚 · Think It Through”。v0.2.0 将其定义为重要行动前后的决策与证据协议：先把“表面任务 → 真实目的 → 决策问题”收敛为 R-align / R-method / A；用户回答后才按需要路由有界 Evidence / Participation Gate；最终 B 交付一个综合判断、一个主现实证据闭环、可复制的决策快照和四项反馈。
+
+文档职责必须保持单一：`README.md` / `README.zh-CN.md` 是对应语言的用户入口；`PRODUCT.md` 说明产品愿景、目标用户与原则；`REQUIREMENTS.md` 是唯一正式行为、安全与验收依据；`docs/product-architecture-v0.2.0.md` 只保留非规范性架构理由、历史取舍和验证路线；`CHANGELOG.md` 记录版本事实。不要在多个文件维护第二套正式合同。
 
 当前可靠调用方式是 `/think-it-through`。自动发现的冻结 v0.1 holdout 仅为 9/16（正例 1/8、负例 8/8），不要把自然语言自动加载或其他客户端兼容性描述为已经通过。
 
@@ -84,6 +86,8 @@ unzip -t dist/vX.Y.Z/think-it-through.skill
 
 ### 唯一维护源与本地副本
 
+用户可见文档优先使用读者语言：中文入口以自然中文为主，必要的命令、标识符和首次出现的正式英文术语除外；英文入口保持英文。表格只用于同维度比较，流程图只在空间关系或分支比文字更清楚时使用，并提供等价文字或可访问描述。
+
 `skills/think-it-through/` 是唯一维护源：
 
 - `SKILL.md`：当前宿主入口、适用边界、精简状态机、Gate 入口、等待与回复合同；保持少于 500 行。
@@ -93,7 +97,7 @@ unzip -t dist/vX.Y.Z/think-it-through.skill
 - `policies/participation-routing.md`：单 / 多 Agent、总数上限、最小上下文、非递归、无投票综合和真人参与。
 - `adapters/text.md`：一等纯文本参考实现。
 - `adapters/claude-code.md`：Claude Code 当前会话的原生选择、搜索、文件、Agent 与授权映射。
-- `adapters/chatgpt.md`：Skill-only / 纯文本保真与 `not_run` 兼容边界。
+- `adapters/chatgpt.md`：Skill-only / 纯文本支持范围、条件能力映射与宿主能力不得推定的边界。
 - `references/core-analysis.md`：问题重构、证据状态、唯一问题、判断、主现实闭环和数字纪律。
 - `references/interaction-ux.md`：答案形态驱动控件、语义排版、文本降级和 B 反馈。
 - `references/method-selection.md`：结构化方法 option、路由、最终组合和增量调整。
@@ -212,30 +216,23 @@ DecisionRecord 默认：
 - `scripts/grade_contracts.py`：当前 v0.2.0 评分器；
 - `scripts/grade_contracts_v0_1.py`：冻结 legacy 评分器；
 - `scripts/grade_behavior_runs.py`：必须显式从 `grade_contracts_v0_1` 导入；
-- `scripts/test_legacy_behavior_grader.py`：保护导入隔离、transcript 哈希和冻结评分重现；
+- `scripts/test_legacy_behavior_grader.py`：可维护的保护测试，负责导入隔离、transcript 哈希和冻结评分重现；可适配 canonical benchmark 布局，但不得改变受保护语义；
 - `benchmarks/behavior-v0.1/`：逐字 transcript、评分、语义 rubric 和聚合结果；
 - `benchmarks/trigger-v0.1/`：冻结 description 与 discovery dev / holdout 结果。
 
 `validate_repo.py` 固定检查 behavior benchmark 的完整文件集合和 SHA-256，也固定 Skill description 的 SHA-256。不要修改历史 transcript、评分、语义评审、benchmark 或冻结 description，除非明确建立新的评测版本和证据链。触发词调整只使用 `skills/think-it-through/evals/trigger-dev.json`；同一发布版本不得根据 frozen holdout 继续调优。
 
-## 版本与证据声明
+## 版本、发布范围与证据声明
 
 合同变化需要同步 `SKILL.md` metadata、方法 registry、core schema、policies、adapters、current fixtures、core / enhancement UX、评分器、validator 和公开文档中的版本。
 
-静态规范、schema、fixtures、单元测试和线框只能证明合同定义，不能证明真实模型、原生 UI、搜索、Agent、真人参与、持久化、跨宿主或真实 UX。没有对应新证据时必须继续标为：
+对外发布状态与内部评测状态必须分层：
 
-```text
-v0.2.0 静态合同：按实际验证结果记录
-v0.2.0 真实模型多轮行为：未实测 / not_run
-v0.2.0 方法 option UI：未实测 / not_run
-v0.2.0 Evidence Gate：未实测 / not_run
-v0.2.0 原生反馈单选 UI：未实测 / not_run
-v0.2.0 独立附注呈现：未实测 / not_run
-v0.2.0 多 Agent：未实测 / not_run
-v0.2.0 真人参与体验：未实测 / not_run
-v0.2.0 ChatGPT / 其他宿主：未实测 / not_run
-v0.2.0 解决方案与复判体验：未实测 / not_run
-v0.2.0 真实用户体验：未实测 / not_run
-```
+- README、PRODUCT、REQUIREMENTS、架构说明和 28 文件运行时包只写当前发布支持范围，不复制内部机器评测状态表；
+- 当前发布范围使用“Claude Code 显式 `/think-it-through` + 纯文本跨宿主基线 + 条件能力逐会话协商”表达；
+- `evals/` 继续按实际执行情况维护机器状态，正式发布不得把未运行项改成 `passed`；
+- 静态规范、schema、fixtures、单元测试和线框只能证明合同定义，不能证明某次真实模型行为、原生 UI、搜索、Agent、真人参与、持久化、宿主兼容或真实 UX；
+- 具体能力是否发生只由当前会话 capability observation、consent、工具 trace 与 receipt 建立；未调用、拒绝和失败不得写成完成；
+- 新增宿主原生兼容或真实体验声明前，必须建立对应版本化加载、能力、交互、授权、执行与降级证据。
 
 旧 v0.1 分数不能证明 v0.2.0 行为。

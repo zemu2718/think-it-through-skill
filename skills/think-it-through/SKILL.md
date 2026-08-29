@@ -271,7 +271,7 @@ Adapter 只映射真实能力：
 
 - [纯文本](adapters/text.md) 是一等参考实现；
 - [Claude Code](adapters/claude-code.md) 要求实际工具调用与回执；
-- [ChatGPT](adapters/chatgpt.md) 当前只定义纯文本保真合同，真实兼容状态为 `not_run`。
+- [ChatGPT](adapters/chatgpt.md) 定义 Skill-only / 纯文本语义映射；Adapter 不构成原生兼容认证，也不得用宿主名称推定当前会话能力。
 
 ## 结束、复判与总检
 
@@ -294,5 +294,5 @@ Adapter 只映射真实能力：
 - B 有一个判断、一个主证据闭环、决策快照和四项反馈；
 - 没有虚构用户目的、来源、能力、调用结果或系统数字；
 - 事实、推断、假设和未知清楚；
-- 真实模型、方法 option UI、Evidence Gate、原生反馈 UI、独立附注、多 Agent、ChatGPT 与真实 UX 没有静态证据冒充实测；
+- 能力只来自当前会话观测；实际执行只由 trace 与 receipt 建立；未调用、拒绝或失败没有写成完成；
 - 高风险与紧急场景遵守安全边界。

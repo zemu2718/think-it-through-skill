@@ -119,8 +119,6 @@ EXPECTED_PACKAGE_FILES = {
     "core/intents.schema.json",
     "core/protocol.md",
     "core/receipts.schema.json",
-    "examples/partnership-boundary.md",
-    "examples/saas-validation.md",
     "policies/evidence-routing.md",
     "policies/participation-routing.md",
     "references/core-analysis.md",
@@ -290,7 +288,8 @@ def validate_skill(validation: Validation) -> None:
         "inline-text",
         "冲突时以文字为准",
         "反馈不执行实验，也不授权能力、委派、私有数据、持久化或外部行动",
-        "真实兼容状态为 `not_run`",
+        "Adapter 不构成原生兼容认证",
+        "实际执行只由 trace 与 receipt 建立",
     ):
         validation.require(phrase in body, f"SKILL.md 缺少 v0.2.0 合同：{phrase}")
     for forbidden in (
@@ -1449,6 +1448,17 @@ def validate_assets(validation: Validation, files: list[Path]) -> None:
         validation.require(not re.search(r"(?:href|src)=[\"']https?://", text, re.IGNORECASE), f"SVG {path.relative_to(ROOT)} 不得引用远程资源")
         validation.require("<title" in text and "<desc" in text, f"SVG {path.relative_to(ROOT)} 必须包含 title 和 desc")
 
+    flow_en = ROOT / "assets" / "demo-flow.svg"
+    flow_zh = ROOT / "assets" / "demo-flow.zh-CN.svg"
+    validation.require(flow_en.exists() and flow_zh.exists(), "缺少英文或中文用户流程图")
+    if flow_en.exists() and flow_zh.exists():
+        en_text = flow_en.read_text(encoding="utf-8")
+        zh_text = flow_zh.read_text(encoding="utf-8")
+        for phrase in ("one main agent", "zero external calls", "Optional Gate", "explicitly authorized", "decision snapshot"):
+            validation.require(phrase in en_text, f"英文流程图缺少当前用户路径语义：{phrase}")
+        for phrase in ("当前主 Agent", "零外部调用", "可选 Gate", "明确授权", "决策快照"):
+            validation.require(phrase in zh_text, f"中文流程图缺少当前用户路径语义：{phrase}")
+
 
 def validate_repo_hygiene(validation: Validation, files: list[Path]) -> None:
     home_marker = "/" + "Users" + "/" + "wuweixiang" + "/"
@@ -1516,17 +1526,11 @@ def validate_examples_and_benchmarks(validation: Validation) -> None:
                     f"语义评分未绑定当前 transcript：{eval_id}/{configuration}",
                 )
 
-    for example_name, eval_name in (
-        ("saas-validation.md", "eval-1-saas-misalignment"),
-        ("partnership-boundary.md", "eval-3-partnership-safety"),
-    ):
-        example = SKILL_DIR / "examples" / example_name
-        transcript = benchmark_root / eval_name / "with_skill" / "transcript.md"
-        validation.require(example.exists() and transcript.exists(), f"缺少示例或原始 transcript：{example_name}")
-        if example.exists() and transcript.exists():
-            example_text = example.read_text(encoding="utf-8")
-            transcript_text = transcript.read_text(encoding="utf-8").strip()
-            validation.require(transcript_text in example_text, f"示例 {example_name} 必须包含逐字评测 transcript")
+    examples_dir = SKILL_DIR / "examples"
+    validation.require(
+        not examples_dir.exists(),
+        "冻结 v0.1 transcript 只保留在 benchmarks/behavior-v0.1，不再复制到分发源 examples/",
+    )
 
 
 def validate_contract_graders(validation: Validation) -> None:
@@ -1623,25 +1627,78 @@ def validate_contract_graders(validation: Validation) -> None:
 
 
 def validate_public_docs(validation: Validation) -> None:
-    readme_en = (ROOT / "README.md").read_text(encoding="utf-8")
-    readme_zh = (ROOT / "README.zh-CN.md").read_text(encoding="utf-8")
-    requirements = (ROOT / "REQUIREMENTS.md").read_text(encoding="utf-8")
-    product = (ROOT / "PRODUCT.md").read_text(encoding="utf-8")
-    claude_md = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
-    for name, text in (("README.md", readme_en), ("README.zh-CN.md", readme_zh)):
-        validation.require(f"v{CURRENT_CONTRACT_VERSION}" in text, f"{name} 缺少当前版本说明")
-        validation.require("not_run" in text, f"{name} 必须如实说明 v{CURRENT_CONTRACT_VERSION} 体验未实测")
-        validation.require("/think-it-through" in text, f"{name} 缺少显式调用命令")
-        validation.require("assets/demo-flow.svg" in text, f"{name} 缺少用户流程图")
-        validation.require("R-align" in text and "R-method" in text, f"{name} 缺少后台状态边界")
-        for concept in (
-            "Evidence Gate",
-            "Participation Gate",
-            "Decision snapshot" if name == "README.md" else "决策快照",
-            "ChatGPT",
-            "not_run",
-        ):
-            validation.require(concept in text, f"{name} 缺少 v0.2.0 公开语义：{concept}")
+    public_paths = (
+        "README.md",
+        "README.zh-CN.md",
+        "PRODUCT.md",
+        "REQUIREMENTS.md",
+        "SECURITY.md",
+        "docs/product-architecture-v0.2.0.md",
+        "CLAUDE.md",
+    )
+    public_docs = {
+        relative: (ROOT / relative).read_text(encoding="utf-8")
+        for relative in public_paths
+    }
+    readme_en = public_docs["README.md"]
+    readme_zh = public_docs["README.zh-CN.md"]
+    requirements = public_docs["REQUIREMENTS.md"]
+    product = public_docs["PRODUCT.md"]
+    claude_md = public_docs["CLAUDE.md"]
+    security = public_docs["SECURITY.md"]
+    architecture = public_docs["docs/product-architecture-v0.2.0.md"]
+    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+
+    readme_shared_facts = (
+        f"v{CURRENT_CONTRACT_VERSION}",
+        "/think-it-through",
+        "Evidence Gate",
+        "Participation Gate",
+        "ChatGPT",
+        "28",
+    )
+    for fact in readme_shared_facts:
+        validation.require(fact in readme_en and fact in readme_zh, f"中英文 README 共享事实缺失或漂移：{fact}")
+
+    readme_requirements = (
+        (
+            "README.md",
+            readme_en,
+            "assets/demo-flow.svg",
+            "Decision snapshot",
+            "v0.2.0 is the current release",
+            "text protocol is the cross-host baseline",
+            "native compatibility certification",
+        ),
+        (
+            "README.zh-CN.md",
+            readme_zh,
+            "assets/demo-flow.zh-CN.svg",
+            "决策快照",
+            "v0.2.0 已正式发布",
+            "纯文本协议是跨宿主基线",
+            "原生兼容认证",
+        ),
+    )
+    for name, text, flow_asset, snapshot_label, release_phrase, text_baseline, adapter_boundary in readme_requirements:
+        validation.require(flow_asset in text, f"{name} 缺少对应语言的用户流程图：{flow_asset}")
+        validation.require("R-align" in text and "R-method" in text, f"{name} 缺少状态边界")
+        validation.require(snapshot_label in text, f"{name} 缺少决策快照说明")
+        validation.require("git clone" in text and "test ! -e" in text, f"{name} 缺少非覆盖式安装步骤")
+        validation.require(release_phrase in text, f"{name} 缺少正式发布状态")
+        validation.require(text_baseline in text, f"{name} 缺少纯文本跨宿主基线")
+        validation.require(adapter_boundary in text, f"{name} 缺少 Adapter 原生兼容边界")
+        validation.require("trace" in text and "receipt" in text, f"{name} 缺少具体会话执行证明边界")
+        validation.require("examples/" not in text, f"{name} 仍把已删除 examples/ 描述为当前结构")
+
+    validation.require(
+        "assets/demo-flow.zh-CN.svg" not in readme_en,
+        "英文 README 不应引用中文流程图",
+    )
+    validation.require(
+        "assets/demo-flow.svg" not in readme_zh,
+        "中文 README 不应引用英文流程图",
+    )
 
     for phrase in (
         "v0.2.0 的唯一正式行为、安全与验收依据",
@@ -1659,23 +1716,18 @@ def validate_public_docs(validation: Validation) -> None:
         "DecisionRecord",
         "conversation_only",
         "四项反馈",
-        "纯文本保真",
-        "ChatGPT Adapter",
-        "静态 Adapter 不被描述为兼容实测",
+        "纯文本协议是跨宿主基线",
+        "Skill-only / 纯文本语义映射",
+        "原生兼容认证",
+        "发布支持范围、内部评测状态与具体会话执行记录分层管理",
+        "capability observation",
+        "trace",
+        "receipt",
         "八维 16 分 rubric",
         "14/16",
         "Draft 2020-12",
         "不改变外部世界",
-        "v0.2.0 真实模型多轮行为：未实测 / not_run",
-        "v0.2.0 方法 option UI：未实测 / not_run",
-        "v0.2.0 Evidence Gate：未实测 / not_run",
-        "v0.2.0 原生反馈单选 UI：未实测 / not_run",
-        "v0.2.0 独立附注呈现：未实测 / not_run",
-        "v0.2.0 多 Agent：未实测 / not_run",
-        "v0.2.0 真人参与体验：未实测 / not_run",
-        "v0.2.0 ChatGPT / 其他宿主：未实测 / not_run",
-        "v0.2.0 解决方案与复判体验：未实测 / not_run",
-        "v0.2.0 真实用户体验：未实测 / not_run",
+        "当前严格为 28 个源文件",
     ):
         validation.require(phrase in requirements, f"REQUIREMENTS.md 缺少 v0.2.0 规则：{phrase}")
 
@@ -1693,17 +1745,12 @@ def validate_public_docs(validation: Validation) -> None:
         "主现实证据闭环",
         "决策快照",
         "纯文本仍保留完整状态",
-        "没有真实运行证据前，不宣称兼容",
-        "v0.2.0 真实模型多轮行为：未实测 / not_run",
-        "v0.2.0 方法 option UI：未实测 / not_run",
-        "v0.2.0 Evidence Gate：未实测 / not_run",
-        "v0.2.0 原生反馈单选 UI：未实测 / not_run",
-        "v0.2.0 独立附注呈现：未实测 / not_run",
-        "v0.2.0 多 Agent：未实测 / not_run",
-        "v0.2.0 ChatGPT / 其他宿主：未实测 / not_run",
-        "v0.2.0 真实用户体验：未实测 / not_run",
+        "v0.2.0 是当前正式版本",
+        "原生兼容认证",
+        "capability observation",
+        "trace 与 receipt",
     ):
-        validation.require(phrase in product, f"PRODUCT.md 缺少 v0.2.0 产品或证据边界：{phrase}")
+        validation.require(phrase in product, f"PRODUCT.md 缺少 v0.2.0 产品或声明边界：{phrase}")
 
     for phrase in (
         "当前 v0.2.0 状态与交互合同",
@@ -1712,9 +1759,88 @@ def validate_public_docs(validation: Validation) -> None:
         "四类授权互不继承",
         "DecisionRecord",
         "scripts/grade_contracts.py` 是 v0.2.0 当前评分器",
-        "v0.2.0 真实模型多轮行为：未实测 / not_run",
+        "版本、发布范围与证据声明",
+        "对外发布状态与内部评测状态必须分层",
+        "28 文件运行时包只写当前发布支持范围",
+        "具体能力是否发生只由当前会话 capability observation",
+        "文档职责必须保持单一",
+        "用户可见文档优先使用读者语言",
     ):
         validation.require(phrase in claude_md, f"CLAUDE.md 缺少 v0.2.0 维护规则：{phrase}")
+
+    for phrase in (
+        "四类授权彼此独立",
+        "无需联网",
+        "不读取私有文件",
+        "只使用当前主 Agent",
+        "不改变外部世界",
+        "不包含可执行脚本",
+        "最新正式版本",
+    ):
+        validation.require(phrase in security, f"SECURITY.md 缺少当前安全模型或发行政策：{phrase}")
+
+    validation.require(
+        "文档性质：非规范性架构说明与历史决策记录" in architecture
+        and "正式行为、安全与验收只以 [`REQUIREMENTS.md`]" in architecture,
+        "架构文档必须明确非规范性角色和 REQUIREMENTS 唯一合同边界",
+    )
+    for phrase in (
+        "v0.2.0 已正式发布",
+        "纯文本协议是跨宿主基线",
+        "Adapter 的存在本身不扩大兼容声明",
+        "observation、consent、trace 与 receipt",
+    ):
+        validation.require(phrase in architecture, f"架构文档缺少正式发布或声明扩展治理：{phrase}")
+    validation.require(
+        "不构成逐项实现或验收规范" in product
+        and "REQUIREMENTS.md" in product,
+        "PRODUCT.md 必须明确只负责产品愿景而非验收合同",
+    )
+    validation.require(
+        "唯一正式行为、安全与验收依据" in requirements,
+        "REQUIREMENTS.md 必须声明唯一正式合同角色",
+    )
+
+    validation.require("## [Unreleased]" in changelog, "CHANGELOG.md 必须保留 Unreleased 节")
+    validation.require(
+        f"## [{CURRENT_CONTRACT_VERSION}] - 2026-08-29" in changelog,
+        "CHANGELOG.md 缺少 v0.2.0 正式发布记录",
+    )
+    for phrase in (
+        "显式调用 `/think-it-through`",
+        "纯文本协议作为跨宿主基线",
+        "不构成原生兼容认证",
+        "28 个运行时源文件",
+        "trace 和 receipt",
+    ):
+        validation.require(phrase in changelog, f"CHANGELOG.md 缺少 v0.2.0 发布事实：{phrase}")
+
+    current_changelog = changelog.split("## [0.1.5]", 1)[0]
+    release_status_re = re.compile(
+        r"not_run|未实测|release candidate|pre-release|候选版(?:本)?|预发布|0\.2\.0-rc",
+        re.IGNORECASE,
+    )
+    for relative, text in public_docs.items():
+        validation.require(
+            not release_status_re.search(text),
+            f"{relative} 不应把内部研发状态写入当前公开发布文案",
+        )
+    validation.require(
+        not release_status_re.search(current_changelog),
+        "CHANGELOG.md 当前发布段不应包含候选版或内部研发状态叙事",
+    )
+
+    runtime_markdown = sorted(
+        relative
+        for relative in EXPECTED_PACKAGE_FILES
+        if relative.endswith(".md")
+    )
+    for relative in runtime_markdown:
+        text = (SKILL_DIR / relative).read_text(encoding="utf-8")
+        validation.require(
+            not release_status_re.search(text),
+            f"运行时分发文档 {relative} 不应携带内部研发状态",
+        )
 
     for legacy_phrase in (
         "本轮确认：基础分析",
@@ -1770,6 +1896,8 @@ def validate_package_source(validation: Validation) -> None:
     )
     validation.require(not forbidden, f"独立 Skill 源目录含禁止分发内容：{forbidden}")
     distributable = actual - {relative for relative in actual if relative.startswith("evals/")}
+    validation.require(len(EXPECTED_PACKAGE_FILES) == 28, "预期分发集合必须明确为 28 个源文件")
+    validation.require(len(distributable) == 28, f"独立分发源文件应为 28 个，当前为 {len(distributable)}")
     validation.require(distributable == EXPECTED_PACKAGE_FILES, f"独立分发文件集合不匹配：{sorted(distributable ^ EXPECTED_PACKAGE_FILES)}")
 
 
@@ -1787,6 +1915,7 @@ def validate_required_open_source_files(validation: Validation) -> None:
         "benchmarks/trigger-v0.1/summary.json",
         "assets/hero.png",
         "assets/demo-flow.svg",
+        "assets/demo-flow.zh-CN.svg",
         "assets/social-preview.png",
         ".github/workflows/validate.yml",
     ):

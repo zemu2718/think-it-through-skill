@@ -13,7 +13,6 @@ import grade_behavior_runs
 from grade_contracts_v0_1 import grade_a as grade_a_v0_1
 
 ROOT = Path(__file__).resolve().parents[1]
-WORKSPACE = ROOT / "skills" / "think-it-through-workspace" / "iteration-1"
 BENCHMARK_DIR = ROOT / "benchmarks" / "behavior-v0.1"
 TRANSCRIPT_HASHES = {
     1: "4531b893b5473dd33560b68e9085e0e1ef77d1ed54dc773f5fee5cb647b3e538",
@@ -25,10 +24,24 @@ TRANSCRIPT_HASHES = {
 class LegacyBehaviorGraderTests(unittest.TestCase):
     @staticmethod
     def _eval_dir(eval_id: int) -> Path:
-        matches = list(WORKSPACE.glob(f"eval-{eval_id}-*"))
+        matches = list(BENCHMARK_DIR.glob(f"eval-{eval_id}-*"))
         if len(matches) != 1:
-            raise AssertionError(f"eval {eval_id} 目录数量异常：{matches}")
+            raise AssertionError(f"eval {eval_id} 冻结目录数量异常：{matches}")
         return matches[0]
+
+    @staticmethod
+    def _copy_run_to_legacy_layout(source: Path, target: Path) -> None:
+        for configuration in ("with_skill", "without_skill"):
+            source_run = source / configuration
+            target_run = target / configuration / "run-1"
+            target_outputs = target_run / "outputs"
+            target_outputs.mkdir(parents=True)
+            (target_outputs / "transcript.md").write_bytes(
+                (source_run / "transcript.md").read_bytes()
+            )
+            grading = source_run / "grading.json"
+            if grading.exists():
+                (target_run / "grading.json").write_bytes(grading.read_bytes())
 
     def test_behavior_grader_explicitly_uses_frozen_module(self) -> None:
         self.assertEqual("grade_contracts_v0_1", grade_behavior_runs.grade_a.__module__)
@@ -39,13 +52,13 @@ class LegacyBehaviorGraderTests(unittest.TestCase):
 
     def test_frozen_with_skill_transcript_hashes(self) -> None:
         for eval_id, expected_hash in TRANSCRIPT_HASHES.items():
-            path = self._eval_dir(eval_id) / "with_skill" / "run-1" / "outputs" / "transcript.md"
+            path = self._eval_dir(eval_id) / "with_skill" / "transcript.md"
             self.assertEqual(expected_hash, hashlib.sha256(path.read_bytes()).hexdigest())
 
     def test_legacy_regrade_matches_frozen_expectations(self) -> None:
         for eval_id in (1, 2, 3):
-            run_dir = self._eval_dir(eval_id) / "with_skill" / "run-1"
-            transcript = (run_dir / "outputs" / "transcript.md").read_text(encoding="utf-8")
+            run_dir = self._eval_dir(eval_id) / "with_skill"
+            transcript = (run_dir / "transcript.md").read_text(encoding="utf-8")
             actual = grade_behavior_runs.grade_run(eval_id, transcript)
             frozen = json.loads((run_dir / "grading.json").read_text(encoding="utf-8"))
             self.assertEqual(frozen["expectations"], actual["expectations"], f"eval {eval_id}")
@@ -55,16 +68,9 @@ class LegacyBehaviorGraderTests(unittest.TestCase):
         source = self._eval_dir(1)
         with tempfile.TemporaryDirectory() as temp_dir:
             target = Path(temp_dir) / source.name
-            (target / "with_skill" / "run-1" / "outputs").mkdir(parents=True)
-            (target / "without_skill" / "run-1" / "outputs").mkdir(parents=True)
+            target.mkdir()
             (target / "eval_metadata.json").write_bytes((source / "eval_metadata.json").read_bytes())
-            for configuration in ("with_skill", "without_skill"):
-                source_outputs = source / configuration / "run-1" / "outputs"
-                target_outputs = target / configuration / "run-1" / "outputs"
-                for filename in ("transcript.md", "metrics.json"):
-                    path = source_outputs / filename
-                    if path.exists():
-                        (target_outputs / filename).write_bytes(path.read_bytes())
+            self._copy_run_to_legacy_layout(source, target)
             original_argv = grade_behavior_runs.argparse.ArgumentParser.parse_args
             try:
                 grade_behavior_runs.argparse.ArgumentParser.parse_args = lambda _self: type(

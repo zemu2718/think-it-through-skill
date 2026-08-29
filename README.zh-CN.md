@@ -12,7 +12,7 @@
 </div>
 
 > [!IMPORTANT]
-> 当前源码合同为 **v0.2.0**。静态合同状态以仓库测试结果为准；真实模型多轮行为、方法 option UI、Evidence Gate、原生反馈单选 UI、独立附注呈现、多 Agent、真人参与体验、ChatGPT / 其他宿主、解决方案复判体验和真实用户体验均为 `未实测 / not_run`。规范、schema、fixture、Markdown 线框和单元测试不能替代真实调用与界面证据。自动发现的冻结 v0.1 holdout 仅为 9/16（正例 1/8、负例 8/8），当前请显式使用 `/think-it-through`。
+> **v0.2.0 已正式发布。** 当前可靠使用方式是在 Claude Code 中显式调用 `/think-it-through`。纯文本协议是跨宿主基线；原生控件、搜索、额外 Agent、私有数据、持久化和外部行动仅在当前会话实际具备相应能力、满足路由条件并取得对应授权时使用，实际执行以 trace 和 receipt 为准。Adapter 文档定义协议映射，不代表对应宿主已经完成原生兼容认证。
 
 ## 它解决什么问题
 
@@ -38,7 +38,7 @@ AI 很擅长完成明确任务。但如果眼前动作不服务真实目的，�
 
 ## 安装前先看体验
 
-<img src="assets/demo-flow.svg" alt="说出议题，对齐目的，确认思考角度，只回答一个关键问题，必要时补充证据或参与，最后获得判断、现实证据闭环和复判入口。" width="100%">
+<img src="assets/demo-flow.zh-CN.svg" alt="说出议题，对齐真实目的，只回答一个关键问题；必要且获授权时补充证据或参与，最后获得判断、决策快照和复判入口。" width="100%">
 
 ```text
 R-align：先说清希望得到或保护什么
@@ -236,7 +236,7 @@ B 默认在对话中输出可复制的决策快照，不写文件、不上传：
 任何反馈都不会自动执行实验，也不构成能力调用、参与 / 委派、私有数据、持久化或外部行动授权。控件不可用、失败或被拒绝时，使用普通编号的明确文本降级。
 
 > [!NOTE]
-> 上述交互是 **v0.2.0 规范线框**，不是模型实测 transcript。静态内容不能证明原生控件、独立附注、搜索、Agent、真人参与或持久化已经实际运行。
+> 上述交互是便于阅读的协议示意。实际会话只使用宿主当时提供的控件与能力；能力调用以 trace 和 receipt 记录。
 
 ## 四类授权必须分开
 
@@ -253,11 +253,11 @@ B 默认在对话中输出可复制的决策快照，不写文件、不上传：
 
 ## 跨宿主怎么工作
 
-| Adapter | 当前合同 |
+| Adapter | v0.2.0 支持边界 |
 | --- | --- |
-| 纯文本 | 一等参考实现；无控件、搜索、Agent 或持久化时仍完整保留核心语义 |
-| Claude Code | 映射当前会话真实可用的原生选择、搜索、文件和 Agent；可靠入口仍是 `/think-it-through` |
-| ChatGPT | 当前仅定义 Skill-only / 纯文本保真；真实运行与兼容验收为 `not_run` |
+| 纯文本 | 跨宿主基线；无原生控件、搜索、Agent 或持久化时仍完整保留核心语义 |
+| Claude Code | 通过显式 `/think-it-through` 正式使用；只映射当前会话观察到的能力 |
+| ChatGPT | Skill-only / 纯文本语义映射；不代表原生控件、工具、Agent 或持久化认证 |
 
 Adapter 只能改变交互表面，不能改变状态、授权、等待、判断和降级语义。官方产品“可能支持”某项能力，不等于当前会话已经启用。
 
@@ -277,7 +277,7 @@ Adapter 只能改变交互表面，不能改变状态、授权、等待、判断
 
 ## 什么时候使用
 
-当前最可靠的方式是显式调用：
+v0.2.0 的正式使用入口是：
 
 ```text
 /think-it-through
@@ -318,7 +318,7 @@ cp -R /path/to/think-it-through-skill/skills/think-it-through .claude/skills/
 
 如果已经安装，请先自行删除或改名旧目录，不要合并两个版本。若会话启动时 Skill 目录尚不存在，创建后重启 Claude Code。
 
-Skill 核心不依赖网络、API Key、账号或可执行脚本。只有当前问题满足条件并取得授权时，才可能使用宿主已有的搜索、私有数据、Agent 或持久化能力。`.skill` 压缩包的客户端端到端安装尚未宣称通过。
+Skill 核心不依赖网络、API Key、账号或可执行脚本。只有当前问题满足条件并取得授权时，才可能使用宿主已有的搜索、私有数据、Agent 或持久化能力。发布归档包含[项目结构](#项目结构)所列的同一组 28 个运行时源文件；Claude Code 当前按上述源码目录方式安装。
 
 Claude Code 官方参考：[Extend Claude with skills](https://code.claude.com/docs/en/slash-commands)。
 
@@ -343,9 +343,9 @@ Claude Code 官方参考：[Extend Claude with skills](https://code.claude.com/d
 
 逐字 transcript、评分和 SHA-256 绑定位于 [`benchmarks/behavior-v0.1/`](benchmarks/behavior-v0.1/)。自动发现的冻结 holdout 为 **9/16**；详情见 [`benchmarks/trigger-v0.1/`](benchmarks/trigger-v0.1/)。
 
-### v0.2.0 静态合同
+### v0.2.0 合同校验
 
-v0.2.0 current grader、versioned fixtures、十维 20 分核心 UX rubric 和八维 16 分增强 rubric 用于定义与回归合同，不是模型输出或真实 UI 证据：
+current grader、versioned fixtures、十维 20 分核心 UX rubric 和八维 16 分增强 rubric 让正式发布合同保持可机械复核：
 
 - [`ux-evals.json`](skills/think-it-through/evals/ux-evals.json)
 - [`ux-rubric.md`](skills/think-it-through/evals/ux-rubric.md)
@@ -356,21 +356,7 @@ uv run --python 3.12 --with pyyaml python -m unittest discover -s scripts -p 'te
 uv run --python 3.12 --with pyyaml python scripts/validate_repo.py
 ```
 
-在产生对应真实证据前，状态保持：
-
-```text
-v0.2.0 静态合同：按实际验证结果记录
-v0.2.0 真实模型多轮行为：未实测 / not_run
-v0.2.0 方法 option UI：未实测 / not_run
-v0.2.0 Evidence Gate：未实测 / not_run
-v0.2.0 原生反馈单选 UI：未实测 / not_run
-v0.2.0 独立附注呈现：未实测 / not_run
-v0.2.0 多 Agent：未实测 / not_run
-v0.2.0 真人参与体验：未实测 / not_run
-v0.2.0 ChatGPT / 其他宿主：未实测 / not_run
-v0.2.0 解决方案与复判体验：未实测 / not_run
-v0.2.0 真实用户体验：未实测 / not_run
-```
+仓库合同校验与具体会话执行分开管理：前者确认分发协议和机器合同，后者只由当次能力观测、授权、trace 与 receipt 建立。新增宿主原生兼容声明，需要对应版本的加载、交互、执行与降级证据。
 
 ## 安全与隐私
 
@@ -397,7 +383,6 @@ skills/think-it-through/
 ├── policies/                   # Evidence / Participation 路由
 ├── adapters/                   # text / Claude Code / ChatGPT
 ├── references/                 # 分析、交互、方法、安全与来源
-├── examples/                   # 冻结 v0.1 逐字 transcript
 ├── evals/                      # current fixtures、UX 与触发定义；不打包
 ├── LICENSE
 └── THIRD_PARTY_NOTICES.md
@@ -410,7 +395,7 @@ assets/                         # 原创项目视觉
 CHANGELOG.md                    # 发布状态与版本历史
 ```
 
-唯一维护源是 `skills/think-it-through/`。项目级 `.claude/skills/think-it-through/` 只是本地安装副本。分发包包含 core、policies、adapters、必要 references、examples、许可证和第三方通知；排除 evals、benchmarks、workspace、缓存和本机配置。
+唯一维护源是 `skills/think-it-through/`。项目级 `.claude/skills/think-it-through/` 只是本地安装副本。分发包共 28 个源文件，包含运行时入口、core、policies、adapters、必要 references、许可证和第三方通知；排除 evals、benchmarks、历史 transcript、workspace、缓存和本机配置。
 
 ## 参与贡献
 

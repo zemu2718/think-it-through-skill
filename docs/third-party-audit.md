@@ -1,6 +1,21 @@
 # Third-party source audit
 
-This document records the v0.1 source review for the neutral specialist method cards bundled with Think It Through. It is an engineering and licensing record, not an endorsement of every statement or behavior in the reviewed repositories.
+This document records the source review for the neutral specialist method cards bundled with Think It Through. It is an engineering and licensing record, not an endorsement of every statement or behavior in the reviewed repositories. The adopted source set was established in v0.1 and remains the provenance basis for v0.2.0.
+
+## 简体中文摘要
+
+本文档记录随 Skill 分发的七张专项方法卡如何追溯到固定上游版本。它只说明工程审计与许可证事实，不代表本项目认可候选仓库中的所有观点、措辞或行为。
+
+| 项目 | 结论 |
+| --- | --- |
+| 审计范围 | 4 个候选仓库，全部固定到明确 commit |
+| 采用结果 | 仅从 `SamadhiFire/xinqingnian-maoxuan-skill` 中性改编 7 个独立方法文件 |
+| 未采用 | 其余 3 个仓库，以及已选仓库中的执行路线和索引文件 |
+| 采用门槛 | 独立决策价值、可中性表达、安全边界清楚、许可证允许改编与分发、可覆盖路由测试 |
+| 主要修改 | 删除人物模仿、政治 / 军事与动员措辞、操控和高压策略、无证据权威；增加适用边界、可观察证据、重叠规则和可撤回复判 |
+| 法律记录 | 固定来源、commit、准确文件、MIT 许可证和实质修改同时记录在本文档、方法注册表、每张方法卡和两份 `THIRD_PARTY_NOTICES.md` |
+
+详细文件映射和英文审计记录见下文。新增或升级第三方材料时，必须重新固定版本、核对许可证并同步全部来源记录；不得只修改方法卡正文。
 
 ## Audit policy
 

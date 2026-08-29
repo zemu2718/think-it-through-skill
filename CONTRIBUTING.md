@@ -19,18 +19,28 @@ Please do not add a framework, persona, method card, or tool integration merely 
 
 ## Before opening a pull request
 
-1. Read [`PRODUCT.md`](PRODUCT.md), [`REQUIREMENTS.md`](REQUIREMENTS.md), and the relevant part of [`SKILL.md`](skills/think-it-through/SKILL.md).
-2. For behavior changes, add or update a fixture under `skills/think-it-through/evals/fixtures/`. Evidence, participation, human-review, persistence, and host changes must also update the relevant core schema, policy, or adapter.
-3. For trigger changes, use `trigger-dev.json`. Do not inspect or tune against the frozen holdout for the same release.
-4. Run:
+Use the document that matches your task:
+
+| If you are changing | Read first |
+| --- | --- |
+| Product purpose, audience, or non-goals | [`PRODUCT.md`](PRODUCT.md) |
+| Behavior, safety, or acceptance criteria | [`REQUIREMENTS.md`](REQUIREMENTS.md) |
+| Runtime instructions | The relevant part of [`SKILL.md`](skills/think-it-through/SKILL.md) |
+| Architecture rationale or future evidence work | [`docs/product-architecture-v0.2.0.md`](docs/product-architecture-v0.2.0.md) |
+
+Then:
+
+1. For behavior changes, add or update a fixture under `skills/think-it-through/evals/fixtures/`. Evidence, participation, human-review, persistence, and host changes must also update the relevant core schema, policy, or adapter.
+2. For trigger changes, use `trigger-dev.json`. Do not inspect or tune against the frozen holdout for the same release.
+3. Run:
 
    ```bash
    python3 -m unittest discover -s scripts -p 'test_*.py' -v
    python3 scripts/validate_repo.py
    ```
 
-5. Keep English and Chinese README instructions synchronized when changing user-facing commands, compatibility, benchmarks, or security boundaries.
-6. Describe what changed, why it changes a decision, and how it was verified.
+4. Keep English and Chinese README instructions synchronized when changing user-facing commands, compatibility, benchmarks, or security boundaries.
+5. Describe what changed, why it changes a decision, and how it was verified.
 
 ## Third-party material
 
@@ -76,18 +86,28 @@ By contributing, you agree that your contribution is licensed under the reposito
 
 ### 提交 Pull Request 前
 
-1. 阅读 [`PRODUCT.md`](PRODUCT.md)、[`REQUIREMENTS.md`](REQUIREMENTS.md) 和 [`SKILL.md`](skills/think-it-through/SKILL.md) 的相关部分。
-2. 行为修改应在 `skills/think-it-through/evals/fixtures/` 增加或更新夹具；证据、参与、真人评审、持久化或宿主行为变化还必须同步相应 core schema、policy 或 adapter。
-3. 触发修改只使用 `trigger-dev.json`；同一版本不得读取最终 holdout 后继续调优。
-4. 运行：
+先按修改类型选择文档，不必从头阅读全部规范：
+
+| 如果你要修改 | 先读 |
+| --- | --- |
+| 产品目的、目标用户或非目标 | [`PRODUCT.md`](PRODUCT.md) |
+| 行为、安全或验收标准 | [`REQUIREMENTS.md`](REQUIREMENTS.md) |
+| 运行时指令 | [`SKILL.md`](skills/think-it-through/SKILL.md) 的相关部分 |
+| 架构理由或后续实测路线 | [`docs/product-architecture-v0.2.0.md`](docs/product-architecture-v0.2.0.md) |
+
+然后：
+
+1. 行为修改应在 `skills/think-it-through/evals/fixtures/` 增加或更新夹具；证据、参与、真人评审、持久化或宿主行为变化还必须同步相应 core schema、policy 或 adapter。
+2. 触发修改只使用 `trigger-dev.json`；同一版本不得读取最终 holdout 后继续调优。
+3. 运行：
 
    ```bash
    python3 -m unittest discover -s scripts -p 'test_*.py' -v
    python3 scripts/validate_repo.py
    ```
 
-5. 修改用户命令、兼容性、benchmark 或安全边界时，同步英文和中文 README。
-6. 在 PR 中说明改了什么、为什么会改变决策，以及如何验证。
+4. 修改用户命令、兼容性、benchmark 或安全边界时，同步英文和中文 README。
+5. 在 PR 中说明改了什么、为什么会改变决策，以及如何验证。
 
 ### 第三方材料
 

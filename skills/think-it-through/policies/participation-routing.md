@@ -166,6 +166,11 @@ what_would_reverse_this
 
 四类授权按 `core/consent.schema.json` 独立记录。B 的反馈、方法选择或当前 Agent 上限均不能扩大其中任何一类授权。
 
-## 证据声明
+## 执行证明
 
-规范、Schema、线框和 synthetic fixture 只能证明 Participation Policy 已定义，不能证明真实 Agent 已启动、并行提高了质量、真人已参与或任何宿主已实现该体验。没有真实运行证据时状态必须是 `not_run`。
+规范、Schema、线框和 synthetic fixture 只定义 Participation Policy，不自行证明真实 Agent 或真人已经参与。
+
+- 只有实际 delegation trace 与 started / completed / failed receipt 才能证明额外 Agent 的启动和结果；
+- 回执中的实际总数必须等于当前主 Agent 加实际启动的额外 Agent；没有额外 Agent 回执时不得声称多 Agent 已发生；
+- 真人参与只有真实回复或已授权外部行动的对应回执才能写入事实；可转发草稿不能冒充对方已参与；
+- Agent 数量、并行执行或模型一致性本身不证明质量增益，最终判断仍须呈现来源、冲突和现实证据边界。
