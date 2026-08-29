@@ -7,7 +7,7 @@
 
 一个开源 Agent Skill：先确认真正要解决什么，再找出最可能改变决定的一个答案；只有外部证据或独立参与确实有增量时，才按授权升级，最终交付一个综合判断、一个主现实证据闭环和可复制的决策快照。
 
-[English](README.md) · [产品文档](PRODUCT.md) · [需求与验收](REQUIREMENTS.md) · [参与贡献](CONTRIBUTING.md)
+[English](README.md) · [产品文档](PRODUCT.md) · [需求与验收](REQUIREMENTS.md) · [变更记录](CHANGELOG.md) · [参与贡献](CONTRIBUTING.md)
 
 </div>
 
@@ -404,8 +404,10 @@ skills/think-it-through/
 
 benchmarks/behavior-v0.1/       # 冻结行为证据
 benchmarks/trigger-v0.1/        # 冻结 discovery 证据
+docs/                           # 版本化产品架构与第三方审计
 scripts/                        # 版本化评分、测试、校验与打包
 assets/                         # 原创项目视觉
+CHANGELOG.md                    # 发布状态与版本历史
 ```
 
 唯一维护源是 `skills/think-it-through/`。项目级 `.claude/skills/think-it-through/` 只是本地安装副本。分发包包含 core、policies、adapters、必要 references、examples、许可证和第三方通知；排除 evals、benchmarks、workspace、缓存和本机配置。

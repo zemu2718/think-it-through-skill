@@ -7,7 +7,7 @@
 
 An open Agent Skill that clarifies what you are actually trying to resolve, finds the one answer most likely to change the decision, escalates to evidence or independent participation only when it adds value and you authorize it, and ends with one synthesized judgment, one primary real-world evidence loop, and a copyable decision snapshot.
 
-[简体中文](README.zh-CN.md) · [Product](PRODUCT.md) · [Requirements](REQUIREMENTS.md) · [Contributing](CONTRIBUTING.md)
+[简体中文](README.zh-CN.md) · [Product](PRODUCT.md) · [Requirements](REQUIREMENTS.md) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
@@ -404,8 +404,10 @@ skills/think-it-through/
 
 benchmarks/behavior-v0.1/       # Frozen behavior evidence
 benchmarks/trigger-v0.1/        # Frozen discovery evidence
+docs/                           # Versioned product architecture and third-party audit
 scripts/                        # Versioned grading, tests, validation, packaging
 assets/                         # Original project visuals
+CHANGELOG.md                    # Release status and version history
 ```
 
 The single maintenance source is `skills/think-it-through/`. A project-level `.claude/skills/think-it-through/` is only a local installation copy. Distribution includes core, policies, adapters, required references, examples, licenses, and notices; it excludes evals, benchmarks, workspaces, caches, and local configuration.

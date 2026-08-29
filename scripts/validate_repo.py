@@ -1777,8 +1777,10 @@ def validate_required_open_source_files(validation: Validation) -> None:
     for relative in (
         "README.md",
         "README.zh-CN.md",
+        "CHANGELOG.md",
         "CONTRIBUTING.md",
         "SECURITY.md",
+        "docs/product-architecture-v0.2.0.md",
         "docs/third-party-audit.md",
         "benchmarks/behavior-v0.1/README.md",
         "benchmarks/trigger-v0.1/README.md",

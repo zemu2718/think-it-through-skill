@@ -10,7 +10,7 @@ The most valuable changes are concrete and testable:
 
 - a realistic decision scenario that exposes a state-contract failure;
 - a trigger positive or close negative that improves discovery without hijacking unrelated work;
-- a simpler instruction that preserves R → A → B behavior;
+- a simpler instruction that preserves R-align → R-method → A → optional Gate → B behavior;
 - a method-card routing test for applicability, non-applicability, or overlap;
 - an accessibility, privacy, safety, or provenance correction;
 - a reproducible packaging or validation fix.
@@ -20,7 +20,7 @@ Please do not add a framework, persona, method card, or tool integration merely 
 ## Before opening a pull request
 
 1. Read [`PRODUCT.md`](PRODUCT.md), [`REQUIREMENTS.md`](REQUIREMENTS.md), and the relevant part of [`SKILL.md`](skills/think-it-through/SKILL.md).
-2. For behavior changes, add or update a fixture under `skills/think-it-through/evals/fixtures/`.
+2. For behavior changes, add or update a fixture under `skills/think-it-through/evals/fixtures/`. Evidence, participation, human-review, persistence, and host changes must also update the relevant core schema, policy, or adapter.
 3. For trigger changes, use `trigger-dev.json`. Do not inspect or tune against the frozen holdout for the same release.
 4. Run:
 
@@ -67,7 +67,7 @@ By contributing, you agree that your contribution is licensed under the reposito
 
 - 能暴露状态合同问题的真实决策场景；
 - 能提升发现性又不误触无关任务的正向或近邻负向触发样本；
-- 在保留 R → A → B 行为的前提下简化指令；
+- 在保留 R-align → R-method → A → 可选 Gate → B 行为的前提下简化指令；
 - 专项方法卡的适用、不适用或重叠路由测试；
 - 可访问性、隐私、安全或来源追溯修正；
 - 可复现的打包和校验修复。
@@ -77,7 +77,7 @@ By contributing, you agree that your contribution is licensed under the reposito
 ### 提交 Pull Request 前
 
 1. 阅读 [`PRODUCT.md`](PRODUCT.md)、[`REQUIREMENTS.md`](REQUIREMENTS.md) 和 [`SKILL.md`](skills/think-it-through/SKILL.md) 的相关部分。
-2. 行为修改应在 `skills/think-it-through/evals/fixtures/` 增加或更新夹具。
+2. 行为修改应在 `skills/think-it-through/evals/fixtures/` 增加或更新夹具；证据、参与、真人评审、持久化或宿主行为变化还必须同步相应 core schema、policy 或 adapter。
 3. 触发修改只使用 `trigger-dev.json`；同一版本不得读取最终 holdout 后继续调优。
 4. 运行：
 
