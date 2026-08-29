@@ -186,39 +186,47 @@ Current judgment and recommended direction
 → Four-way feedback
 ```
 
-The primary evidence loop tests one core hypothesis:
+The primary evidence loop tests one core hypothesis without turning the answer into a stack of label-first fields:
 
 ```text
-Action: what to do and within which resource boundary
+The test is whether the current version produces a real response that distinguishes the direction (core hypothesis).
 
-Observe: what real signal supports or argues against continuing
+Show the existing version and invite real payment without adding features (action for this round).
 
-Reassess: when or on what evidence to decide again
+Record payment, explicit refusal, and refusal reasons; payment supports continuing while repeated refusal argues against it (signals to observe).
+
+If payment appears, decide again whether to proceed; if refusals persist, stop new investment (reassessment condition).
 ```
 
-It may contain necessary sequential actions or several participants when they test the same hypothesis under one boundary and reassessment point. It cannot bundle unrelated projects. Every decision-relevant number introduced by the Skill is labeled locally as a suggested boundary, heuristic starting point, or reliable sourced value.
+The meaning comes first; the precise role appears at the end only where useful. The loop may contain necessary sequential actions or several participants when they test the same hypothesis under one boundary and reassessment point. It cannot bundle unrelated projects. Every decision-relevant number introduced by the Skill is labeled locally as a suggested boundary, heuristic starting point, or reliable sourced value.
 
 Stage B produces a copyable conversation-only snapshot by default:
 
 ```markdown
 ## Decision snapshot
 
-Issue:
-Real objective:
-Decision this round:
-Current judgment:
-Recommended direction and reason:
-Confirmed facts:
-Key inferences:
-Key hypotheses and unknowns:
-Evidence sources:
-Signals that would change the judgment:
-Primary real-world experiment:
-Reassessment trigger:
-Participation and capability record:
+What we are deciding:
+What you want to gain or protect:
+Decision needed this round:
+Thinking approaches used this round:
+Best direction for now:
+Why this direction fits:
+Conditions that must hold:
+What is already confirmed:
+What the current evidence suggests:
+What this judgment still assumes:
+What remains unknown:
+Where the evidence came from:
+What would change the judgment:
+What this round needs to learn:
+What to do first:
+Which real-world signals to watch:
+When to decide again:
+Participants and capabilities used:
+Where this record is kept: this conversation only
 ```
 
-Writing it to a file or remote store requires a concrete destination and consent. The Skill does not persist hidden chain-of-thought. A later round can use a pasted snapshot to distinguish judgment error, execution deviation, resource mismatch, and changed conditions.
+These reader-facing fields map one-to-one to the canonical DecisionRecord; assumptions and unknowns remain separate. Writing it to a file or remote store requires a concrete destination and consent. The Skill does not persist hidden chain-of-thought. A later round can use a pasted old or new snapshot to distinguish judgment error, execution deviation, resource mismatch, and changed conditions.
 
 ### 6. Four-way feedback routes what happens next
 

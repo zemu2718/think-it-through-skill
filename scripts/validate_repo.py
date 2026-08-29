@@ -826,6 +826,46 @@ def validate_specialized_fixtures(validation: Validation, fixture_dir: Path) -> 
     record = adapter_data.get("decision_record", {})
     record_checks = grade_decision_record(record)
     validation.require(all(check.passed for check in record_checks), "fixture 17 DecisionRecord 正例必须通过当前 grader")
+    visible_snapshot = adapter_data.get("visible_snapshot", {})
+    required_snapshot_paths = {
+        "topic",
+        "true_objectives",
+        "decision",
+        "confirmed_methods",
+        "judgment.recommendation",
+        "judgment.rationale",
+        "judgment.validity_conditions",
+        "evidence.confirmed_facts",
+        "evidence.inferences",
+        "evidence.assumptions",
+        "evidence.unknowns",
+        "evidence.sources",
+        "reversal_signals",
+        "main_experiment.core_hypothesis",
+        "main_experiment.action",
+        "main_experiment.observation",
+        "main_experiment.reassessment",
+        "participation_and_capabilities",
+        "persistence",
+    }
+    snapshot_paths = {
+        item.get("path")
+        for item in visible_snapshot.values()
+        if isinstance(item, dict)
+    } if isinstance(visible_snapshot, dict) else set()
+    validation.require(
+        required_snapshot_paths == snapshot_paths,
+        "fixture 17 可见快照必须逐项映射 canonical DecisionRecord，且假设与未知分别保留",
+    )
+    for label, item in visible_snapshot.items() if isinstance(visible_snapshot, dict) else []:
+        path = item.get("path") if isinstance(item, dict) else None
+        current = record
+        for part in path.split(".") if isinstance(path, str) else []:
+            current = current.get(part) if isinstance(current, dict) else None
+        validation.require(
+            isinstance(item, dict) and item.get("value") == current,
+            f"fixture 17 可见快照字段 {label} 未无损映射 {path}",
+        )
     adapters = adapter_data.get("adapter_cases", [])
     adapter_by_id = {case.get("id"): case for case in adapters if isinstance(case, dict)} if isinstance(adapters, list) else {}
     required_adapter_ids = {
@@ -1090,8 +1130,8 @@ def validate_evals(validation: Validation) -> None:
                     f"fixture {path.name} 第 {index} 个 B 项必须声明 semantic_paragraphs=true",
                 )
                 validation.require(
-                    expected_interaction.get("action_observe_review_separate_paragraphs") is True,
-                    f"fixture {path.name} 第 {index} 个 B 项必须声明动作、观察和复判分别成段",
+                    expected_interaction.get("main_loop_roles_separate_paragraphs") is True,
+                    f"fixture {path.name} 第 {index} 个 B 项必须声明主现实闭环的四个语义角色分别成段",
                 )
                 validation.require(
                     expected_interaction.get("question_is_last_paragraph") is True,
@@ -1348,7 +1388,7 @@ def validate_evals(validation: Validation) -> None:
             "不要求排出唯一第一名",
             "真实排他边界",
             "按语义短段呈现",
-            "动作、观察、复判各自成段",
+            "自然句分别说清核心假设、本轮动作、观察信号和复判条件",
             "四项原生单选",
             "独立附注",
             "普通编号",
@@ -1392,7 +1432,7 @@ def validate_evals(validation: Validation) -> None:
             "有限互斥答案使用单选",
             "开放答案直接自由回答",
             "正式问题独立位于最后",
-            "动作、观察、复判",
+            "要弄清什么、先做什么、看哪些现实信号和何时重新决定",
             "B 用四项单选表达一个主要反馈方向",
             "未观察到独立附注时不假装存在备注框",
             "文本降级明确使用普通编号",
@@ -1598,7 +1638,7 @@ def validate_contract_graders(validation: Validation) -> None:
             '"PARTICIPATION"',
             '"HUMAN"',
             '"DECISION_RECORD"',
-            '"阶段 B 的动作、观察和复判分别成段"',
+            '"阶段 B 的核心假设、本轮动作、观察信号和复判条件以自然句分别成段并后置标记"',
             '"阶段 B 只提出一个反馈问题，不追加决策信息问题"',
         ):
             validation.require(token in current_text, f"当前评分器缺少 v0.2.0 合同：{token}")
@@ -1692,6 +1732,29 @@ def validate_public_docs(validation: Validation) -> None:
         validation.require("examples/" not in text, f"{name} 仍把已删除 examples/ 描述为当前结构")
 
     validation.require(
+        "（核心假设）" in readme_zh
+        and "（本轮动作）" in readme_zh
+        and "（观察信号）" in readme_zh
+        and "（复判条件）" in readme_zh,
+        "中文 README 缺少自然句末主现实闭环示例",
+    )
+    validation.require(
+        "(core hypothesis)" in readme_en
+        and "(action for this round)" in readme_en
+        and "(signals to observe)" in readme_en
+        and "(reassessment condition)" in readme_en,
+        "英文 README 缺少自然句末主现实闭环示例",
+    )
+    validation.require(
+        "当前判断仍依赖" in readme_zh and "仍不知道的关键问题" in readme_zh,
+        "中文 README 决策快照必须分别显示假设与未知",
+    )
+    validation.require(
+        "What this judgment still assumes" in readme_en and "What remains unknown" in readme_en,
+        "英文 README 决策快照必须分别显示假设与未知",
+    )
+
+    validation.require(
         "assets/demo-flow.zh-CN.svg" not in readme_en,
         "英文 README 不应引用中文流程图",
     )
@@ -1728,6 +1791,8 @@ def validate_public_docs(validation: Validation) -> None:
         "Draft 2020-12",
         "不改变外部世界",
         "当前严格为 28 个源文件",
+        "普通正文先自然说清",
+        "assumptions` 与 `unknowns` 必须分别呈现",
     ):
         validation.require(phrase in requirements, f"REQUIREMENTS.md 缺少 v0.2.0 规则：{phrase}")
 
@@ -1765,6 +1830,8 @@ def validate_public_docs(validation: Validation) -> None:
         "具体能力是否发生只由当前会话 capability observation",
         "文档职责必须保持单一",
         "用户可见文档优先使用读者语言",
+        "普通正文先说完整含义",
+        "canonical key 与用户可见字段分离",
     ):
         validation.require(phrase in claude_md, f"CLAUDE.md 缺少 v0.2.0 维护规则：{phrase}")
 
@@ -1789,6 +1856,8 @@ def validate_public_docs(validation: Validation) -> None:
         "纯文本协议是跨宿主基线",
         "Adapter 的存在本身不扩大兼容声明",
         "observation、consent、trace 与 receipt",
+        "自然语言显示投影",
+        "current grader 检查主现实闭环的受控句末标记",
     ):
         validation.require(phrase in architecture, f"架构文档缺少正式发布或声明扩展治理：{phrase}")
     validation.require(
@@ -1812,6 +1881,8 @@ def validate_public_docs(validation: Validation) -> None:
         "不构成原生兼容认证",
         "28 个运行时源文件",
         "trace 和 receipt",
+        "阶段 B 改为自然语言优先",
+        "与稳定的 DecisionRecord schema 无损映射",
     ):
         validation.require(phrase in changelog, f"CHANGELOG.md 缺少 v0.2.0 发布事实：{phrase}")
 

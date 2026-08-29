@@ -807,17 +807,20 @@ class ContractGraderTests(unittest.TestCase):
         self.assertEqual([("10", "%")], [phrase.key for phrase in phrases])
 
     def test_valid_b_unexecuted_with_single_experiment(self) -> None:
-        text = """按目前信息，我更建议：小步验证。
+        text = """按目前信息，当前更合适的方向如下（当前判断：小步验证）。
 
 原因很简单：付费意愿还是会改变决定的最大未知；如果真实付款出现，判断可以转向推进，否则应停止继续投入。
 
 ### 先做这一件事
 
-**动作**：把现有版本给符合画像的陌生对象看，并邀请真实付款，不新增功能。
 
-**观察**：记录真实付款、明确拒绝和拒绝理由。
+这一步要弄清的是现有版本能否产生有区分力的现实反应（核心假设）。
 
-**复判**：出现真实付款就重新判断是否推进；持续只有拒绝就停止本轮开发投入。"""
+把现有版本给符合画像的陌生对象看，并邀请真实付款，不新增功能（本轮动作）。
+
+记录真实付款、明确拒绝和拒绝理由（观察信号）。
+
+出现真实付款就重新判断是否推进；持续只有拒绝就停止本轮开发投入（复判条件）。"""
         self.assert_all_pass(
             grade_b(
                 text,
@@ -826,16 +829,98 @@ class ContractGraderTests(unittest.TestCase):
             )
         )
 
+    def test_valid_b_without_fixed_heading(self) -> None:
+        text = """按目前信息，更合适的是先验证真实付款，再决定是否继续开发（当前判断：小步验证）。
+
+这一步要弄清的是，现有版本能否带来有区分力的真实反应（核心假设）。
+
+先展示现有版本，再邀请符合画像的陌生对象真实付款，但不新增功能（本轮动作）。
+
+只记录付款、明确拒绝和拒绝理由；付款支持继续，持续拒绝则反对继续（观察信号）。
+
+出现付款时重新决定是否推进；持续只有拒绝时停止新增投入（复判条件）。"""
+        self.assert_all_pass(
+            grade_b(text, already_executed=False, interaction=native_b_feedback())
+        )
+
+    def test_valid_b_english_suffix_contract(self) -> None:
+        text = """Based on the current evidence, validate real payment before committing further (current judgment: small test).
+
+The point to test is whether the current version solves a problem worth paying for (core hypothesis).
+
+Show the existing version to suitable prospects and invite real payment without adding features (action for this round).
+
+Record payment, explicit refusal, and refusal reasons; payment supports continuing while repeated refusal argues against it (signals to observe).
+
+If payment appears, reassess whether to proceed; if refusals persist, stop new investment (reassessment condition)."""
+        self.assert_all_pass(
+            grade_b(text, already_executed=False, interaction=native_b_feedback())
+        )
+
+    def test_b_rejects_legacy_prefix_labels(self) -> None:
+        text = """按目前信息，更合适的是先验证真实付款（当前判断：小步验证）。
+
+核心假设：现有版本能否带来真实付款（核心假设）。
+
+**动作**：展示现有版本（本轮动作）。
+
+**观察**：付款支持继续，拒绝反对继续（观察信号）。
+
+**复判**：有付款时重新决定是否推进，否则停止（复判条件）。"""
+        checks = grade_b(text, already_executed=False, interaction=native_b_feedback())
+        self.assert_has_failure(
+            checks,
+            "阶段 B 的核心假设、本轮动作、观察信号和复判条件以自然句分别成段并后置标记",
+        )
+
+    def test_b_rejects_missing_or_misordered_suffixes(self) -> None:
+        cases = {
+            "missing": """按目前信息，更合适的是先验证（当前判断：小步验证）。
+
+先展示现有版本（本轮动作）。
+
+付款支持继续，拒绝反对继续（观察信号）。
+
+有付款时重新决定，否则停止（复判条件）。""",
+            "misordered": """按目前信息，更合适的是先验证（当前判断：小步验证）。
+
+先展示现有版本（本轮动作）。
+
+要弄清的是能否带来真实付款（核心假设）。
+
+付款支持继续，拒绝反对继续（观察信号）。
+
+有付款时重新决定，否则停止（复判条件）。""",
+            "duplicate": """按目前信息，更合适的是先验证（当前判断：小步验证）。
+
+要弄清的是能否带来真实付款（核心假设）。
+
+另一个假设也需要验证（核心假设）。
+
+先展示现有版本（本轮动作）。
+
+付款支持继续，拒绝反对继续（观察信号）。
+
+有付款时重新决定，否则停止（复判条件）。""",
+        }
+        for name, text in cases.items():
+            with self.subTest(name=name):
+                checks = grade_b(text, already_executed=False, interaction=native_b_feedback())
+                self.assert_has_failure(checks, "阶段 B 只有一个现实实验")
+
     def test_valid_b_with_locally_attributed_numbers(self) -> None:
-        text = """按目前信息，我更建议：小步验证。
+        text = """按目前信息，当前更合适的方向如下（当前判断：小步验证）。
 原因很简单：真实付款会改变判断，持续没有付款就停止。
 
 ### 先做这一件事
-**动作**：用建议边界 500 元触达对象。
 
-**观察**：把 15 人作为启发式起点，记录是否付款。
+这一步要弄清的是现实触达能否带来有区分力的反应（核心假设）。
 
-**复判**：建议边界是至少 3 人付款才复判是否推进；无人付款就停止。
+用建议边界 500 元触达对象（本轮动作）。
+
+把 15 人作为启发式起点，记录是否付款（观察信号）。
+
+建议边界是至少 3 人付款才复判是否推进；无人付款就停止（复判条件）。
 """
         self.assert_all_pass(
             grade_b(
@@ -846,75 +931,93 @@ class ContractGraderTests(unittest.TestCase):
         )
 
     def test_b_feedback_controls_are_not_questions_or_actions(self) -> None:
-        text = """按目前信息，我更建议：调整。
+        text = """按目前信息，当前更合适的方向如下（当前判断：调整）。
 原因很简单：真实反馈会改变判断，若结果改善则继续，否则暂停。
 ### 先做这一件事
-**动作**：只调整当前合作的责任边界。
 
-**观察**：看双方是否按新边界行动。
+这一步要弄清的是明确责任边界能否改善合作（核心假设）。
 
-**复判**：边界被履行则继续，否则暂停。"""
+只调整当前合作的责任边界（本轮动作）。
+
+记录双方是否按新边界行动；履行支持继续，不履行则反对继续（观察信号）。
+
+边界被履行则继续，否则重新决定是否暂停（复判条件）。"""
         self.assert_all_pass(grade_b(text, already_executed=True, interaction=native_b_feedback()))
 
     def test_b_components_without_blank_lines_fail_layout(self) -> None:
-        text = """按目前信息，我更建议：小步验证。
+        text = """按目前信息，当前更合适的方向如下（当前判断：小步验证）。
 
 真实付款会改变判断，没有付款就停止。
 
 ### 先做这一件事
 
-**动作**：验证真实付款。
-**观察**：记录付款或明确拒绝。
-**复判**：有付款就推进，否则停止。"""
+
+这一步要弄清的是当前方案能否带来真实付款（核心假设）。
+
+验证真实付款（本轮动作）。
+记录付款或明确拒绝（观察信号）。
+有付款就推进，否则停止（复判条件）。"""
         checks = grade_b(text, already_executed=False, interaction=native_b_feedback())
-        self.assert_has_failure(checks, "阶段 B 的动作、观察和复判分别成段")
+        self.assert_has_failure(checks, "阶段 B 的核心假设、本轮动作、观察信号和复判条件以自然句分别成段并后置标记")
 
     def test_b_with_question_fails(self) -> None:
-        text = """按目前信息，我更建议：暂停。
+        text = """按目前信息，当前更合适的方向如下（当前判断：暂停）。
 真实结果改善则继续，否则停止。
 ### 先做这一件事
-**动作**：暂停新增投入。
 
-**观察**：记录现实结果。
+这一步要弄清的是暂停投入后现实结果是否改善（核心假设）。
 
-**复判**：结果改善则继续，否则停止。
+暂停新增投入（本轮动作）。
+
+记录现实结果（观察信号）。
+
+结果改善则继续，否则停止（复判条件）。
 你还想继续吗？"""
         checks = grade_b(text, already_executed=True, interaction=native_b_feedback())
         self.assert_has_failure(checks, "阶段 B 只提出一个反馈问题，不追加决策信息问题")
 
     def test_b_unexplained_precise_numbers_fail(self) -> None:
-        text = """按目前信息，我更建议：小步验证。
+        text = """按目前信息，当前更合适的方向如下（当前判断：小步验证）。
 真实付款会改变判断，没有付款就停止。
 ### 先做这一件事
-**动作**：用 500 元触达对象。
 
-**观察**：记录 15 人中是否有人付款。
+这一步要弄清的是有限触达能否带来真实付款（核心假设）。
 
-**复判**：至少 3 人付款才推进，否则停止。"""
+用 500 元触达对象（本轮动作）。
+
+记录 15 人中是否有人付款（观察信号）。
+
+至少 3 人付款才推进，否则停止（复判条件）。"""
         checks = grade_b(text, already_executed=False, interaction=native_b_feedback())
         self.assert_has_failure(checks, "阶段 B 的每个系统新增数字都有局部来源或建议性质")
 
     def test_b_one_global_disclaimer_does_not_cover_other_numbers(self) -> None:
-        text = """按目前信息，我更建议：小步验证。
+        text = """按目前信息，当前更合适的方向如下（当前判断：小步验证）。
 真实付款会改变判断，没有付款就停止。
 ### 先做这一件事
-**动作**：建议边界是先用 500 元触达对象。
 
-**观察**：记录 15 人中是否有人付款。
+这一步要弄清的是有限触达能否带来真实付款（核心假设）。
 
-**复判**：至少 3 人付款才推进，否则停止。"""
+建议边界是先用 500 元触达对象（本轮动作）。
+
+记录 15 人中是否有人付款（观察信号）。
+
+至少 3 人付款才推进，否则停止（复判条件）。"""
         checks = grade_b(text, already_executed=False, interaction=native_b_feedback())
         self.assert_has_failure(checks, "阶段 B 的每个系统新增数字都有局部来源或建议性质")
 
     def test_b_reuses_user_provided_numbers(self) -> None:
-        text = """按目前信息，我更建议：小步验证。
+        text = """按目前信息，当前更合适的方向如下（当前判断：小步验证）。
 真实付款会改变判断，没有付款就停止。
 ### 先做这一件事
-**动作**：按你说的 500 元预算触达对象。
 
-**观察**：记录十个人中是否有人付款。
+这一步要弄清的是用户给定边界内能否带来真实付款（核心假设）。
 
-**复判**：达到百分之十的付款比例就推进，否则停止。"""
+按你说的 500 元预算触达对象（本轮动作）。
+
+记录十个人中是否有人付款（观察信号）。
+
+达到百分之十的付款比例就推进，否则停止（复判条件）。"""
         self.assert_all_pass(
             grade_b(
                 text,
@@ -925,92 +1028,114 @@ class ContractGraderTests(unittest.TestCase):
         )
 
     def test_b_duplicate_heading_fails(self) -> None:
-        text = """按目前信息，我更建议：小步验证。
+        text = """按目前信息，当前更合适的方向如下（当前判断：小步验证）。
 真实付款会改变判断，没有付款就停止。
 ### 先做这一件事
 ### 先做这一件事
-**动作**：验证付款。
 
-**观察**：记录结果。
+这一步要弄清的是当前方案能否带来真实付款（核心假设）。
 
-**复判**：有付款就推进，否则停止。"""
+验证付款（本轮动作）。
+
+记录结果（观察信号）。
+
+有付款就推进，否则停止（复判条件）。"""
         checks = grade_b(text, already_executed=False, interaction=native_b_feedback())
         self.assert_has_failure(checks, "阶段 B 不含重复标题")
 
     def test_b_external_before_experiment_fails(self) -> None:
-        text = """按目前信息，我更建议：小步验证。
+        text = """按目前信息，当前更合适的方向如下（当前判断：小步验证）。
 先做外部验证。
 真实付款会改变判断，没有付款就停止。
 ### 先做这一件事
-**动作**：验证付款。
 
-**观察**：记录结果。
+这一步要弄清的是当前方案能否带来真实付款（核心假设）。
 
-**复判**：有付款就推进，否则停止。"""
+验证付款（本轮动作）。
+
+记录结果（观察信号）。
+
+有付款就推进，否则停止（复判条件）。"""
         checks = grade_b(text, already_executed=False, interaction=native_b_feedback())
         self.assert_has_failure(checks, "可选外部验证位于完整判断和现实实验之后")
 
     def test_b_with_parallel_actions_fails(self) -> None:
-        text = """按目前信息，我更建议：调整。
+        text = """按目前信息，当前更合适的方向如下（当前判断：调整）。
 真实付款会改变判断，没有付款就停止。
 ### 先做这一件事
+
+这一步要弄清的是多项改动能否共同验证同一个方向（核心假设）。
+
 1. 访谈用户。
 2. 重写首页。
-3. 发起预售。
-**观察**：记录结果。
-**复判**：有付款就继续，否则停止。"""
+3. 发起预售（本轮动作）。
+
+记录结果（观察信号）。
+有付款就继续，否则停止（复判条件）。"""
         checks = grade_b(text, already_executed=True, interaction=native_b_feedback())
         self.assert_has_failure(checks, "阶段 B 只有一个现实实验")
 
     def test_b_action_observe_review_are_not_three_actions(self) -> None:
-        text = """按目前信息，我更建议：调整。
+        text = """按目前信息，当前更合适的方向如下（当前判断：调整）。
 现实结果改善就继续，否则暂停。
 ### 先做这一件事
-- **动作**：只改一个合作边界。
 
-- **观察**：记录是否履行。
+这一步要弄清的是明确合作边界能否改善履行（核心假设）。
 
-- **复判**：履行就继续，否则暂停。"""
+只改一个合作边界（本轮动作）。
+
+记录是否履行；履行支持继续，不履行则反对继续（观察信号）。
+
+履行就继续，否则重新决定是否暂停（复判条件）。"""
         self.assert_all_pass(grade_b(text, already_executed=True, interaction=native_b_feedback()))
 
     def test_b_that_infers_authorization_fails(self) -> None:
-        text = """按目前信息，我更建议：小步验证。
+        text = """按目前信息，当前更合适的方向如下（当前判断：小步验证）。
 稳定需求会改变判断，没有需求就停止。
 ### 先做这一件事
-**动作**：既然你已经授权联网，所以我会自动联系潜在客户。
 
-**观察**：记录回复。
+这一步要弄清的是当前方向能否得到真实需求信号（核心假设）。
 
-**复判**：有需求就继续，否则停止。"""
+既然你已经授权联网，所以我会自动联系潜在客户（本轮动作）。
+
+记录回复（观察信号）。
+
+有需求就继续，否则停止（复判条件）。"""
         checks = grade_b(text, already_executed=False, interaction=native_b_feedback())
         self.assert_has_failure(checks, "阶段 B 不把一种授权推定为另一种")
 
     def test_valid_b_with_native_note(self) -> None:
-        text = """按目前信息，我更建议：小步验证。
+        text = """按目前信息，当前更合适的方向如下（当前判断：小步验证）。
 真实付款会改变判断，没有付款就停止。
 
 ### 先做这一件事
 
-**动作**：展示现有版本并邀请真实付款。
 
-**观察**：记录付款或明确拒绝。
+这一步要弄清的是现有版本能否产生有区分力的现实反应（核心假设）。
 
-**复判**：有付款就重新判断是否推进，否则停止。"""
+展示现有版本并邀请真实付款（本轮动作）。
+
+记录付款或明确拒绝（观察信号）。
+
+有付款就重新判断是否推进，否则停止（复判条件）。"""
         self.assert_all_pass(
             grade_b(text, already_executed=False, interaction=native_b_feedback("native-note"))
         )
 
     def test_valid_b_text_fallback_matrix(self) -> None:
-        base = """按目前信息，我更建议：小步验证。
+        base = """按目前信息，当前更合适的方向如下（当前判断：小步验证）。
 真实付款会改变判断，没有付款就停止。
 
 ### 先做这一件事
 
-**动作**：展示现有版本并邀请真实付款。
 
-**观察**：记录付款或明确拒绝。
+这一步要弄清的是现有版本能否产生有区分力的现实反应（核心假设）。
 
-**复判**：有付款就重新判断是否推进，否则停止。"""
+展示现有版本并邀请真实付款（本轮动作）。
+
+记录付款或明确拒绝（观察信号）。
+
+有付款就重新判断是否推进，否则停止（复判条件）。"""
         text = with_feedback_fallback(base)
         for status in ("unavailable", "failed", "rejected"):
             with self.subTest(status=status):
@@ -1019,14 +1144,17 @@ class ContractGraderTests(unittest.TestCase):
                 )
 
     def test_b_available_host_cannot_use_text_fallback(self) -> None:
-        text = with_feedback_fallback("""按目前信息，我更建议：小步验证。
+        text = with_feedback_fallback("""按目前信息，当前更合适的方向如下（当前判断：小步验证）。
 真实付款会改变判断，没有付款就停止。
 ### 先做这一件事
-**动作**：展示现有版本并邀请真实付款。
 
-**观察**：记录付款或明确拒绝。
+这一步要弄清的是现有版本能否产生有区分力的现实反应（核心假设）。
 
-**复判**：有付款就重新判断是否推进，否则停止。""")
+展示现有版本并邀请真实付款（本轮动作）。
+
+记录付款或明确拒绝（观察信号）。
+
+有付款就重新判断是否推进，否则停止（复判条件）。""")
         interaction = InteractionEvidence(
             host_control_status="available",
             surface="text-fallback",
@@ -1047,14 +1175,17 @@ class ContractGraderTests(unittest.TestCase):
             question_text=native_b_feedback().question_text,
             supplement_mode="follow-up-message",
         )
-        text = """按目前信息，我更建议：小步验证。
+        text = """按目前信息，当前更合适的方向如下（当前判断：小步验证）。
 真实付款会改变判断，没有付款就停止。
 ### 先做这一件事
-**动作**：展示现有版本。
 
-**观察**：记录结果。
+这一步要弄清的是现有版本能否产生有区分力的现实反应（核心假设）。
 
-**复判**：有付款就推进，否则停止。"""
+展示现有版本（本轮动作）。
+
+记录结果（观察信号）。
+
+有付款就推进，否则停止（复判条件）。"""
         checks = grade_b(text, already_executed=False, interaction=interaction)
         self.assert_has_failure(checks, "阶段 B 按宿主能力使用原生反馈单选或明确文本降级")
 
@@ -1068,26 +1199,32 @@ class ContractGraderTests(unittest.TestCase):
             question_text=native_b_feedback().question_text,
             supplement_mode="follow-up-message",
         )
-        text = """按目前信息，我更建议：小步验证。
+        text = """按目前信息，当前更合适的方向如下（当前判断：小步验证）。
 真实付款会改变判断，没有付款就停止。
 ### 先做这一件事
-**动作**：展示现有版本。
 
-**观察**：记录结果。
+这一步要弄清的是现有版本能否产生有区分力的现实反应（核心假设）。
 
-**复判**：有付款就推进，否则停止。"""
+展示现有版本（本轮动作）。
+
+记录结果（观察信号）。
+
+有付款就推进，否则停止（复判条件）。"""
         checks = grade_b(text, already_executed=False, interaction=interaction)
         self.assert_has_failure(checks, "阶段 B 恰好提供四个稳定反馈方向")
 
     def test_b_native_feedback_cannot_repeat_pseudo_buttons(self) -> None:
-        text = """按目前信息，我更建议：小步验证。
+        text = """按目前信息，当前更合适的方向如下（当前判断：小步验证）。
 真实付款会改变判断，没有付款就停止。
 ### 先做这一件事
-**动作**：展示现有版本。
 
-**观察**：记录结果。
+这一步要弄清的是现有版本能否产生有区分力的现实反应（核心假设）。
 
-**复判**：有付款就推进，否则停止。
+展示现有版本（本轮动作）。
+
+记录结果（观察信号）。
+
+有付款就推进，否则停止（复判条件）。
 
 [方向符合我]
 [调整下一步]
@@ -1097,14 +1234,17 @@ class ContractGraderTests(unittest.TestCase):
         self.assert_has_failure(checks, "阶段 B 清楚区分原生反馈与文本降级并诚实说明补充通道")
 
     def test_b_fallback_rejects_pseudo_radio(self) -> None:
-        text = with_feedback_fallback("""按目前信息，我更建议：小步验证。
+        text = with_feedback_fallback("""按目前信息，当前更合适的方向如下（当前判断：小步验证）。
 真实付款会改变判断，没有付款就停止。
 ### 先做这一件事
-**动作**：展示现有版本。
 
-**观察**：记录结果。
+这一步要弄清的是现有版本能否产生有区分力的现实反应（核心假设）。
 
-**复判**：有付款就推进，否则停止。""").replace("1. 方向符合我", "○ 方向符合我")
+展示现有版本（本轮动作）。
+
+记录结果（观察信号）。
+
+有付款就推进，否则停止（复判条件）。""").replace("1. 方向符合我", "○ 方向符合我")
         checks = grade_b(text, already_executed=False, interaction=b_text_fallback())
         self.assert_has_failure(checks, "阶段 B 恰好提供四个稳定反馈方向")
         self.assert_has_failure(checks, "阶段 B 清楚区分原生反馈与文本降级并诚实说明补充通道")
@@ -1120,26 +1260,32 @@ class ContractGraderTests(unittest.TestCase):
             question_text=native_b_feedback().question_text,
             supplement_mode="native-note",
         )
-        text = """按目前信息，我更建议：小步验证。
+        text = """按目前信息，当前更合适的方向如下（当前判断：小步验证）。
 真实付款会改变判断，没有付款就停止。
 ### 先做这一件事
-**动作**：展示现有版本。
 
-**观察**：记录结果。
+这一步要弄清的是现有版本能否产生有区分力的现实反应（核心假设）。
 
-**复判**：有付款就推进，否则停止。"""
+展示现有版本（本轮动作）。
+
+记录结果（观察信号）。
+
+有付款就推进，否则停止（复判条件）。"""
         checks = grade_b(text, already_executed=False, interaction=interaction)
         self.assert_has_failure(checks, "阶段 B 清楚区分原生反馈与文本降级并诚实说明补充通道")
 
     def test_b_feedback_selection_does_not_authorize_execution(self) -> None:
-        text = """按目前信息，我更建议：小步验证。
+        text = """按目前信息，当前更合适的方向如下（当前判断：小步验证）。
 真实付款会改变判断，没有付款就停止。
 ### 先做这一件事
-**动作**：你选择方向符合我，因此我会立即执行实验并联系客户。
 
-**观察**：记录结果。
+这一步要弄清的是当前方案能否带来真实付款（核心假设）。
 
-**复判**：有付款就推进，否则停止。"""
+你选择方向符合我，因此我会立即执行实验并联系客户（本轮动作）。
+
+记录结果（观察信号）。
+
+有付款就推进，否则停止（复判条件）。"""
         checks = grade_b(text, already_executed=False, interaction=native_b_feedback())
         self.assert_has_failure(checks, "阶段 B 不把一种授权推定为另一种")
 

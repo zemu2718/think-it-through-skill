@@ -112,13 +112,13 @@
         "supplement_mode": "follow-up-message",
         "semantic_paragraphs": true,
         "question_is_last_paragraph": true,
-        "action_observe_review_separate_paragraphs": true
+        "main_loop_roles_separate_paragraphs": true
       },
       "mechanical": [
         "no_information_question",
         "unexecuted_status",
         "one_reality_experiment",
-        "action_observe_review",
+        "main_loop_roles_present",
         "local_numeric_provenance",
         "gate_routing_before_final_judgment_when_needed",
         "supplement_via_follow_up_message"

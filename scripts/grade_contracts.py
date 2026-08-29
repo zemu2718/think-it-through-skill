@@ -14,6 +14,38 @@ QUESTION_MARK_RE = re.compile(r"[?？]")
 
 UNEXECUTED_STATES = ("暂不行动", "小步验证", "有条件推进", "可以推进")
 EXECUTED_STATES = ("继续", "调整", "暂停", "停止")
+B_STATUS_ENGLISH = {
+    "hold": "暂不行动",
+    "small test": "小步验证",
+    "proceed conditionally": "有条件推进",
+    "proceed": "可以推进",
+    "continue": "继续",
+    "adjust": "调整",
+    "pause": "暂停",
+    "stop": "停止",
+}
+B_STATUS_MARK_RE = re.compile(
+    r"(?:"
+    r"（当前判断：(?P<zh>暂不行动|小步验证|有条件推进|可以推进|继续|调整|暂停|停止)）|"
+    r"\(current judgment:\s*(?P<en>hold|small test|proceed conditionally|proceed|continue|adjust|pause|stop)\)"
+    r")",
+    re.IGNORECASE,
+)
+B_LOOP_SUFFIXES = {
+    "core_hypothesis": ("（核心假设）", "(core hypothesis)"),
+    "action": ("（本轮动作）", "(action for this round)"),
+    "observation": ("（观察信号）", "(signals to observe)"),
+    "reassessment": ("（复判条件）", "(reassessment condition)"),
+}
+B_LOOP_ORDER = tuple(B_LOOP_SUFFIXES)
+B_LOOP_PREFIX_RE = re.compile(
+    r"(?mi)^\s*(?:[-*+]\s*)?\*{0,2}"
+    r"(?:核心假设|动作|观察|复判|core hypothesis|action|observe|observation|reassess|reassessment)"
+    r"\*{0,2}[：:]"
+)
+B_CONTENT_BOUNDARY_RE = re.compile(
+    r"(?mi)^#{1,3}\s+(?:决策快照|decision snapshot|反馈|feedback)\s*$"
+)
 METHOD_LABELS = {
     "two-sided-steelman": "双向钢人",
     "pre-mortem": "失败预演",
@@ -1061,31 +1093,115 @@ def grade_a(
     ]
 
 
-def _count_statuses(text: str, states: tuple[str, ...]) -> list[str]:
-    experiment_start = text.find("先做这一件事")
-    search_area = text[:experiment_start if experiment_start >= 0 else 500]
-    status_match = re.search(
-        r"(?:按目前信息，我更建议|我的判断|判断)[：:]\s*(?:\*{1,2})?(?P<state>[^。；;，,\n*]+)",
-        search_area,
-    )
-    if status_match:
-        status_text = status_match.group("state").strip()
-        return [state for state in states if state in status_text]
-    return []
+@dataclass(frozen=True)
+class BLoopComponent:
+    key: str
+    content: str
+    paragraph_index: int
+    start: int
+    end: int
 
 
-def _experiment_body(text: str) -> tuple[int, str]:
-    matches = list(re.finditer(r"(?m)^\s*#{0,3}\s*\*{0,2}先做这一件事\*{0,2}\s*$", text))
-    if len(matches) != 1:
-        return len(matches), ""
-    remainder = text[matches[0].end():]
-    next_heading = re.search(
-        r"(?m)^#{1,3}\s+(?!\*{0,2}(?:动作|观察|复判)\b).+$",
-        remainder,
+@dataclass(frozen=True)
+class BLoopParse:
+    components: tuple[BLoopComponent, ...]
+    marker_counts: dict[str, int]
+    order: tuple[str, ...]
+    separate_paragraphs: bool
+    contents_nonempty: bool
+
+    @property
+    def complete(self) -> bool:
+        return (
+            all(self.marker_counts.get(key) == 1 for key in B_LOOP_ORDER)
+            and self.order == B_LOOP_ORDER
+            and self.separate_paragraphs
+            and self.contents_nonempty
+        )
+
+    def content_for(self, key: str) -> str:
+        return next((component.content for component in self.components if component.key == key), "")
+
+    @property
+    def start(self) -> int:
+        return min((component.start for component in self.components), default=-1)
+
+    @property
+    def end(self) -> int:
+        return max((component.end for component in self.components), default=-1)
+
+
+def _b_main_content(text: str) -> str:
+    boundary = B_CONTENT_BOUNDARY_RE.search(text)
+    return text[:boundary.start()] if boundary else text
+
+
+def _b_statuses(text: str, loop_start: int) -> list[str]:
+    search_area = text[:loop_start] if loop_start >= 0 else _b_main_content(text)
+    states: list[str] = []
+    for match in B_STATUS_MARK_RE.finditer(search_area):
+        if match.group("zh"):
+            states.append(match.group("zh"))
+        else:
+            states.append(B_STATUS_ENGLISH[match.group("en").casefold()])
+    return states
+
+
+def _b_loop_suffix_match(paragraph: str) -> tuple[str, re.Match[str]] | None:
+    matches: list[tuple[str, re.Match[str]]] = []
+    for key, suffixes in B_LOOP_SUFFIXES.items():
+        suffix_pattern = "|".join(re.escape(suffix) for suffix in suffixes)
+        match = re.search(rf"(?:{suffix_pattern})(?=[。.!！]?\s*$)", paragraph, re.IGNORECASE)
+        if match:
+            matches.append((key, match))
+    return matches[0] if len(matches) == 1 else None
+
+
+def _parse_b_loop(text: str) -> BLoopParse:
+    main_content = _b_main_content(text)
+    paragraphs = _semantic_paragraphs(main_content)
+    marker_counts = {key: 0 for key in B_LOOP_ORDER}
+    components: list[BLoopComponent] = []
+    cursor = 0
+
+    for paragraph_index, paragraph in enumerate(paragraphs):
+        paragraph_start = main_content.find(paragraph, cursor)
+        paragraph_end = paragraph_start + len(paragraph)
+        cursor = paragraph_end
+
+        matched_keys: list[str] = []
+        for key, suffixes in B_LOOP_SUFFIXES.items():
+            count = sum(paragraph.casefold().count(suffix.casefold()) for suffix in suffixes)
+            marker_counts[key] += count
+            if count:
+                matched_keys.append(key)
+
+        suffix_match = _b_loop_suffix_match(paragraph)
+        if len(matched_keys) != 1 or suffix_match is None:
+            continue
+        key, match = suffix_match
+        content = (paragraph[:match.start()] + paragraph[match.end():]).strip()
+        content = re.sub(r"[。.!！]\s*$", "", content).strip()
+        components.append(
+            BLoopComponent(
+                key=key,
+                content=content,
+                paragraph_index=paragraph_index,
+                start=paragraph_start,
+                end=paragraph_end,
+            )
+        )
+
+    component_paragraphs = [component.paragraph_index for component in components]
+    return BLoopParse(
+        components=tuple(components),
+        marker_counts=marker_counts,
+        order=tuple(component.key for component in components),
+        separate_paragraphs=(
+            len(component_paragraphs) == len(set(component_paragraphs)) == len(B_LOOP_ORDER)
+        ),
+        contents_nonempty=all(component.content for component in components),
     )
-    if next_heading:
-        remainder = remainder[:next_heading.start()]
-    return 1, remainder.strip()
 
 
 def _feedback_options_valid(options: tuple[str, ...]) -> bool:
@@ -1167,9 +1283,8 @@ def _b_feedback_layout_valid(text: str, interaction: InteractionEvidence | None)
     return False
 
 
-def _independent_action_items(body: str) -> list[str]:
-    items = re.findall(r"(?m)^\s*(?:[-*+] |\d+[.)]\s+)(.+)$", body)
-    return [item for item in items if not re.match(r"\*{0,2}(?:动作|观察|复判)\*{0,2}[：:]", item.strip())]
+def _independent_action_items(action: str) -> list[str]:
+    return re.findall(r"(?m)^\s*(?:[-*+] |\d+[.)]\s+)(.+)$", action)
 
 
 def grade_b(
@@ -1185,48 +1300,40 @@ def grade_b(
     info_questions = _matches_any(visible_text, INFORMATION_QUESTION_PATTERNS)
     hidden_requests = _matches_any(visible_text, HIDDEN_INFO_REQUEST_PATTERNS)
     expected_states = EXECUTED_STATES if already_executed else UNEXECUTED_STATES
-    states = _count_statuses(text, expected_states)
-    experiment_heading_count, experiment_body = _experiment_body(text)
-    independent_items = _independent_action_items(experiment_body)
-    multiple_actions = _matches_any(experiment_body, MULTI_ACTION_PATTERNS)
-    action_labels = re.findall(r"(?m)^\s*(?:[-*+]\s*)?\*{0,2}动作\*{0,2}[：:]", experiment_body)
-    observation_labels = re.findall(r"(?m)^\s*(?:[-*+]\s*)?\*{0,2}观察\*{0,2}[：:]", experiment_body)
-    review_labels = re.findall(r"(?m)^\s*(?:[-*+]\s*)?\*{0,2}复判\*{0,2}[：:]", experiment_body)
-    labels_valid = all(len(labels) <= 1 for labels in (action_labels, observation_labels, review_labels))
-    if any((action_labels, observation_labels, review_labels)):
-        labels_valid = labels_valid and all((action_labels, observation_labels, review_labels))
-    experiment_paragraphs = _semantic_paragraphs(experiment_body)
-    component_paragraphs = [
-        next(
-            (
-                index
-                for index, paragraph in enumerate(experiment_paragraphs)
-                if re.match(rf"^(?:[-*+]\s*)?\*{{0,2}}{label}\*{{0,2}}[：:]", paragraph)
-            ),
-            None,
-        )
-        for label in ("动作", "观察", "复判")
-    ]
-    layout_valid = not any((action_labels, observation_labels, review_labels)) or (
-        None not in component_paragraphs
-        and component_paragraphs == sorted(component_paragraphs)
-        and len(set(component_paragraphs)) == 3
-    )
+    loop = _parse_b_loop(text)
+    states = _b_statuses(text, loop.start)
+    action_content = loop.content_for("action")
+    observation_content = loop.content_for("observation")
+    reassessment_content = loop.content_for("reassessment")
+    independent_items = _independent_action_items(action_content)
+    multiple_actions = _matches_any(action_content, MULTI_ACTION_PATTERNS)
+    legacy_prefixes = B_LOOP_PREFIX_RE.findall(_b_main_content(text))
     authorization_inference = _matches_any(visible_text, AUTHORIZATION_INFERENCE_PATTERNS)
     unattributed_numbers = _unattributed_b_numbers(visible_text, user_numbers)
     external_position = min(
-        [position for marker in ("外部验证", "另行明确授权") if (position := text.find(marker)) >= 0],
+        [
+            position
+            for marker in ("外部验证", "另行明确授权", "external validation", "separate consent")
+            if (position := text.casefold().find(marker.casefold())) >= 0
+        ],
         default=-1,
     )
-    judgment_position = min(
-        [position for marker in ("按目前信息", "我的判断", "判断") if (position := text.find(marker)) >= 0],
-        default=-1,
-    )
-    experiment_position = text.find("先做这一件事")
+    status_positions = [match.start() for match in B_STATUS_MARK_RE.finditer(text)]
+    judgment_position = min(status_positions, default=-1)
+    experiment_position = loop.start
     external_after_judgment = external_position < 0 or (
-        judgment_position >= 0 and experiment_position >= 0 and external_position > experiment_position
+        judgment_position >= 0 and experiment_position >= 0 and external_position > loop.end
     )
-    reversal = re.search(r"改变.*判断|判断.*改变|推翻.*结论|支持.*继续|反对.*继续|停止|转向|复判", text)
+    observation_signal = re.search(
+        r"支持.*继续|反对.*继续|付款|拒绝|改善|恶化|support.*continu|argue.*against|payment|refusal",
+        observation_content,
+        re.IGNORECASE,
+    )
+    reassessment_signal = re.search(
+        r"改变.*判断|判断.*改变|重新决定|停止|转向|复判|reassess|decide again|stop|change direction",
+        reassessment_content,
+        re.IGNORECASE,
+    )
 
     interaction_passed = _b_interaction_valid(text, interaction)
     if interaction is None:
@@ -1303,25 +1410,42 @@ def grade_b(
             ),
             severe=True,
         ),
-        _check("阶段 B 使用一个与事项阶段匹配的判断状态", len(states) == 1, f"在判断区域找到状态：{states}", severe=True),
+        _check(
+            "阶段 B 使用一个与事项阶段匹配的后置判断状态",
+            len(states) == 1 and states[0] in expected_states,
+            f"在主现实闭环前找到状态：{states}；允许状态={list(expected_states)}",
+            severe=True,
+        ),
         _check(
             "阶段 B 只有一个现实实验",
-            experiment_heading_count == 1 and bool(experiment_body) and len(independent_items) <= 1 and not multiple_actions and labels_valid,
+            loop.complete and len(independent_items) <= 1 and not multiple_actions,
             (
-                f"实验标题数量：{experiment_heading_count}；独立列表项：{independent_items}；"
-                f"多行动模式：{multiple_actions}；动作/观察/复判标签="
-                f"{[len(action_labels), len(observation_labels), len(review_labels)]}"
+                f"标记数量={loop.marker_counts}；顺序={list(loop.order)}；"
+                f"独立动作项={independent_items}；多行动模式={multiple_actions}"
             ),
             severe=True,
         ),
         _check(
-            "阶段 B 的动作、观察和复判分别成段",
-            layout_valid,
-            f"动作/观察/复判所在段落：{component_paragraphs}",
+            "阶段 B 的核心假设、本轮动作、观察信号和复判条件以自然句分别成段并后置标记",
+            loop.complete and not legacy_prefixes,
+            (
+                f"标记数量={loop.marker_counts}；顺序={list(loop.order)}；"
+                f"分别成段={loop.separate_paragraphs}；内容非空={loop.contents_nonempty}；"
+                f"句首旧标签={legacy_prefixes}"
+            ),
             severe=True,
         ),
         _check("阶段 B 不把一种授权推定为另一种", not authorization_inference, f"越权推定模式：{authorization_inference}" if authorization_inference else "未发现授权范围推定", severe=True),
-        _check("阶段 B 包含会改变判断的现实信号", reversal is not None, "找到改变判断的现实信号" if reversal else "未找到改变判断的现实信号"),
+        _check(
+            "阶段 B 包含支持或反对继续的观察信号",
+            observation_signal is not None,
+            "观察段包含有区分力的现实信号" if observation_signal else "观察段未找到支持或反对继续的现实信号",
+        ),
+        _check(
+            "阶段 B 包含会触发重新决定的复判条件",
+            reassessment_signal is not None,
+            "复判段包含重新决定条件" if reassessment_signal else "复判段未找到重新决定条件",
+        ),
         _check("可选外部验证位于完整判断和现实实验之后", external_after_judgment, f"判断位置={judgment_position}，实验位置={experiment_position}，外部验证位置={external_position}", severe=True),
         _check(
             "阶段 B 的每个系统新增数字都有局部来源或建议性质",

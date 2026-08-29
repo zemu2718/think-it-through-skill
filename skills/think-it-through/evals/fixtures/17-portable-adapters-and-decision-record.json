@@ -70,6 +70,118 @@
       "authorized": false
     }
   },
+  "visible_snapshot": {
+    "这次要想清楚的事": {
+      "path": "topic",
+      "value": "是否继续开发当前产品"
+    },
+    "真正想得到或保护的结果": {
+      "path": "true_objectives",
+      "value": [
+        "验证陌生客户是否愿意付费"
+      ]
+    },
+    "本轮需要决定什么": {
+      "path": "decision",
+      "value": "继续开发还是先验证付费意愿"
+    },
+    "本轮采用的思考角度": {
+      "path": "confirmed_methods",
+      "value": [
+        "two-sided-steelman"
+      ]
+    },
+    "目前更合适的方向": {
+      "path": "judgment.recommendation",
+      "value": "先验证真实付款，再决定是否继续开发"
+    },
+    "为什么这样判断": {
+      "path": "judgment.rationale",
+      "value": [
+        "付费意愿仍是会改变决定的最大未知"
+      ]
+    },
+    "判断成立的前提": {
+      "path": "judgment.validity_conditions",
+      "value": [
+        "现有版本足以展示核心价值"
+      ]
+    },
+    "已经确认的信息": {
+      "path": "evidence.confirmed_facts",
+      "value": [
+        "已有可展示版本"
+      ]
+    },
+    "根据现有信息可以推断": {
+      "path": "evidence.inferences",
+      "value": [
+        "继续开发暂时无法减少最大未知"
+      ]
+    },
+    "当前判断仍依赖": {
+      "path": "evidence.assumptions",
+      "value": [
+        "陌生对象反馈比熟人反馈更能区分方向"
+      ]
+    },
+    "仍不知道的关键问题": {
+      "path": "evidence.unknowns",
+      "value": [
+        "陌生对象是否愿意真实付款"
+      ]
+    },
+    "本轮依据来自哪里": {
+      "path": "evidence.sources",
+      "value": []
+    },
+    "什么情况会改变判断": {
+      "path": "reversal_signals",
+      "value": [
+        "出现真实付款"
+      ]
+    },
+    "要弄清什么": {
+      "path": "main_experiment.core_hypothesis",
+      "value": "现有版本解决了足以付费的问题"
+    },
+    "先做什么": {
+      "path": "main_experiment.action",
+      "value": "向符合画像的陌生对象展示现有版本并邀请真实付款"
+    },
+    "看哪些现实信号": {
+      "path": "main_experiment.observation",
+      "value": "记录付款、明确拒绝与拒绝理由"
+    },
+    "什么时候重新决定": {
+      "path": "main_experiment.reassessment",
+      "value": "出现真实付款时复判是否推进，否则停止新增投入"
+    },
+    "本轮参与者与使用的能力": {
+      "path": "participation_and_capabilities",
+      "value": {
+        "main_agents": 1,
+        "additional_agents_planned": 0,
+        "additional_agents_started": 0,
+        "additional_agents_completed": 0,
+        "additional_agents_failed": 0,
+        "human_participants_requested": [],
+        "capabilities_used": [],
+        "private_data_accessed": false,
+        "external_action_executed": false,
+        "consent_ids": [],
+        "receipt_ids": [],
+        "conflicts_and_gaps": []
+      }
+    },
+    "这份记录保存在哪里": {
+      "path": "persistence",
+      "value": {
+        "mode": "conversation_only",
+        "authorized": false
+      }
+    }
+  },
   "adapter_cases": [
     {
       "id": "text-first-class-fallback",

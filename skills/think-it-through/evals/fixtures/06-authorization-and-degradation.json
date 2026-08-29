@@ -94,7 +94,7 @@
         "supplement_mode": "follow-up-message",
         "semantic_paragraphs": true,
         "question_is_last_paragraph": true,
-        "action_observe_review_separate_paragraphs": true
+        "main_loop_roles_separate_paragraphs": true
       },
       "mechanical": [
         "gate_routing_after_a_answer",

@@ -58,14 +58,14 @@
     {
       "id": "ux-cross-stage-terminal-readability",
       "prompt": "请完整走一遍目的对齐、方法确认、关键问题和判断，让我检查终端阅读体验。",
-      "expected_experience": "R-align、R-method、A、B 都按语义短段呈现；承接、解释、操作提示和正式问题之间留空行；B 的动作、观察、复判各自成段但仍属于同一个现实实验。",
+      "expected_experience": "R-align、R-method、A、B 都按语义短段呈现；承接、解释、操作提示和正式问题之间留空行；B 用自然句分别说清核心假设、本轮动作、观察信号和复判条件，术语在句末按需后置，四段仍属于同一个现实证据闭环。",
       "expected_interaction": "native-control:multi -> native-control:multi -> free-answer:none -> native-control:single+follow-up-message",
       "fixture": "fixtures/11-b-experiment-and-feedback.json"
     },
     {
       "id": "ux-judgment-experiment-feedback",
       "prompt": "如果没有真实付款，我就不继续投入。",
-      "expected_experience": "给明确但可调整的判断，以及分段清晰的动作、观察、复判组成的一个现实实验；随后实际调用四项原生单选，只收集主要反馈方向。未观察到独立附注时，诚实说明选中后可再发普通消息补充；选择、补充和宿主 Other 都不构成执行或授权。",
+      "expected_experience": "给明确但可调整的判断，并用自然句分别说清要弄清什么、先做什么、看哪些现实信号和何时重新决定；受控术语放在句末，不使用连续的句首报告标签。随后实际调用四项原生单选，只收集主要反馈方向。未观察到独立附注时，诚实说明选中后可再发普通消息补充；选择、补充和宿主 Other 都不构成执行或授权。",
       "expected_interaction": "native-control:single+follow-up-message",
       "fixture": "fixtures/11-b-experiment-and-feedback.json"
     },
@@ -135,7 +135,7 @@
     {
       "id": "ux-portable-text-fidelity",
       "prompt": "这个宿主没有原生控件、搜索、子 Agent 或持久化，体验还能完整吗？",
-      "expected_experience": "纯文本路径完整保留状态、方法推荐、授权边界、主现实闭环、决策快照与 B 反馈路由；明确说明缺失能力，不冒充原生控件、搜索、委派或保存已经发生。",
+      "expected_experience": "纯文本路径完整保留状态、方法推荐、授权边界、自然表达的主现实闭环、无损显示投影的决策快照与 B 反馈路由；不因降级退回句首专业标签，也不冒充原生控件、搜索、委派或保存已经发生。",
       "expected_interaction": "text-fallback",
       "fixture": "fixtures/17-portable-adapters-and-decision-record.json"
     },
@@ -149,14 +149,14 @@
     {
       "id": "ux-solution-completeness",
       "prompt": "不要给我方法报告或投票结果，给我最终能行动和复判的方案。",
-      "expected_experience": "最终只有一个综合判断、关键依据和边界、一个围绕核心假设的主现实证据闭环、紧凑决策快照与诚实能力回执；方法、调研和参与都服务于方案。",
+      "expected_experience": "最终只有一个综合判断、关键依据和边界、一个自然说清四个职责的主现实证据闭环、紧凑且无损映射的决策快照与诚实能力回执；方法、调研和参与都服务于方案，术语标签不替代实际方案。",
       "expected_interaction": "B -> native-control:single+follow-up-message",
       "fixture": "fixtures/18-main-evidence-loop.json"
     },
     {
       "id": "ux-decision-reassessment",
       "prompt": "这是上次的决策快照，现在结果回来了，请判断继续、调整、暂停还是停止。",
-      "expected_experience": "读取用户粘贴或已授权访问的快照，区分判断错误、执行偏差、资源错配与条件变化；更新证据状态、反转信号、判断和主实验，不要求隐藏思维链。",
+      "expected_experience": "读取用户粘贴或已授权访问的新旧快照，按自然显示字段无损区分事实、推断、假设和未知，再区分判断错误、执行偏差、资源错配与条件变化；更新证据状态、反转信号、判断和主实验，不要求 schema key 或隐藏思维链。",
       "expected_interaction": "free-answer:none -> R-method -> A -> B",
       "fixture": "fixtures/17-portable-adapters-and-decision-record.json"
     }
