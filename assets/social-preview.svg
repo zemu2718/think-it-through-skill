@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">Think It Through social preview</title>
+  <desc id="desc">Think It Through and its slogan beside decision paths that converge at one question and return through a real-world evidence loop.</desc>
+  <rect width="1280" height="640" fill="#F7F5EF"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <g stroke="#556274" stroke-width="7">
+      <path d="M710 150 C826 150 860 218 952 248"/>
+      <path d="M710 232 C820 232 874 250 952 260"/>
+      <path d="M710 322 C820 322 874 284 952 272"/>
+      <path d="M710 408 C826 408 866 320 952 284"/>
+    </g>
+    <path d="M1036 266 C1112 266 1152 232 1226 232" stroke="#172033" stroke-width="13"/>
+    <path d="M1092 270 C1130 336 1174 354 1224 350" stroke="#8A5A22" stroke-width="7" stroke-dasharray="15 15"/>
+    <path d="M1216 250 C1244 434 1100 494 960 472 C886 460 840 418 818 374" stroke="#0F766E" stroke-width="9"/>
+  </g>
+  <g>
+    <path d="M970 228 C989 208 1020 208 1040 228 L1062 250 C1072 260 1072 276 1062 286 L1040 308 C1020 328 989 328 970 308 L948 286 C938 276 938 260 948 250 Z" fill="#F7F5EF" stroke="#0F766E" stroke-width="10"/>
+    <path d="M1002 228 L1002 260 L1034 260" fill="none" stroke="#0F766E" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="1008" cy="280" r="7" fill="#0F766E"/>
+  </g>
+  <text x="86" y="214" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="72" font-weight="750" fill="#172033">Think It Through</text>
+  <text x="88" y="276" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="38" font-weight="650" fill="#0F766E">想清楚</text>
+  <text x="88" y="382" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="31" font-weight="500" fill="#39475A">Do not let AI flawlessly execute</text>
+  <text x="88" y="426" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="31" font-weight="500" fill="#39475A">the wrong task.</text>
+</svg>

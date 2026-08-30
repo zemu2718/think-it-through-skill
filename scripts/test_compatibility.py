@@ -12,7 +12,13 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from validate_repo import ROOT, Validation, validate_compatibility
+from validate_repo import (
+    ROOT,
+    RUNTIME_SUPPORT_CLAIM_RE,
+    Validation,
+    _validate_runtime_support_claims,
+    validate_compatibility,
+)
 
 
 class CompatibilityTests(unittest.TestCase):
@@ -136,15 +142,40 @@ class CompatibilityTests(unittest.TestCase):
             self.assertNotEqual(expected, actual)
 
     def test_forbidden_runtime_claim_patterns(self) -> None:
-        import re
-
-        pattern = re.compile(
-            r"(?:50\+|55\+|77)\s*(?:verified\s*)?runtimes?|(?:50\+|55\+|77)\s*个?(?:已验证)?(?:兼容)?\s*runtime",
-            re.IGNORECASE,
+        for claim in (
+            "Supports 50+ runtimes",
+            "77 verified runtimes",
+            "Compatible with 12 runtimes",
+            "已支持 50+ 个 runtime",
+            "77 个已验证 runtime",
+        ):
+            with self.subTest(claim=claim):
+                self.assertIsNotNone(RUNTIME_SUPPORT_CLAIM_RE.search(claim))
+        self.assertIsNone(
+            RUNTIME_SUPPORT_CLAIM_RE.search(
+                "八个安装器 target 已做本地安装 smoke；runtime 行为尚未实测"
+            )
         )
-        self.assertIsNotNone(pattern.search("77 verified runtimes"))
-        self.assertIsNotNone(pattern.search("50+ 个已验证兼容 runtime"))
-        self.assertIsNone(pattern.search("八个安装器 target 已做本地安装 smoke；runtime 行为尚未实测"))
+
+    def test_runtime_claim_guard_follows_matrix_state(self) -> None:
+        validation = Validation()
+        _validate_runtime_support_claims(
+            validation,
+            "Supports 50+ runtimes",
+            copy.deepcopy(self.support),
+        )
+        self.assertTrue(any("矩阵只有 0 个" in error for error in validation.errors))
+
+        support = copy.deepcopy(self.support)
+        for level in ("L3", "L4", "L5"):
+            support["runtimes"][0]["levels"][level]["status"] = "passed"
+        validation = Validation()
+        _validate_runtime_support_claims(validation, "Supports 1 runtime", support)
+        self.assertEqual([], validation.errors)
+
+        validation = Validation()
+        _validate_runtime_support_claims(validation, "Supports 2 runtimes", support)
+        self.assertTrue(any("矩阵只有 1 个" in error for error in validation.errors))
 
     def _validate_mutated_compatibility(
         self,

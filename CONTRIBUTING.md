@@ -32,17 +32,30 @@ Then:
 
 1. For behavior changes, add or update a fixture under `skills/think-it-through/evals/fixtures/`. Evidence, participation, human-review, persistence, and host changes must also update the relevant core schema, policy, or adapter.
 2. For trigger changes, use `trigger-dev.json`. Do not inspect or tune against the frozen holdout for the same release.
-3. Run:
+3. Run the pinned Python 3.12 validation environment:
 
    ```bash
-   python3 -m unittest discover -s scripts -p 'test_*.py' -v
-   python3 scripts/validate_repo.py
+   uv run --python 3.12 --with-requirements requirements-validation.txt \
+     python -m unittest discover -s scripts -p 'test_*.py' -v
+   uv run --python 3.12 --with-requirements requirements-validation.txt \
+     python scripts/validate_repo.py
    ```
 
 4. Keep English and Chinese README instructions synchronized when changing user-facing commands, compatibility, benchmarks, or security boundaries.
 5. Describe what changed, why it changes a decision, and how it was verified.
 
 Real Claude Code or Codex smoke is deliberately excluded from ordinary CI. Use the manual `Runtime smoke` workflow only after a person explicitly authorizes that one provider call and accepts the disclosed test prompt, four-turn limit, cost boundary, stop conditions, and fallback. The workflow injects only the selected provider secret and retains only redacted user/final-output artifacts; it does not promote `runtime-support.json` automatically.
+
+## Validate and build a local candidate
+
+After the checks above pass, build into a new output directory and verify the archive:
+
+```bash
+python3 scripts/build_distribution.py --output-dir dist/local-candidate
+unzip -t dist/local-candidate/think-it-through.skill
+```
+
+The builder refuses to overwrite an existing archive or `unpacked/` directory. A local candidate is not a GitHub Release asset, and successful packaging does not prove that any runtime loaded or followed the Skill.
 
 ## Third-party material
 
@@ -101,17 +114,30 @@ By contributing, you agree that your contribution is licensed under the reposito
 
 1. 行为修改应在 `skills/think-it-through/evals/fixtures/` 增加或更新夹具；证据、参与、真人评审、持久化或宿主行为变化还必须同步相应 core schema、policy 或 adapter。
 2. 触发修改只使用 `trigger-dev.json`；同一版本不得读取最终 holdout 后继续调优。
-3. 运行：
+3. 使用固定依赖的 Python 3.12 环境运行：
 
    ```bash
-   python3 -m unittest discover -s scripts -p 'test_*.py' -v
-   python3 scripts/validate_repo.py
+   uv run --python 3.12 --with-requirements requirements-validation.txt \
+     python -m unittest discover -s scripts -p 'test_*.py' -v
+   uv run --python 3.12 --with-requirements requirements-validation.txt \
+     python scripts/validate_repo.py
    ```
 
 4. 修改用户命令、兼容性、benchmark 或安全边界时，同步英文和中文 README。
 5. 在 PR 中说明改了什么、为什么会改变决策，以及如何验证。
 
 真实 Claude Code 或 Codex smoke 刻意不进入普通 CI。只有在真人明确授权该次 provider 调用，并接受已披露的测试议题、四轮上限、成本边界、停止条件与失败降级后，才使用手动 `Runtime smoke` workflow。workflow 只注入所选 provider 的 secret，只保留脱敏后的用户输入与最终输出 artifact，也不会自动提升 `runtime-support.json`。
+
+### 验证并构建本地候选包
+
+上述检查通过后，使用新的输出目录构建并验证归档：
+
+```bash
+python3 scripts/build_distribution.py --output-dir dist/local-candidate
+unzip -t dist/local-candidate/think-it-through.skill
+```
+
+构建器会拒绝覆盖已有 archive 或 `unpacked/` 目录。本地候选包不是 GitHub Release asset；打包成功也不能证明任何 runtime 已加载或遵循 Skill。
 
 ### 第三方材料
 

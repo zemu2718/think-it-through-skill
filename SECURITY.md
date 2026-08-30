@@ -4,7 +4,7 @@
 
 ## Supported versions
 
-Security fixes are applied to the latest release on the default branch. Older releases and previously generated `.skill` packages may not receive separate maintenance.
+Security fixes are applied to the maintained source on the default branch. Older source snapshots and previously generated `.skill` packages may not receive separate maintenance; the README separately records whether a public Git tag, GitHub Release, or downloadable asset exists.
 
 ## Reporting a vulnerability
 
@@ -57,7 +57,7 @@ Method confirmation, an agent-count limit, feedback, or an earlier request does 
 
 ### 支持版本
 
-安全修复应用于默认分支上的最新正式版本。旧版本和此前生成的 `.skill` 包不保证单独维护。
+安全修复应用于默认分支上持续维护的源码。旧源码快照和此前生成的 `.skill` 包不保证单独维护；是否存在公开 Git tag、GitHub Release 或可下载 asset，以 README 的当前状态说明为准。
 
 ### 报告漏洞
 

@@ -2,6 +2,8 @@
 
 本项目的重要版本变更记录在此。发布支持范围、仓库合同校验和具体会话执行事实分层管理。
 
+版本条目记录仓库指定的源码版本历史；同名 Git tag、GitHub Release 和可下载 asset 是否存在，必须由对应的公开对象单独证明。
+
 格式参考 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)，版本遵循 [Semantic Versioning](https://semver.org/spec/v2.0.0.html)。
 
 ## [Unreleased]

@@ -6,7 +6,9 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import struct
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
 
@@ -588,6 +590,38 @@ def _validate_instance(
         validation.require(True, f"{label} 符合 schema")
 
 
+RUNTIME_SUPPORT_CLAIM_RE = re.compile(
+    r"(?:supports?|compatible\s+with|verified\s+(?:on|across)|works?\s+(?:on|across))\s+"
+    r"(?P<en_after>\d+\+?|all|every)\s+runtimes?|"
+    r"(?P<en_before>\d+\+?|all|every)\s+(?:verified|supported|compatible)\s+runtimes?|"
+    r"(?:已验证|已支持|支持|兼容)\s*(?P<zh_after>\d+\+?|全部|所有)\s*(?:个)?\s*(?:runtime|运行时)|"
+    r"(?P<zh_before>\d+\+?|全部|所有)\s*(?:个)?\s*(?:已验证|已支持|支持|兼容)\s*(?:runtime|运行时)",
+    re.IGNORECASE,
+)
+
+
+def _validate_runtime_support_claims(
+    validation: Validation,
+    text: str,
+    support: dict[str, Any],
+) -> None:
+    runtimes = support.get("runtimes", [])
+    fully_supported_count = sum(
+        all(
+            runtime.get("levels", {}).get(level, {}).get("status") == "passed"
+            for level in ("L3", "L4", "L5")
+        )
+        for runtime in runtimes
+    )
+    for match in RUNTIME_SUPPORT_CLAIM_RE.finditer(text):
+        claimed = next(value for value in match.groupdict().values() if value is not None)
+        claimed_count = len(runtimes) if claimed.lower() in {"all", "every", "全部", "所有"} else int(claimed.rstrip("+"))
+        validation.require(
+            claimed_count <= fully_supported_count,
+            f"README 宣称支持或验证 {claimed} 个 runtime，但矩阵只有 {fully_supported_count} 个 runtime 的 L3～L5 全部通过",
+        )
+
+
 def validate_compatibility(validation: Validation) -> None:
     compatibility_dir = ROOT / "compatibility"
     profile_path = compatibility_dir / "profile.json"
@@ -727,19 +761,23 @@ def validate_compatibility(validation: Validation) -> None:
                     validation.require(evidence_runtime.get("id") == runtime.get("id") and evidence_runtime.get("version") == runtime.get("runtime_version"), f"{runtime.get('id')} {level} runtime/version 与 evidence 不一致")
 
     readmes = (ROOT / "README.md").read_text(encoding="utf-8") + "\n" + (ROOT / "README.zh-CN.md").read_text(encoding="utf-8")
-    forbidden_claim = re.compile(r"(?:50\+|55\+|77)\s*(?:verified\s*)?runtimes?|(?:50\+|55\+|77)\s*个?(?:已验证)?(?:兼容)?\s*runtime", re.IGNORECASE)
-    validation.require(not forbidden_claim.search(readmes), "README 不得把 50+/55+/77 installer targets 宣称为已验证 runtimes")
+    _validate_runtime_support_claims(validation, readmes, support)
 
 
 def validate_links(validation: Validation, files: list[Path]) -> None:
-    link_re = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
+    markdown_link_re = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
+    html_asset_re = re.compile(
+        r"<(?:img|source)\b[^>]*\b(?:src|srcset)=[\"']([^\"']+)[\"']",
+        re.IGNORECASE,
+    )
     for path in files:
         if path.suffix != ".md":
             continue
         text = path.read_text(encoding="utf-8")
-        for target in link_re.findall(text):
-            target = target.strip().split("#", 1)[0]
-            if not target or target.startswith(("http://", "https://", "mailto:")):
+        targets = markdown_link_re.findall(text) + html_asset_re.findall(text)
+        for raw_target in targets:
+            target = raw_target.strip().split()[0].split("#", 1)[0]
+            if not target or target.startswith(("http://", "https://", "mailto:", "data:")):
                 continue
             resolved = (path.parent / target).resolve()
             validation.require(resolved.exists(), f"{path.relative_to(ROOT)} 存在失效链接：{target}")
@@ -1706,25 +1744,102 @@ def validate_evals(validation: Validation) -> None:
         validation.require("互不覆盖、互不重解释" in legacy_rubric, "行为与 UX rubric 必须明确互不重解释")
 
 
+def _svg_root(validation: Validation, path: Path) -> ET.Element | None:
+    try:
+        root = ET.fromstring(path.read_text(encoding="utf-8"))
+    except ET.ParseError as error:
+        validation.require(False, f"SVG {path.relative_to(ROOT)} 无法解析：{error}")
+        return None
+    validation.require(root.tag.rsplit("}", 1)[-1] == "svg", f"SVG {path.relative_to(ROOT)} 根元素必须是 svg")
+    return root
+
+
+def _svg_ids(root: ET.Element) -> set[str]:
+    return {element_id for element in root.iter() if (element_id := element.get("id"))}
+
+
+def _svg_viewbox(root: ET.Element) -> tuple[str | None, str | None, str | None]:
+    return root.get("width"), root.get("height"), root.get("viewBox")
+
+
+def _png_dimensions(path: Path) -> tuple[int, int] | None:
+    data = path.read_bytes()[:24]
+    if len(data) != 24 or data[:8] != b"\x89PNG\r\n\x1a\n" or data[12:16] != b"IHDR":
+        return None
+    return struct.unpack(">II", data[16:24])
+
+
 def validate_assets(validation: Validation, files: list[Path]) -> None:
+    svg_roots: dict[Path, ET.Element] = {}
     for path in files:
         if path.suffix != ".svg":
             continue
         text = path.read_text(encoding="utf-8")
         validation.require("<script" not in text.lower(), f"SVG {path.relative_to(ROOT)} 不得包含脚本")
-        validation.require(not re.search(r"(?:href|src)=[\"']https?://", text, re.IGNORECASE), f"SVG {path.relative_to(ROOT)} 不得引用远程资源")
-        validation.require("<title" in text and "<desc" in text, f"SVG {path.relative_to(ROOT)} 必须包含 title 和 desc")
+        validation.require(
+            not re.search(r"(?:href|src)=[\"']https?://", text, re.IGNORECASE),
+            f"SVG {path.relative_to(ROOT)} 不得引用远程资源",
+        )
+        root = _svg_root(validation, path)
+        if root is None:
+            continue
+        svg_roots[path] = root
+        local_tags = {element.tag.rsplit("}", 1)[-1] for element in root.iter()}
+        validation.require("title" in local_tags and "desc" in local_tags, f"SVG {path.relative_to(ROOT)} 必须包含 title 和 desc")
+        validation.require("script" not in local_tags, f"SVG {path.relative_to(ROOT)} 不得包含 script 元素")
+        validation.require("image" not in local_tags, f"SVG {path.relative_to(ROOT)} 不得嵌入 raster image")
+        validation.require(
+            "data:image" not in text.lower(),
+            f"SVG {path.relative_to(ROOT)} 不得包含 data URI raster",
+        )
 
-    flow_en = ROOT / "assets" / "demo-flow.svg"
-    flow_zh = ROOT / "assets" / "demo-flow.zh-CN.svg"
+    assets = ROOT / "assets"
+    hero_light = assets / "hero-light.svg"
+    hero_dark = assets / "hero-dark.svg"
+    validation.require(hero_light.exists() and hero_dark.exists(), "缺少 light 或 dark Hero")
+    if hero_light in svg_roots and hero_dark in svg_roots:
+        light_root = svg_roots[hero_light]
+        dark_root = svg_roots[hero_dark]
+        expected_hero = ("1200", "480", "0 0 1200 480")
+        validation.require(_svg_viewbox(light_root) == expected_hero, "light Hero 必须是 1200×480")
+        validation.require(_svg_viewbox(dark_root) == expected_hero, "dark Hero 必须是 1200×480")
+        validation.require(_svg_ids(light_root) == _svg_ids(dark_root), "light/dark Hero 必须共享相同结构 ID")
+        validation.require(not any(element.tag.rsplit("}", 1)[-1] == "text" for element in light_root.iter()), "Hero 不得内嵌正文文字")
+        validation.require(not any(element.tag.rsplit("}", 1)[-1] == "text" for element in dark_root.iter()), "Hero 不得内嵌正文文字")
+        validation.require(hero_light.stat().st_size <= 40 * 1024 and hero_dark.stat().st_size <= 40 * 1024, "Hero SVG 每份不得超过 40 KiB")
+        for element_id in ("decision-hinge", "optional-gate", "reassessment-loop"):
+            validation.require(element_id in _svg_ids(light_root), f"Hero 缺少决策线结构：{element_id}")
+
+    flow_en = assets / "demo-flow.svg"
+    flow_zh = assets / "demo-flow.zh-CN.svg"
     validation.require(flow_en.exists() and flow_zh.exists(), "缺少英文或中文用户流程图")
-    if flow_en.exists() and flow_zh.exists():
+    required_flow_ids = {"step-1", "step-2", "step-3", "step-4", "optional-gate", "reassessment-loop"}
+    if flow_en in svg_roots and flow_zh in svg_roots:
+        en_root = svg_roots[flow_en]
+        zh_root = svg_roots[flow_zh]
+        validation.require(_svg_viewbox(en_root) == _svg_viewbox(zh_root) == ("1200", "520", "0 0 1200 520"), "中英文流程图必须共享 1200×520 画布")
+        validation.require(required_flow_ids <= _svg_ids(en_root), "英文流程图缺少稳定结构 ID")
+        validation.require(required_flow_ids <= _svg_ids(zh_root), "中文流程图缺少稳定结构 ID")
+        validation.require(flow_en.stat().st_size <= 30 * 1024 and flow_zh.stat().st_size <= 30 * 1024, "流程 SVG 每份不得超过 30 KiB")
         en_text = flow_en.read_text(encoding="utf-8")
         zh_text = flow_zh.read_text(encoding="utf-8")
-        for phrase in ("one main agent", "zero external calls", "Optional Gate", "explicitly authorized", "decision snapshot"):
-            validation.require(phrase in en_text, f"英文流程图缺少当前用户路径语义：{phrase}")
-        for phrase in ("当前主 Agent", "零外部调用", "可选 Gate", "明确授权", "决策快照"):
-            validation.require(phrase in zh_text, f"中文流程图缺少当前用户路径语义：{phrase}")
+        for phrase in ("Optional evidence or participation", "needed and explicitly authorized", "real results back to reassess"):
+            validation.require(phrase in en_text, f"英文流程图缺少用户路径语义：{phrase}")
+        for phrase in ("可选的证据或独立参与", "必要且获得明确授权", "现实结果回来复判"):
+            validation.require(phrase in zh_text, f"中文流程图缺少用户路径语义：{phrase}")
+        validation.require("stroke-dasharray" in en_text and "stroke-dasharray" in zh_text, "可选 Gate 不得只依赖颜色编码")
+
+    social_svg = assets / "social-preview.svg"
+    social_png = assets / "social-preview.png"
+    validation.require(social_svg.exists() and social_png.exists(), "缺少 Social Preview 源文件或 PNG")
+    if social_svg in svg_roots:
+        validation.require(_svg_viewbox(svg_roots[social_svg]) == ("1280", "640", "0 0 1280 640"), "Social Preview SVG 必须是 1280×640")
+        social_text = social_svg.read_text(encoding="utf-8")
+        for phrase in ("Think It Through", "想清楚", "Do not let AI flawlessly execute"):
+            validation.require(phrase in social_text, f"Social Preview 缺少稳定品牌信息：{phrase}")
+    if social_png.exists():
+        validation.require(_png_dimensions(social_png) == (1280, 640), "Social Preview PNG 必须是 1280×640")
+        validation.require(social_png.stat().st_size <= 400 * 1024, "Social Preview PNG 不得超过 400 KiB")
 
 
 def validate_repo_hygiene(validation: Validation, files: list[Path]) -> None:
@@ -1919,81 +2034,111 @@ def validate_public_docs(validation: Validation) -> None:
     current_architecture = public_docs[current_architecture_path]
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
 
-    for fact in (
-        f"v{CURRENT_CONTRACT_VERSION}",
-        "v0.2.0",
-        "/think-it-through",
-        "Evidence Gate",
-        "Participation Gate",
-        "Agent Skills",
-        "ChatGPT",
-        "L0",
-        "L5",
-        "not_run",
-        "compatibility/runtime-support.json",
-        "distribution/package-manifest.json",
-    ):
-        validation.require(fact in readme_en and fact in readme_zh, f"中英文 README 共享事实缺失或漂移：{fact}")
-
-    readme_requirements = (
+    readme_contracts = (
         (
             "README.md",
             readme_en,
+            (
+                "## Quick Start",
+                "## A 30-second walkthrough",
+                "## When to use it",
+                "## How it works",
+                "## Safe by default",
+                "## Compatibility and evidence status",
+                "## FAQ",
+                "## Documentation map",
+                "## Contributing",
+                "## License",
+            ),
             "assets/demo-flow.svg",
-            "Decision snapshot",
-            "v0.2.0 remains the latest stable release",
-            "unreleased v0.3.0 source candidate",
-            "text protocol is the cross-host baseline",
-            "native compatibility certification",
+            ("Illustrative walkthrough", "synthetic", "not a runtime transcript"),
+            ("no network access", "no private-data access", "one current main agent", "no file or remote persistence", "no external action"),
+            ("Before starting", "Before choosing a path", "Before committing resources", "Before doubling down", "After results arrive"),
+            "[Chinese]",
         ),
         (
             "README.zh-CN.md",
             readme_zh,
+            (
+                "## 快速开始",
+                "## 30 秒说明性演示",
+                "## 什么时候调用",
+                "## 它如何工作",
+                "## 默认安全与隐私",
+                "## 兼容性与证据状态",
+                "## 常见问题",
+                "## 文档导航",
+                "## 参与贡献",
+                "## 许可证",
+            ),
             "assets/demo-flow.zh-CN.svg",
-            "决策快照",
-            "v0.2.0 仍是最新稳定版",
-            "尚未发布的 v0.3.0 源码候选",
-            "纯文本协议是跨宿主基线",
-            "原生兼容认证",
+            ("说明性演示", "合成示例", "不是真实 runtime transcript"),
+            ("不联网", "不读取私有数据", "只使用当前主 Agent", "不写入文件或远端保存", "不执行外部行动"),
+            ("立项前", "选方向前", "投入资源前", "继续加码前", "结果回来后"),
+            None,
         ),
     )
-    for name, text, flow_asset, snapshot_label, stable_phrase, candidate_phrase, text_baseline, adapter_boundary in readme_requirements:
-        validation.require(flow_asset in text, f"{name} 缺少对应语言的用户流程图：{flow_asset}")
-        validation.require("R-align" in text and "R-method" in text, f"{name} 缺少状态边界")
-        validation.require(snapshot_label in text, f"{name} 缺少决策快照说明")
-        validation.require("git clone" in text and "test ! -e" in text, f"{name} 缺少非覆盖式安装步骤")
-        validation.require("scripts/build_distribution.py" in text and "unzip -t" in text, f"{name} 缺少本地候选包构建与校验步骤")
-        validation.require(stable_phrase in text, f"{name} 缺少 v0.2.0 稳定发布状态")
-        validation.require(candidate_phrase in text, f"{name} 缺少 v0.3.0 源码候选状态")
-        validation.require(text_baseline in text, f"{name} 缺少纯文本跨宿主基线")
-        validation.require(adapter_boundary in text, f"{name} 缺少 Adapter 原生兼容边界")
-        validation.require("trace" in text and "receipt" in text, f"{name} 缺少具体会话执行证明边界")
-        validation.require("examples/" not in text, f"{name} 仍把已删除 examples/ 描述为当前结构")
+    stable_commit = "3b9320b8890d36e592e86e89bf98e5103d4cf7d1"
+    shared_links = (
+        "PRODUCT.md",
+        "REQUIREMENTS.md",
+        "distribution/package-manifest.json",
+        "compatibility/runtime-support.json",
+        "CONTRIBUTING.md",
+        "SECURITY.md",
+        "CHANGELOG.md",
+    )
+    for name, readme, sections, flow_asset, demo_phrases, safety_phrases, decision_moments, language_marker in readme_contracts:
+        lines = readme.splitlines()
+        validation.require(180 <= len(lines) <= 320, f"{name} 应保持发布级入口密度，当前 {len(lines)} 行")
+        positions = [readme.find(section) for section in sections]
+        validation.require(all(position >= 0 for position in positions), f"{name} 缺少发布级入口章节")
+        validation.require(positions == sorted(positions), f"{name} 章节顺序与首次用户路径不一致")
+        validation.require(0 <= positions[0] < 5000, f"{name} Quick Start 出现过晚")
+        validation.require(flow_asset in readme, f"{name} 缺少对应语言流程图：{flow_asset}")
+        validation.require("assets/hero-light.svg" in readme and "assets/hero-dark.svg" in readme, f"{name} 缺少 light/dark Hero")
+        validation.require(stable_commit in readme, f"{name} 缺少固定 v0.2.0 源码提交")
+        validation.require("/think-it-through" in readme, f"{name} 缺少可靠显式入口")
+        validation.require("git clone" in readme and "test ! -e" in readme, f"{name} 缺少非覆盖式源码安装")
+        validation.require(all(phrase in readme for phrase in demo_phrases), f"{name} 缺少合成示例边界")
+        validation.require(all(phrase in readme for phrase in safety_phrases), f"{name} 缺少五项默认安全语义")
+        validation.require(all(moment in readme for moment in decision_moments), f"{name} 缺少行动前后五个具体调用时机")
+        validation.require(
+            ("decision tool" in readme and "not a project-management or task-execution layer" in readme)
+            if name == "README.md"
+            else ("决策工具" in readme and "不是项目管理或任务执行层" in readme),
+            f"{name} 缺少决策工具与执行工具边界",
+        )
+        validation.require(all(link in readme for link in shared_links), f"{name} 缺少任务导向文档链接")
+        validation.require("v0.2.0" in readme and "v0.3.0" in readme, f"{name} 缺少稳定源码与候选状态")
+        validation.require("not_run" in readme and "L0" in readme and "L5" in readme, f"{name} 缺少当前机器兼容状态摘要")
+        validation.require("9/16" in readme and "1/8" in readme and "8/8" in readme, f"{name} 缺少完整自动发现限制")
+        validation.require("Star" in readme, f"{name} 缺少克制的 Star 入口")
+        validation.require("scripts/build_distribution.py" not in readme and "unzip -t" not in readme, f"{name} 不应复制维护者构建命令")
+        validation.require("assets/demo-flow.zh-CN.svg" not in readme if name == "README.md" else "assets/demo-flow.svg" not in readme, f"{name} 引用了错误语言流程图")
+        if language_marker:
+            validation.require(language_marker in readme, "英文 README 必须标注中文主文档语言")
 
-    validation.require(
-        "（核心假设）" in readme_zh
-        and "（本轮动作）" in readme_zh
-        and "（观察信号）" in readme_zh
-        and "（复判条件）" in readme_zh,
-        "中文 README 缺少自然句末主现实闭环示例",
-    )
-    validation.require(
-        "(core hypothesis)" in readme_en
-        and "(action for this round)" in readme_en
-        and "(signals to observe)" in readme_en
-        and "(reassessment condition)" in readme_en,
-        "英文 README 缺少自然句末主现实闭环示例",
-    )
-    validation.require(
-        "当前判断仍依赖" in readme_zh and "仍不知道的关键问题" in readme_zh,
-        "中文 README 决策快照必须分别显示假设与未知",
-    )
-    validation.require(
-        "What this judgment still assumes" in readme_en and "What remains unknown" in readme_en,
-        "英文 README 决策快照必须分别显示假设与未知",
-    )
-    validation.require("assets/demo-flow.zh-CN.svg" not in readme_en, "英文 README 不应引用中文流程图")
-    validation.require("assets/demo-flow.svg" not in readme_zh, "中文 README 不应引用英文流程图")
+    validation.require("[简体中文](README.zh-CN.md)" in readme_en, "英文 README 缺少中文切换")
+    validation.require("[English](README.md)" in readme_zh, "中文 README 缺少英文切换")
+    validation.require("no public Git tag, GitHub Release" in readme_en, "英文 README 必须诚实说明无公开 Release")
+    validation.require("没有公开 Git tag、GitHub Release" in readme_zh, "中文 README 必须诚实说明无公开 Release")
+    validation.require("unreleased v0.3.0 candidate" in readme_en, "英文 README 缺少 v0.3.0 未发布候选状态")
+    validation.require("尚未发布的 v0.3.0 候选" in readme_zh, "中文 README 缺少 v0.3.0 未发布候选状态")
+
+    trigger_summary = _load_json(ROOT / "benchmarks" / "trigger-v0.1" / "summary.json")
+    holdout_summary = trigger_summary.get("holdout", {}).get("summary", {})
+    validation.require(holdout_summary == {"total": 16, "passed": 9, "failed": 7}, "冻结 trigger holdout 摘要发生变化")
+    holdout = _load_json(ROOT / "benchmarks" / "trigger-v0.1" / "holdout.json")
+    holdout_results = holdout.get("results", [])
+    positive_passed = sum(item.get("pass") is True for item in holdout_results if item.get("should_trigger") is True)
+    negative_passed = sum(item.get("pass") is True for item in holdout_results if item.get("should_trigger") is False)
+    validation.require((positive_passed, negative_passed) == (1, 8), "冻结 trigger 正负例摘要发生变化")
+
+    release_asset_re = re.compile(r"https?://[^\s)]+/releases/(?:download|tag)/v0\.3\.0", re.IGNORECASE)
+    validation.require(not release_asset_re.search(readme_en) and not release_asset_re.search(readme_zh), "README 不得在 v0.3.0 发布前链接候选 Release")
+    support = _load_json(ROOT / "compatibility" / "runtime-support.json")
+    _validate_runtime_support_claims(validation, readme_en + "\n" + readme_zh, support)
 
     for phrase in (
         "本文档是 v0.3.0 的唯一正式行为、安全与验收依据",
@@ -2078,9 +2223,9 @@ def validate_public_docs(validation: Validation) -> None:
         "只使用当前主 Agent",
         "不改变外部世界",
         "不包含可执行脚本",
-        "最新正式版本",
+        "持续维护的源码",
     ):
-        validation.require(phrase in security, f"SECURITY.md 缺少当前安全模型或发行政策：{phrase}")
+        validation.require(phrase in security, f"SECURITY.md 缺少当前安全模型或维护政策：{phrase}")
 
     validation.require(
         "文档性质：非规范性架构说明与历史决策记录" in stable_architecture
@@ -2109,23 +2254,18 @@ def validate_public_docs(validation: Validation) -> None:
     ):
         validation.require(phrase in current_architecture, f"v0.3.0 架构文档缺少候选兼容边界：{phrase}")
 
-    validation.require(
-        "不构成逐项实现或验收规范" in product and "REQUIREMENTS.md" in product,
-        "PRODUCT.md 必须明确只负责产品愿景而非验收合同",
-    )
+    validation.require("不构成逐项实现或验收规范" in product and "REQUIREMENTS.md" in product, "PRODUCT.md 必须明确只负责产品愿景而非验收合同")
     validation.require("唯一正式行为、安全与验收依据" in requirements, "REQUIREMENTS.md 必须声明唯一正式合同角色")
 
     validation.require("## [Unreleased]" in changelog, "CHANGELOG.md 必须保留 Unreleased 节")
-    validation.require("## [0.2.0] - 2026-08-29" in changelog, "CHANGELOG.md 缺少 v0.2.0 正式发布记录")
+    validation.require("## [0.2.0] - 2026-08-29" in changelog, "CHANGELOG.md 缺少 v0.2.0 源码版本记录")
+    validation.require("Git tag、GitHub Release 和可下载 asset" in changelog, "CHANGELOG.md 必须区分源码版本与公开 Release 对象")
     validation.require(
         f"准备 v{CURRENT_CONTRACT_VERSION} 开放 Agent Skills 候选" in changelog
         and f"v{CURRENT_CONTRACT_VERSION} 在正式 tag 与 Release 前保持候选状态" in changelog,
         "CHANGELOG.md Unreleased 缺少 v0.3.0 候选状态",
     )
-    validation.require(
-        f"## [{CURRENT_CONTRACT_VERSION}] -" not in changelog,
-        "CHANGELOG.md 不得在正式发布前创建 v0.3.0 日期段",
-    )
+    validation.require(f"## [{CURRENT_CONTRACT_VERSION}] -" not in changelog, "CHANGELOG.md 不得在正式发布前创建 v0.3.0 日期段")
     for phrase in (
         "显式调用 `/think-it-through`",
         "纯文本协议作为跨宿主基线",
@@ -2135,28 +2275,13 @@ def validate_public_docs(validation: Validation) -> None:
         "阶段 B 改为自然语言优先",
         "与稳定的 DecisionRecord schema 无损映射",
     ):
-        validation.require(phrase in changelog, f"CHANGELOG.md 缺少 v0.2.0 发布事实：{phrase}")
+        validation.require(phrase in changelog, f"CHANGELOG.md 缺少 v0.2.0 源码版本事实：{phrase}")
 
-    release_asset_re = re.compile(
-        r"https?://[^\s)]+/releases/(?:download|tag)/v0\.3\.0",
-        re.IGNORECASE,
-    )
-    validation.require(
-        not release_asset_re.search(readme_en) and not release_asset_re.search(readme_zh),
-        "README 不得在 v0.3.0 发布前链接候选 Release asset",
-    )
-
-    for legacy_phrase in (
-        "本轮确认：基础分析",
-        "本轮使用：基础分析",
-        "三类授权",
-        "declarative-feedback",
-    ):
+    for legacy_phrase in ("本轮确认：基础分析", "本轮使用：基础分析", "三类授权", "declarative-feedback"):
         validation.require(
             legacy_phrase not in readme_zh and legacy_phrase not in requirements and legacy_phrase not in product,
             f"公开当前规范仍含旧版合同：{legacy_phrase}",
         )
-
 
 def validate_trigger_benchmark(validation: Validation) -> None:
     benchmark_root = ROOT / "benchmarks" / "trigger-v0.1"
@@ -2230,9 +2355,12 @@ def validate_required_open_source_files(validation: Validation) -> None:
         "benchmarks/behavior-v0.1/README.md",
         "benchmarks/trigger-v0.1/README.md",
         "benchmarks/trigger-v0.1/summary.json",
-        "assets/hero.png",
+        "assets/README.md",
+        "assets/hero-light.svg",
+        "assets/hero-dark.svg",
         "assets/demo-flow.svg",
         "assets/demo-flow.zh-CN.svg",
+        "assets/social-preview.svg",
         "assets/social-preview.png",
         ".github/workflows/validate.yml",
         ".github/workflows/runtime-smoke.yml",

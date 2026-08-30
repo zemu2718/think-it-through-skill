@@ -1,90 +1,64 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
-  <title id="title">Think It Through decision journey</title>
-  <desc id="desc">Share one consequential issue, align the real objective and decision, answer one decisive question, optionally add bounded evidence or participation after explicit authorization, then receive a judgment, primary real-world evidence loop, decision snapshot, and reassessment path.</desc>
-  <defs>
-    <style>
-      .bg { fill: #f7f3ea; }
-      .ink { fill: #14243a; }
-      .muted { fill: #526176; }
-      .card { fill: #fffdf8; stroke: #ccd4dc; stroke-width: 2; }
-      .accent-card { fill: #fff6f1; stroke: #ef7457; stroke-width: 3; }
-      .gate-card { fill: #f0f6f8; stroke: #6b8fa3; stroke-width: 2; stroke-dasharray: 7 6; }
-      .line { fill: none; stroke: #8290a2; stroke-width: 3; stroke-linecap: round; }
-      .accent-line { fill: none; stroke: #ef7457; stroke-width: 4; stroke-linecap: round; }
-      .gate-line { fill: none; stroke: #6b8fa3; stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 7 6; }
-      .number { font: 700 18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      .title { font: 700 25px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      .heading { font: 700 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      .body { font: 400 17px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      .small { font: 600 15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-    </style>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8290a2"/>
-    </marker>
-    <marker id="accent-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ef7457"/>
-    </marker>
-    <marker id="gate-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b8fa3"/>
-    </marker>
-  </defs>
+  <title id="title">How Think It Through moves from an issue to reassessment</title>
+  <desc id="desc">Four main steps move from sharing an issue to a judgment and real-world check. An optional evidence or participation branch appears only when needed and authorized, and observed results return for reassessment.</desc>
+  <style>
+    .title { font: 700 24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #172033; }
+    .body { font: 400 17px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #526176; }
+    .small { font: 600 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #315F6D; }
+    .card { fill: #FFFFFF; stroke: #AAB4C0; stroke-width: 2; }
+    .accent { fill: #E9F6F3; stroke: #0F766E; stroke-width: 3; }
+    .gate { fill: #FFF4E5; stroke: #8A5A22; stroke-width: 3; stroke-dasharray: 9 7; }
+    .path { fill: none; stroke: #556274; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .loop { fill: none; stroke: #0F766E; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .number { font: 700 18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #FFFFFF; text-anchor: middle; dominant-baseline: middle; }
+  </style>
+  <rect width="1200" height="520" rx="28" fill="#F7F5EF"/>
+  <path class="path" d="M278 186 H326 M554 186 H602 M830 186 H878"/>
+  <path class="path" d="M714 278 V322" stroke-dasharray="9 7"/>
+  <path id="reassessment-loop" class="loop" d="M992 278 C1000 428 820 458 620 450 C440 443 318 400 250 300"/>
+  <path class="loop" d="M250 300 L238 322 M250 300 L272 309"/>
 
-  <rect class="bg" width="1200" height="520" rx="28"/>
-
-  <text class="title ink" x="48" y="52">From an important issue to a decision you can reassess</text>
-  <text class="body muted" x="48" y="82">The default path uses one main agent, zero external calls, and no external action.</text>
-
-  <path class="line" d="M280 218 H304" marker-end="url(#arrow)"/>
-  <path class="line" d="M568 218 H592" marker-end="url(#arrow)"/>
-  <path class="accent-line" d="M856 218 H880" marker-end="url(#accent-arrow)"/>
-
-  <g transform="translate(24 116)">
-    <rect class="card" width="256" height="204" rx="22"/>
-    <circle cx="36" cy="36" r="18" fill="#14243a"/>
-    <text class="number" x="31" y="43" fill="#fffdf8">1</text>
-    <text class="heading ink" x="66" y="45">Share one issue</text>
-    <text class="body muted" x="24" y="91">A consequential choice,</text>
-    <text class="body muted" x="24" y="120">plan, conflict, or idea.</text>
-    <text class="small" x="24" y="164" fill="#526176">One core issue per round.</text>
+  <g id="step-1">
+    <rect class="card" x="50" y="86" width="228" height="200" rx="22"/>
+    <circle cx="84" cy="122" r="18" fill="#556274"/><text class="number" x="84" y="123">1</text>
+    <text class="title" x="76" y="174">Share one issue</text>
+    <text class="body" x="76" y="208">A choice, plan, or</text>
+    <text class="body" x="76" y="234">sense that something</text>
+    <text class="body" x="76" y="260">is off is enough.</text>
   </g>
 
-  <g transform="translate(304 116)">
-    <rect class="card" width="264" height="204" rx="22"/>
-    <circle cx="36" cy="36" r="18" fill="#14243a"/>
-    <text class="number" x="31" y="43" fill="#fffdf8">2</text>
-    <text class="heading ink" x="66" y="45">Align the decision</text>
-    <text class="body muted" x="24" y="91">Clarify the real objective.</text>
-    <text class="body muted" x="24" y="120">Confirm useful angles.</text>
-    <text class="small" x="24" y="164" fill="#526176">Your words override controls.</text>
+  <g id="step-2">
+    <rect class="card" x="326" y="86" width="228" height="200" rx="22"/>
+    <circle cx="360" cy="122" r="18" fill="#556274"/><text class="number" x="360" y="123">2</text>
+    <text class="title" x="352" y="174">Clarify what matters</text>
+    <text class="body" x="352" y="208">Separate the requested</text>
+    <text class="body" x="352" y="234">task from the result</text>
+    <text class="body" x="352" y="260">you want to protect.</text>
   </g>
 
-  <g transform="translate(592 116)">
-    <rect class="accent-card" width="264" height="204" rx="22"/>
-    <circle cx="36" cy="36" r="18" fill="#ef7457"/>
-    <text class="number" x="31" y="43" fill="#fffdf8">3</text>
-    <text class="heading ink" x="66" y="45">Answer one thing</text>
-    <text class="body muted" x="24" y="91">One answer most likely to</text>
-    <text class="body muted" x="24" y="120">change ranking or direction.</text>
-    <text class="small" x="24" y="164" fill="#d9573c">Then the Skill stops and waits.</text>
+  <g id="step-3">
+    <rect class="accent" x="602" y="86" width="228" height="200" rx="22"/>
+    <circle cx="636" cy="122" r="18" fill="#0F766E"/><text class="number" x="636" y="123">3</text>
+    <text class="title" x="628" y="174">Answer one thing</text>
+    <text class="body" x="628" y="208">Focus on the answer</text>
+    <text class="body" x="628" y="234">most likely to change</text>
+    <text class="body" x="628" y="260">the decision.</text>
   </g>
 
-  <g transform="translate(880 116)">
-    <rect class="card" width="296" height="204" rx="22"/>
-    <circle cx="36" cy="36" r="18" fill="#14243a"/>
-    <text class="number" x="31" y="43" fill="#fffdf8">4</text>
-    <text class="heading ink" x="66" y="45">Judge and reassess</text>
-    <text class="body muted" x="24" y="91">Judgment + evidence loop</text>
-    <text class="body muted" x="24" y="120">+ copyable decision snapshot.</text>
-    <text class="small" x="24" y="164" fill="#526176">No automatic execution.</text>
+  <g id="step-4">
+    <rect class="card" x="878" y="86" width="272" height="200" rx="22"/>
+    <circle cx="912" cy="122" r="18" fill="#556274"/><text class="number" x="912" y="123">4</text>
+    <text class="title" x="904" y="174">Judge and check reality</text>
+    <text class="body" x="904" y="208">Get a direction, one</text>
+    <text class="body" x="904" y="234">real-world evidence loop,</text>
+    <text class="body" x="904" y="260">and a decision snapshot.</text>
   </g>
 
-  <path class="gate-line" d="M724 320 V350 H1028 V320" marker-end="url(#gate-arrow)"/>
-  <g transform="translate(706 354)">
-    <rect class="gate-card" width="340" height="76" rx="18"/>
-    <text class="small ink" x="22" y="30">Optional Gate · only if it can change the judgment</text>
-    <text class="body muted" x="22" y="56">Bounded evidence or participation, explicitly authorized</text>
+  <g id="optional-gate">
+    <rect class="gate" x="538" y="322" width="352" height="88" rx="20"/>
+    <text class="title" x="566" y="358">Optional evidence or participation</text>
+    <text class="small" x="566" y="386">Only when needed and explicitly authorized</text>
   </g>
 
-  <path class="line" d="M1028 442 C1028 492 448 493 448 330" marker-end="url(#arrow)"/>
-  <text class="small muted" x="510" y="485">Correction, new evidence, or real results start a new round</text>
+  <text class="small" x="914" y="444">Bring real results back to reassess</text>
 </svg>

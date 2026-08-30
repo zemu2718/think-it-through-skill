@@ -1,90 +1,64 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
-  <title id="title">想清楚的用户决策流程</title>
-  <desc id="desc">说出一个重要议题，对齐真实目的与当前决定，只回答一个最可能改变判断的问题；只有必要且明确授权时才补充有界证据或参与，最后获得判断、主现实证据闭环、决策快照和复判入口。</desc>
-  <defs>
-    <style>
-      .bg { fill: #f7f3ea; }
-      .ink { fill: #14243a; }
-      .muted { fill: #526176; }
-      .card { fill: #fffdf8; stroke: #ccd4dc; stroke-width: 2; }
-      .accent-card { fill: #fff6f1; stroke: #ef7457; stroke-width: 3; }
-      .gate-card { fill: #f0f6f8; stroke: #6b8fa3; stroke-width: 2; stroke-dasharray: 7 6; }
-      .line { fill: none; stroke: #8290a2; stroke-width: 3; stroke-linecap: round; }
-      .accent-line { fill: none; stroke: #ef7457; stroke-width: 4; stroke-linecap: round; }
-      .gate-line { fill: none; stroke: #6b8fa3; stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 7 6; }
-      .number { font: 700 18px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
-      .title { font: 700 25px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
-      .heading { font: 700 22px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
-      .body { font: 400 17px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
-      .small { font: 600 15px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
-    </style>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8290a2"/>
-    </marker>
-    <marker id="accent-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ef7457"/>
-    </marker>
-    <marker id="gate-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b8fa3"/>
-    </marker>
-  </defs>
+  <title id="title">想清楚如何从一个议题走到现实复判</title>
+  <desc id="desc">四个主步骤从说出议题走到判断和现实验证。只有必要且明确授权时，才进入可选的证据或参与支路；观察到的现实结果会带回复判。</desc>
+  <style>
+    .title { font: 700 24px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; fill: #172033; }
+    .body { font: 400 17px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; fill: #526176; }
+    .small { font: 600 16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; fill: #315F6D; }
+    .card { fill: #FFFFFF; stroke: #AAB4C0; stroke-width: 2; }
+    .accent { fill: #E9F6F3; stroke: #0F766E; stroke-width: 3; }
+    .gate { fill: #FFF4E5; stroke: #8A5A22; stroke-width: 3; stroke-dasharray: 9 7; }
+    .path { fill: none; stroke: #556274; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .loop { fill: none; stroke: #0F766E; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .number { font: 700 18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #FFFFFF; text-anchor: middle; dominant-baseline: middle; }
+  </style>
+  <rect width="1200" height="520" rx="28" fill="#F7F5EF"/>
+  <path class="path" d="M278 186 H326 M554 186 H602 M830 186 H878"/>
+  <path class="path" d="M714 278 V322" stroke-dasharray="9 7"/>
+  <path id="reassessment-loop" class="loop" d="M992 278 C1000 428 820 458 620 450 C440 443 318 400 250 300"/>
+  <path class="loop" d="M250 300 L238 322 M250 300 L272 309"/>
 
-  <rect class="bg" width="1200" height="520" rx="28"/>
-
-  <text class="title ink" x="48" y="52">从一个重要议题，走到可以被现实修正的决定</text>
-  <text class="body muted" x="48" y="82">默认只使用当前主 Agent、零外部调用，也不改变外部世界。</text>
-
-  <path class="line" d="M280 218 H304" marker-end="url(#arrow)"/>
-  <path class="line" d="M568 218 H592" marker-end="url(#arrow)"/>
-  <path class="accent-line" d="M856 218 H880" marker-end="url(#accent-arrow)"/>
-
-  <g transform="translate(24 116)">
-    <rect class="card" width="256" height="204" rx="22"/>
-    <circle cx="36" cy="36" r="18" fill="#14243a"/>
-    <text class="number" x="31" y="43" fill="#fffdf8">1</text>
-    <text class="heading ink" x="66" y="45">说出一个议题</text>
-    <text class="body muted" x="24" y="91">可以是重要选择、计划、</text>
-    <text class="body muted" x="24" y="120">冲突、想法或不确定感。</text>
-    <text class="small" x="24" y="164" fill="#526176">每轮只处理一个核心议题。</text>
+  <g id="step-1">
+    <rect class="card" x="50" y="86" width="228" height="200" rx="22"/>
+    <circle cx="84" cy="122" r="18" fill="#556274"/><text class="number" x="84" y="123">1</text>
+    <text class="title" x="76" y="174">说出正在考虑的事</text>
+    <text class="body" x="76" y="208">一个选择、计划，</text>
+    <text class="body" x="76" y="234">或只是觉得哪里</text>
+    <text class="body" x="76" y="260">不对，都可以开始。</text>
   </g>
 
-  <g transform="translate(304 116)">
-    <rect class="card" width="264" height="204" rx="22"/>
-    <circle cx="36" cy="36" r="18" fill="#14243a"/>
-    <text class="number" x="31" y="43" fill="#fffdf8">2</text>
-    <text class="heading ink" x="66" y="45">对齐真正决定</text>
-    <text class="body muted" x="24" y="91">说清真实目的，确认本轮</text>
-    <text class="body muted" x="24" y="120">最小必要的思考角度。</text>
-    <text class="small" x="24" y="164" fill="#526176">文字与选择冲突时以文字为准。</text>
+  <g id="step-2">
+    <rect class="card" x="326" y="86" width="228" height="200" rx="22"/>
+    <circle cx="360" cy="122" r="18" fill="#556274"/><text class="number" x="360" y="123">2</text>
+    <text class="title" x="352" y="174">说清真正重要的结果</text>
+    <text class="body" x="352" y="208">把眼前任务与真正</text>
+    <text class="body" x="352" y="234">想得到或保护的东西</text>
+    <text class="body" x="352" y="260">分开。</text>
   </g>
 
-  <g transform="translate(592 116)">
-    <rect class="accent-card" width="264" height="204" rx="22"/>
-    <circle cx="36" cy="36" r="18" fill="#ef7457"/>
-    <text class="number" x="31" y="43" fill="#fffdf8">3</text>
-    <text class="heading ink" x="66" y="45">只回答一个问题</text>
-    <text class="body muted" x="24" y="91">找出最可能改变排序、</text>
-    <text class="body muted" x="24" y="120">方向或是否继续的答案。</text>
-    <text class="small" x="24" y="164" fill="#d9573c">问后停止并等待。</text>
+  <g id="step-3">
+    <rect class="accent" x="602" y="86" width="228" height="200" rx="22"/>
+    <circle cx="636" cy="122" r="18" fill="#0F766E"/><text class="number" x="636" y="123">3</text>
+    <text class="title" x="628" y="174">只回答一个问题</text>
+    <text class="body" x="628" y="208">聚焦最可能改变方向、</text>
+    <text class="body" x="628" y="234">排序或投入边界的</text>
+    <text class="body" x="628" y="260">一个答案。</text>
   </g>
 
-  <g transform="translate(880 116)">
-    <rect class="card" width="296" height="204" rx="22"/>
-    <circle cx="36" cy="36" r="18" fill="#14243a"/>
-    <text class="number" x="31" y="43" fill="#fffdf8">4</text>
-    <text class="heading ink" x="66" y="45">判断、验证、复判</text>
-    <text class="body muted" x="24" y="91">获得判断、主现实证据闭环</text>
-    <text class="body muted" x="24" y="120">和可复制的决策快照。</text>
-    <text class="small" x="24" y="164" fill="#526176">不会自动执行外部行动。</text>
+  <g id="step-4">
+    <rect class="card" x="878" y="86" width="272" height="200" rx="22"/>
+    <circle cx="912" cy="122" r="18" fill="#556274"/><text class="number" x="912" y="123">4</text>
+    <text class="title" x="904" y="174">得到判断和现实验证</text>
+    <text class="body" x="904" y="208">拿到一个方向、一个</text>
+    <text class="body" x="904" y="234">现实证据闭环和一份</text>
+    <text class="body" x="904" y="260">可复制的决策快照。</text>
   </g>
 
-  <path class="gate-line" d="M724 320 V350 H1028 V320" marker-end="url(#gate-arrow)"/>
-  <g transform="translate(706 354)">
-    <rect class="gate-card" width="340" height="76" rx="18"/>
-    <text class="small ink" x="22" y="30">可选 Gate · 只有会改变判断时才进入</text>
-    <text class="body muted" x="22" y="56">明确授权后，补充有界证据或独立参与</text>
+  <g id="optional-gate">
+    <rect class="gate" x="538" y="322" width="352" height="88" rx="20"/>
+    <text class="title" x="566" y="358">可选的证据或独立参与</text>
+    <text class="small" x="566" y="386">仅在必要且获得明确授权时进入</text>
   </g>
 
-  <path class="line" d="M1028 442 C1028 492 448 493 448 330" marker-end="url(#arrow)"/>
-  <text class="small muted" x="500" y="485">纠正、新证据或现实结果出现后，开启新一轮</text>
+  <text class="small" x="914" y="444">带着现实结果回来复判</text>
 </svg>
