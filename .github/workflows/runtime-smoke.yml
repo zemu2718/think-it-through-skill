@@ -33,7 +33,7 @@ permissions:
 
 jobs:
   smoke:
-    name: Candidate ${{ inputs.runtime }} smoke
+    name: Authorized ${{ inputs.runtime }} smoke
     runs-on: ubuntu-latest
     steps:
       - name: Require explicit provider authorization

@@ -8,17 +8,32 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-31
+
 ### Added
 
-- 准备 v0.3.0 开放 Agent Skills 候选：新增通用 Adapter、L0～L5 兼容矩阵、机器可读证据 schema 与固定版本验证路径。
+- 建立 v0.3.0 开放 Agent Skills 稳定源码：新增通用 Adapter、L0～L5 兼容矩阵、机器可读证据 schema 与固定版本验证路径。
 - 新增精确分发 manifest，供 builder、validator 与 tests 共同使用。
 - 新增隔离的安装器 smoke 和需单独授权执行的 Claude Code / Codex runtime smoke harness。
+- 新增已加载 Skill 在高价值承诺节点使用的一次性上下文检查点合同、intent、静态 fixture 与 current grader；真实多轮行为保持 `not_run`。
+- 新增 Decision Thread 品牌摘要，以 Decision Hinge 为一级识别符号，并建立 manifest 驱动的 Brand Mark、双语/主题 Decision Case 与可复现 Social Preview 管线；派生 PNG 继续使用固定 `resvg-py` / Pillow 和像素级 stale 检查。
 
 ### Changed
 
 - 将当前源码合同、schema、fixtures 与评分器升级为 v0.3.0，同时保持冻结 v0.1 evidence 与 description 不变。
 - 把格式符合、安装器发现、可安装、runtime 加载、纯文本行为与原生能力分层声明；安装器 target 数不再被视为 runtime 认证。
-- v0.3.0 在正式 tag 与 Release 前保持候选状态，不覆盖或改写 v0.2.0 发布事实。
+- 将 v0.3.0 设为当前稳定源码和正式产品合同；Git tag、GitHub Release、可下载 asset 与 runtime 兼容证据仍按各自真实对象独立声明，不覆盖或改写 v0.2.0 历史事实。
+- 增加安装与 runtime 公开反馈表单；反馈只有绑定准确版本、完成复现、脱敏与审阅并形成 approved evidence 后，才能改变兼容矩阵。
+- 重构中英文 README 为“识别产品与可信状态 → 看见错误执行的代价 → 用具体案例判断适用性 → 安装并完成第一次体验 → 渐进披露安全与证据”的正式首次访客路径，并删除失效候选分支引用。
+- 用小尺寸 Brand Mark 取代抽象 Hero，用四个语言/主题 Decision Case 显化同一 SaaS 请求的执行优先与决定优先路径；Social Preview 重绘为深墨、留白和无字体依赖的原创路径字标。
+
+### Validation
+
+- Python 单元测试：165 项通过。
+- 仓库发布前校验：2951 项通过；派生视觉资产完整解码、尺寸与像素 stale check 通过。
+- `.skill` 分发包：29 个 manifest 文件构建成功，归档完整性、解包文件集合与源码逐字节一致性复验通过。
+- 固定 Agent Skills revision 格式校验通过；固定 `skills@1.5.23` 在 Node 22.20.0 下完成 1 项 archive discovery 与 8 个 installer target 精确复制 smoke。该结果只建立格式与 L1/L2 机械路径，不提升 L3～L5。
+- 未运行 Claude Code / Codex real-runtime provider smoke；公开兼容矩阵继续如实保持 `not_run`。
 
 ## [0.2.0] - 2026-08-29
 

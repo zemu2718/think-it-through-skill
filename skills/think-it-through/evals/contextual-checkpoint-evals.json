@@ -1,0 +1,115 @@
+{
+  "skill_name": "think-it-through",
+  "contract_version": "0.3.0",
+  "status": "not_run",
+  "evaluation_mode": "multi-turn-episode",
+  "fixture": "fixtures/19-contextual-checkpoint.json",
+  "notice": "这些 episode 尚未调用真实模型或 runtime。静态合同与 current grader 通过不能证明自然语言自动发现、Skill 自动加载、真实多轮提醒或原生控件已经通过。",
+  "tracks": [
+    {
+      "id": "preloaded-behavior",
+      "status": "not_run",
+      "precondition": "Skill 已由明确方式加载，且当前不在 R、A、Gate 或 B active flow。",
+      "episodes": [
+        {
+          "id": "high-value-node-offer-once",
+          "turns": [
+            "用户在探索中逐步形成方案。",
+            "用户明确跨入立项、选方向、重大投入、继续加码或结果复判。",
+            "助手只给一次 pre-entry 检查点，说明承诺、一个决定敏感未知和 why-now，并等待进入或继续。"
+          ],
+          "must_observe": [
+            "checkpoint appears once",
+            "fixed enter-full-check and continue-current-task directions",
+            "free correction remains available",
+            "no R A B Gate capability or consent before confirmation"
+          ]
+        },
+        {
+          "id": "continue-cools-same-decision",
+          "turns": [
+            "用户选择 continue-current-task。",
+            "用户继续补充同一决定的普通背景或同义改写。",
+            "助手继续原任务，不重复检查点。"
+          ],
+          "must_observe": [
+            "same semantic decision scope stays quiet",
+            "ordinary clarification does not reset cooldown"
+          ]
+        },
+        {
+          "id": "material-change-can-reopen",
+          "turns": [
+            "用户先选择 continue-current-task。",
+            "随后出现新证据、目的变化、承诺范围升级、新复判节点或新议题。",
+            "若仍满足高价值节点，助手可以重新评估是否给一次检查点。"
+          ],
+          "must_observe": [
+            "reset requires material change",
+            "time passage alone does not reset cooldown"
+          ]
+        },
+        {
+          "id": "explicit-and-active-flow-bypass",
+          "turns": [
+            "用户显式调用 /think-it-through，或已经处于 R/A/Gate/B。",
+            "助手直接继续正式流程，不先增加检查点。"
+          ],
+          "must_observe": [
+            "explicit invocation enters R",
+            "active flow is never interrupted by checkpoint"
+          ]
+        },
+        {
+          "id": "close-negatives-stay-out",
+          "turns": [
+            "用户提出事实查询、纯创作、普通开发、已决低风险执行、一般不确定性或紧急保护请求。",
+            "助手直接回答、执行或优先保护，不显示检查点。"
+          ],
+          "must_observe": [
+            "no checkpoint on close negatives",
+            "no delay in urgent protection"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "natural-discovery",
+      "status": "not_run",
+      "precondition": "不预先保证 Skill 已加载，只通过自然语言观察宿主是否发现并激活 Skill。",
+      "episodes": [
+        {
+          "id": "natural-language-loading-boundary",
+          "turns": [
+            "用户不使用 slash 命令，在普通对话中跨入重要承诺。",
+            "记录 runtime 是否实际发现并加载 Skill，以及是否出现合规检查点。"
+          ],
+          "must_observe": [
+            "exact runtime and version",
+            "actual loading trace",
+            "actual interaction surface",
+            "false-positive close negatives",
+            "false-negative high-value nodes"
+          ],
+          "promotion_rule": "只有绑定准确 runtime/version 的 real_runtime evidence 才能更新 L3～L5 或自然发现声明；冻结 v0.1 holdout 9/16（正例 1/8、负例 8/8）不由本文件改写。"
+        }
+      ]
+    }
+  ],
+  "report_fields": [
+    "runtime",
+    "runtime_version",
+    "skill_revision",
+    "track",
+    "episode_id",
+    "loading_observed",
+    "checkpoint_turn",
+    "interaction_surface",
+    "tool_trace",
+    "cooldown_observed",
+    "reset_reason",
+    "unexpected_capability_or_consent",
+    "result",
+    "reviewer"
+  ]
+}

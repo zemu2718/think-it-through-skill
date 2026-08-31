@@ -9,12 +9,14 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from grade_contracts import (
+    CheckpointContext,
     InteractionEvidence,
     InteractionOption,
     extract_number_phrases,
     grade,
     grade_a,
     grade_b,
+    grade_checkpoint,
     grade_decision_record,
     grade_evidence_gate,
     grade_human_review,
@@ -136,6 +138,85 @@ def with_feedback_fallback(text: str) -> str:
 4. 暂时先放一放"""
 
 
+CHECKPOINT_COMMITMENT = "把当前原型正式立为要继续投入的项目"
+CHECKPOINT_UNKNOWN = "陌生用户是否真的愿意为当前价值付费"
+CHECKPOINT_WHY_NOW = "一旦开始追加开发，时间和机会成本就会上升"
+CHECKPOINT_LABELS = ("进入完整检查", "继续当前任务")
+
+
+def checkpoint_context(**overrides: object) -> CheckpointContext:
+    payload: dict[str, object] = {
+        "trigger_type": "project-initiation",
+        "explicit_invocation": False,
+        "active_flow": False,
+        "same_decision_cooling_down": False,
+        "material_change": "none",
+        "response": "pending",
+        "next_stage": "pre-entry",
+        "waited_for_user": True,
+        "commitment": CHECKPOINT_COMMITMENT,
+        "decision_sensitive_unknown": CHECKPOINT_UNKNOWN,
+        "why_now": CHECKPOINT_WHY_NOW,
+        "decision_scope": {
+            "decision_object": "当前原型",
+            "true_objective": "验证是否值得继续投入",
+            "commitment_scope": "从探索原型转为持续开发",
+        },
+        "capability_calls": [],
+        "consent_ids": [],
+        "decision_record_created": False,
+        "persistence_written": False,
+    }
+    payload.update(overrides)
+    return CheckpointContext.from_dict(payload)
+
+
+def checkpoint_text() -> str:
+    return (
+        f"你正在承诺{CHECKPOINT_COMMITMENT}。\n\n"
+        f"仍可能改变方向的是{CHECKPOINT_UNKNOWN}。\n\n"
+        f"现在值得暂停，是因为{CHECKPOINT_WHY_NOW}。"
+    )
+
+
+def checkpoint_native() -> InteractionEvidence:
+    return InteractionEvidence.from_dict(
+        {
+            "host_control_status": "available",
+            "surface": "native-control",
+            "tool_call_observed": True,
+            "selection_mode": "single",
+            "options": [
+                {"id": "enter-full-check", "label": CHECKPOINT_LABELS[0]},
+                {"id": "continue-current-task", "label": CHECKPOINT_LABELS[1]},
+            ],
+            "host_free_text_available": True,
+            "question_text": "可单选，也可以直接纠正我的理解。\n\n要不要现在做一次完整检查？",
+        },
+        option_contract="checkpoint",
+    )
+
+
+def checkpoint_fallback_text() -> str:
+    return checkpoint_text() + """
+
+当前无法显示原生单选。请回复一个编号或直接纠正我的理解。
+
+要不要现在做一次完整检查？
+
+1. 进入完整检查
+2. 继续当前任务"""
+
+
+def checkpoint_fallback(status: str) -> InteractionEvidence:
+    return InteractionEvidence(
+        host_control_status=status,
+        surface="text-fallback",
+        tool_call_observed=status in {"failed", "rejected"},
+        selection_mode="single",
+    )
+
+
 class ContractGraderTests(unittest.TestCase):
     def assert_all_pass(self, checks) -> None:
         failed = [(check.text, check.evidence) for check in checks if not check.passed]
@@ -145,6 +226,222 @@ class ContractGraderTests(unittest.TestCase):
         matches = [check for check in checks if check.text == name]
         self.assertEqual(1, len(matches), name)
         self.assertFalse(matches[0].passed, name)
+
+    def test_valid_checkpoint_native_single(self) -> None:
+        self.assert_all_pass(
+            grade_checkpoint(
+                checkpoint_text(),
+                checkpoint_context(),
+                checkpoint_native(),
+            )
+        )
+
+    def test_grade_supports_checkpoint(self) -> None:
+        self.assert_all_pass(
+            grade(
+                "CHECKPOINT",
+                checkpoint_text(),
+                False,
+                [],
+                [],
+                [],
+                [],
+                "method",
+                interaction=checkpoint_native(),
+                checkpoint_context=checkpoint_context(),
+            )
+        )
+
+    def test_checkpoint_text_fallback_matrix(self) -> None:
+        for status in ("unavailable", "failed", "rejected"):
+            with self.subTest(status=status):
+                self.assert_all_pass(
+                    grade_checkpoint(
+                        checkpoint_fallback_text(),
+                        checkpoint_context(),
+                        checkpoint_fallback(status),
+                    )
+                )
+
+    def test_checkpoint_requires_fixed_structured_options(self) -> None:
+        invalid = checkpoint_native()
+        invalid = InteractionEvidence(
+            host_control_status=invalid.host_control_status,
+            surface=invalid.surface,
+            tool_call_observed=invalid.tool_call_observed,
+            selection_mode=invalid.selection_mode,
+            options=(
+                InteractionOption(id="continue-current-task", label=CHECKPOINT_LABELS[1]),
+                InteractionOption(id="enter-full-check", label=CHECKPOINT_LABELS[0]),
+            ),
+            host_free_text_available=True,
+            question_text=invalid.question_text,
+        )
+        checks = grade_checkpoint(checkpoint_text(), checkpoint_context(), invalid)
+        self.assert_has_failure(
+            checks,
+            "上下文检查点按宿主能力使用固定原生单选或普通编号降级",
+        )
+
+    def test_checkpoint_does_not_relax_method_option_parser(self) -> None:
+        payload = {
+            "host_control_status": "available",
+            "surface": "native-control",
+            "tool_call_observed": True,
+            "selection_mode": "single",
+            "options": [
+                {"id": "enter-full-check", "label": CHECKPOINT_LABELS[0]},
+                {"id": "continue-current-task", "label": CHECKPOINT_LABELS[1]},
+            ],
+            "host_free_text_available": True,
+            "question_text": "可单选，也可以直接纠正。\n\n要不要进入完整检查？",
+        }
+        with self.assertRaises(ValueError):
+            InteractionEvidence.from_dict(payload)
+        self.assertEqual(
+            ("enter-full-check", "continue-current-task"),
+            tuple(
+                option.id
+                for option in InteractionEvidence.from_dict(
+                    payload,
+                    option_contract="checkpoint",
+                ).options
+            ),
+        )
+
+    def test_checkpoint_ambiguous_response_stays_pre_entry(self) -> None:
+        self.assert_all_pass(
+            grade_checkpoint(
+                checkpoint_text(),
+                checkpoint_context(response="ambiguous"),
+                checkpoint_native(),
+            )
+        )
+        checks = grade_checkpoint(
+            checkpoint_text(),
+            checkpoint_context(response="ambiguous", next_stage="R-align"),
+            checkpoint_native(),
+        )
+        self.assert_has_failure(
+            checks,
+            "上下文检查点等待明确选择并按进入、继续或模糊回应路由",
+        )
+
+    def test_checkpoint_enter_and_continue_routes(self) -> None:
+        for response, next_stage in (
+            ("enter-full-check", "R-align"),
+            ("enter-full-check", "R-method"),
+            ("continue-current-task", "resume-current-task"),
+        ):
+            with self.subTest(response=response, next_stage=next_stage):
+                self.assert_all_pass(
+                    grade_checkpoint(
+                        checkpoint_text(),
+                        checkpoint_context(response=response, next_stage=next_stage),
+                        checkpoint_native(),
+                    )
+                )
+
+    def test_checkpoint_bypasses_explicit_invocation_and_active_flow(self) -> None:
+        cases = (
+            checkpoint_context(
+                explicit_invocation=True,
+                response="not-applicable",
+                next_stage="R-align",
+                waited_for_user=False,
+                commitment="",
+                decision_sensitive_unknown="",
+                why_now="",
+            ),
+            checkpoint_context(
+                active_flow=True,
+                response="not-applicable",
+                next_stage="active-flow",
+                waited_for_user=False,
+                commitment="",
+                decision_sensitive_unknown="",
+                why_now="",
+            ),
+        )
+        for context in cases:
+            with self.subTest(context=context):
+                self.assert_all_pass(grade_checkpoint("", context))
+
+    def test_checkpoint_close_negative_does_not_present(self) -> None:
+        context = checkpoint_context(
+            trigger_type="close-negative",
+            response="not-applicable",
+            next_stage="resume-current-task",
+            waited_for_user=False,
+            commitment="",
+            decision_sensitive_unknown="",
+            why_now="",
+            decision_scope={},
+        )
+        self.assert_all_pass(grade_checkpoint("", context))
+
+    def test_checkpoint_cooldown_and_material_changes(self) -> None:
+        cooldown = checkpoint_context(
+            same_decision_cooling_down=True,
+            response="not-applicable",
+            next_stage="resume-current-task",
+            waited_for_user=False,
+            commitment="",
+            decision_sensitive_unknown="",
+            why_now="",
+        )
+        self.assert_all_pass(grade_checkpoint("", cooldown))
+        for change in (
+            "new-evidence",
+            "purpose-change",
+            "commitment-scope-expanded",
+            "new-reassessment-node",
+            "new-topic",
+        ):
+            with self.subTest(change=change):
+                self.assert_all_pass(
+                    grade_checkpoint(
+                        checkpoint_text(),
+                        checkpoint_context(
+                            same_decision_cooling_down=True,
+                            material_change=change,
+                        ),
+                        checkpoint_native(),
+                    )
+                )
+
+    def test_checkpoint_rejects_missing_required_meaning(self) -> None:
+        checks = grade_checkpoint(
+            checkpoint_text().replace(CHECKPOINT_UNKNOWN, "一个问题"),
+            checkpoint_context(),
+            checkpoint_native(),
+        )
+        self.assert_has_failure(
+            checks,
+            "上下文检查点说清承诺、一个决定敏感未知和 why-now",
+        )
+
+    def test_checkpoint_rejects_early_r_gate_or_side_effects(self) -> None:
+        text = checkpoint_text() + "\n\n建议：你应该先做双向钢人并开始 Evidence Gate。"
+        context = checkpoint_context(
+            capability_calls=["search.public_web"],
+            consent_ids=["consent-capability"],
+            decision_record_created=True,
+            persistence_written=True,
+        )
+        checks = grade_checkpoint(text, context, checkpoint_native())
+        self.assert_has_failure(
+            checks,
+            "上下文检查点确认前不进入正式分析、方法、判断或行动",
+        )
+        self.assert_has_failure(
+            checks,
+            "上下文检查点不触发 Gate、能力调用或授权请求",
+        )
+        self.assert_has_failure(
+            checks,
+            "上下文检查点选择不推定授权且不创建记录或持久化",
+        )
 
     @staticmethod
     def r_align_interaction() -> InteractionEvidence:
@@ -1288,6 +1585,60 @@ If payment appears, reassess whether to proceed; if refusals persist, stop new i
 有付款就推进，否则停止（复判条件）。"""
         checks = grade_b(text, already_executed=False, interaction=native_b_feedback())
         self.assert_has_failure(checks, "阶段 B 不把一种授权推定为另一种")
+
+    def test_fixture_19_cases_execute_current_grader(self) -> None:
+        fixture_path = (
+            Path(__file__).resolve().parents[1]
+            / "skills"
+            / "think-it-through"
+            / "evals"
+            / "fixtures"
+            / "19-contextual-checkpoint.json"
+        )
+        fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+        self.assertIn("不是自然语言自动发现", fixture["notice"])
+        for case in fixture["cases"]:
+            with self.subTest(case=case["id"]):
+                context = CheckpointContext.from_dict(case["context"])
+                observed = case.get("observed_interaction")
+                interaction = (
+                    InteractionEvidence.from_dict(
+                        observed,
+                        option_contract="checkpoint",
+                    )
+                    if observed is not None
+                    else None
+                )
+                checks = grade_checkpoint(
+                    case["assistant_text"],
+                    context,
+                    interaction,
+                )
+                failed = [check.text for check in checks if not check.passed]
+                if case["must_pass"]:
+                    self.assertEqual([], failed)
+                else:
+                    self.assertTrue(case.get("must_fail"))
+                    self.assertTrue(failed, "负例必须由 current grader 拒绝")
+
+        base_case = fixture["cases"][0]
+        for reset_case in fixture["reset_cases"]:
+            with self.subTest(reset=reset_case["id"]):
+                context_data = {
+                    **base_case["context"],
+                    "same_decision_cooling_down": True,
+                    "material_change": reset_case["material_change"],
+                }
+                self.assert_all_pass(
+                    grade_checkpoint(
+                        base_case["assistant_text"],
+                        CheckpointContext.from_dict(context_data),
+                        InteractionEvidence.from_dict(
+                            base_case["observed_interaction"],
+                            option_contract="checkpoint",
+                        ),
+                    )
+                )
 
     def test_fixture_14_method_cases_execute_current_grader(self) -> None:
         fixture_path = (

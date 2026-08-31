@@ -1,50 +1,65 @@
 # Visual assets
 
-The repository uses an original geometric language called **Decision Thread**. Its purpose is to make one product relationship visible without turning the README into a diagram of the internal contract.
+The repository uses an original geometric language called **Decision Thread**. Its primary symbol is the **Decision Hinge**: several surface inputs meet at a deliberate pause, one direction commits, and real results return to revise the judgment.
 
 ## Visual meaning
 
-- several incoming paths: surface tasks, objectives, constraints, and unknowns;
-- a decision hinge: one question that can change direction or commitment;
-- one main path: the current conditional judgment, not an absolute answer;
-- a dashed side branch: optional evidence or participation, used only when needed and authorized;
-- a returning loop: real-world results can trigger reassessment.
+- converging inputs: surface tasks, objectives, constraints, and unknowns;
+- a decision hinge: the answer that can change direction or commitment;
+- one solid path: the current conditional judgment, not absolute certainty;
+- a small dashed branch: optional evidence or participation, only when useful and authorized;
+- a returning loop: real-world results can reopen the decision.
 
-Line shape, weight, position, and labels carry meaning alongside color. No important state relies on color alone.
+Shape, weight, line style, position, and labels carry meaning alongside color. No important state relies on color alone.
 
-## Files and budgets
+## Source of truth
 
-| Asset | Source | Output | Budget |
-| --- | --- | --- | ---: |
-| README hero | `hero-light.svg`, `hero-dark.svg` | same files | 40 KiB each |
-| English flow | `demo-flow.svg` | same file | 30 KiB |
-| Chinese flow | `demo-flow.zh-CN.svg` | same file | 30 KiB |
-| Social preview | `social-preview.svg` | `social-preview.png` | 400 KiB PNG |
+[`manifest.json`](manifest.json) is the machine-readable asset inventory. It records each asset's role, language and theme variants, canvas, stable structure IDs, byte budget, and—where applicable—generator.
 
-The light and dark heroes use the same geometry. SVGs include `title` and `desc`, use no scripts, remote resources, embedded raster images, external fonts, or heavy filters. The README keeps a text equivalent near every informational diagram.
+| Role | Editable source | Output |
+| --- | --- | --- |
+| Brand Mark | `brand-mark-light.svg`, `brand-mark-dark.svg` | the same SVG files |
+| Decision Case | four `decision-case-*.svg` locale/theme variants | the same SVG files |
+| Social Preview | `social-preview.svg` | `social-preview.png` |
 
-## Social Preview export
+The Brand Mark carries recognition at small sizes. The Decision Case visualizes one synthetic SaaS decision and requires an adjacent text equivalent in each README; it is not a testimonial, runtime transcript, or behavior evidence. Social Preview is a restrained sharing card, not an installation or compatibility matrix.
 
-`social-preview.svg` is the editable source. The PNG is exported on macOS with the system SVG renderer, then optimized with ImageMagick 7.1.2-25:
+## Social Preview generation
+
+`social-preview.svg` is the only editable source; do not hand-edit the PNG. Its wordmark and tagline use original SVG paths, not `<text>`, external fonts, remote resources, or embedded raster images.
+
+Generate the PNG in a Python 3.12 environment with the pinned validation dependencies:
 
 ```bash
-sips -s format png assets/social-preview.svg --out assets/social-preview.png
-magick assets/social-preview.png -strip -define png:compression-level=9 \
-  assets/social-preview.png
+uv run --python 3.12 --with-requirements requirements-validation.txt \
+  python scripts/render_assets.py
 ```
 
-After export, verify the 1280×640 dimensions, file size, text edges, safe-area cropping, and colors. A local PNG does not mean GitHub repository settings use it.
+Check freshness without writing tracked files:
 
-## Originality and negative standards
+```bash
+uv run --python 3.12 --with-requirements requirements-validation.txt \
+  python scripts/render_assets.py --check
+```
 
-These assets use repository-authored paths, text, layout, and colors. They do not copy third-party characters, images, object metaphors, compositions, prompts, or style specifications.
+The renderer uses `resvg-py` with system fonts disabled. Pillow verifies the complete PNG stream, reopens and loads it, converts it to RGBA, and compares dimensions plus decoded pixel hashes. Different PNG compression is accepted when the pixels are identical.
+
+A generated local PNG does not mean GitHub repository settings use it. Uploading it as the repository Social Preview remains an explicit external action.
+
+## Accessibility and negative standards
+
+All SVGs include `title` and `desc`. Brand Mark light/dark variants share geometry. Decision Case variants share non-text geometry and equivalent English/Chinese semantics. The optional Gate is dashed and secondary; the reassessment loop has a distinct returning shape.
+
+The visual character is premium through restraint: deep ink, warm neutral space, disciplined teal, rare amber, clear hierarchy, and only meaning-bearing geometry.
 
 Reject an asset if it:
 
-- looks like a generic AI workflow or mandatory multi-agent pipeline;
-- makes the optional Gate look like a required stage;
-- shows only an answer and omits the real-world reassessment loop;
+- resembles a generic AI workflow, robot, neural network, or mandatory multi-Agent pipeline;
+- makes the optional Gate look required or equally prominent;
+- shows only an answer and omits real-world reassessment;
 - uses color as the only status signal;
-- embeds paragraph-length product copy;
+- invents a result, metric, user, testimonial, price, sample size, or deadline;
+- embeds paragraph-length product copy or pseudo UI;
+- uses gradients, glow, glass effects, stacked shadows, or decorative node clouds;
 - needs zooming before its primary relationship is understandable;
-- adds decorative elements whose removal would not change meaning.
+- adds decoration whose removal would not change meaning.

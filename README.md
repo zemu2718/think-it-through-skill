@@ -3,80 +3,53 @@
 [简体中文](README.zh-CN.md)
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/hero-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="assets/hero-light.svg">
-  <img src="assets/hero-light.svg" alt="Several possible paths converge on one decision-changing question, then continue through a real-world evidence loop." width="1200">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/brand-mark-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/brand-mark-light.svg">
+  <img src="assets/brand-mark-light.svg" alt="Three inputs meet at a decision hinge, turn into one committed path, and return for reassessment." width="104">
 </picture>
 
 # Think It Through · 想清楚
 
-**Do not let AI flawlessly execute the wrong task.**
+**Decide before you execute. Let reality revise the decision.**
 
-An open Agent Skill for independent builders, solo operators, and small teams making consequential choices with limited resources. Use it before starting a project, choosing a direction, committing more resources, or automatically continuing after results arrive. It helps clarify the real decision, identify the answer most likely to change it, and choose a next step that can be tested and reassessed.
+[![Validate](https://img.shields.io/github/actions/workflow/status/zemu2718/think-it-through-skill/validate.yml?branch=main&style=flat-square&label=Validate)](https://github.com/zemu2718/think-it-through-skill/actions/workflows/validate.yml?query=branch%3Amain)
+[![Agent Skill](https://img.shields.io/badge/type-Agent%20Skill-0F766E?style=flat-square)](skills/think-it-through/SKILL.md)
+[![Stable source v0.3.0](https://img.shields.io/badge/stable%20source-v0.3.0-172033?style=flat-square)](https://github.com/zemu2718/think-it-through-skill/tree/main/skills/think-it-through)
+[![MIT License](https://img.shields.io/badge/license-MIT-172033?style=flat-square)](LICENSE)
 
-[Quick Start](#quick-start) · [When to use it](#when-to-use-it) · [How it works](#how-it-works)
+**Reliable entry today:** invoke `/think-it-through` explicitly in Claude Code.
+
+The Validate badge reports the workflow on committed `main`; it does not describe uncommitted local work.
 
 </div>
 
-> [!IMPORTANT]
-> **v0.2.0 is the repository-designated stable source snapshot, but there is currently no public Git tag, GitHub Release, or downloadable `.skill` asset.** This source branch contains the unreleased v0.3.0 candidate. The Quick Start below pins the v0.2.0 source commit instead of relying on a moving branch. The reliable entry point is explicit `/think-it-through` invocation in Claude Code.
+## What it is
 
-## Quick Start
+Think It Through is an open Agent Skill for consequential decisions before—or after—important action. It turns a surface request into the decision underneath it, finds the one answer most likely to change that decision, and ends with a next step reality can test.
 
-### 1. Install the stable source snapshot for Claude Code
+It is a decision layer, not a project-management or task-execution layer. It helps you decide whether to act, which direction to choose, how much to commit, or whether new results mean continue, adjust, pause, or stop.
 
-You need Git and an existing Claude Code installation. The non-overwrite check stops if another copy is already installed.
+## Why it matters
 
-```bash
-git clone https://github.com/zemu2718/think-it-through-skill.git
-cd think-it-through-skill
-git checkout 3b9320b8890d36e592e86e89bf98e5103d4cf7d1
-test ! -e ~/.claude/skills/think-it-through
-mkdir -p ~/.claude/skills
-cp -R skills/think-it-through ~/.claude/skills/
-```
+AI can now produce plans, code, campaigns, research, and polished deliverables before the underlying choice is clear. That makes a wrong direction faster, more convincing, and more expensive—not less wrong.
 
-If the top-level Skill directory did not exist when your current Claude Code session started, restart Claude Code.
+Think It Through inserts one deliberate hinge before commitment: separate the requested action from the result you actually want, identify the unknown that could change the choice, then let reality answer what reasoning alone cannot.
 
-### 2. Invoke it explicitly
+## A concrete case
 
-```text
-/think-it-through
-```
+> **Illustrative synthetic case—not a runtime transcript, user story, testimonial, compatibility result, or real model run.**
 
-Then paste one important choice, for example:
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/decision-case-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/decision-case-light.svg">
+  <img src="assets/decision-case-light.svg" alt="A synthetic SaaS case contrasts producing more features and launch material while willingness to pay remains unknown with first deciding whether continued investment is worthwhile, testing that through real behavior, and reassessing from the result." width="1200">
+</picture>
 
-```text
-I built a scheduling SaaS for small shops, but no unfamiliar customer has paid yet.
-Before I spend three more months building and write a launch campaign,
-help me decide what to validate first.
-```
+You ask AI to **keep building a SaaS and write the launch plan**. An execution-first response can produce more features and campaign material while leaving the decisive unknown untouched: will an unfamiliar customer show real willingness to pay?
 
-**First success signal:** instead of immediately writing the campaign, the Skill should first help clarify the decision you are actually making.
+Think It Through reframes the request as **whether continued investment is worth it now**. Instead of treating output as progress, it first directs the next commitment toward a real behavior that can support or oppose that judgment.
 
-This is a source snapshot, not a GitHub Release. Copying files proves only that files were copied; it does not certify loading or behavior in a particular runtime/version. If the destination already exists, do not merge two versions—inspect it, then rename or remove the old copy yourself before reinstalling.
-
-## A 30-second walkthrough
-
-> **Illustrative walkthrough — synthetic, not a runtime transcript.** It explains the product shape; it is not a user testimonial, compatibility result, or claim about a real model run.
-
-**Surface task**
-
-Keep developing the scheduling product for three months and write a launch campaign.
-
-**Real decision**
-
-Should you keep investing now, or first test whether an unfamiliar shop owner will pay for the current version?
-
-**One answer that could change the decision**
-
-What real payment or refusal outcome would make you revise the decision to keep investing?
-
-**Real-world evidence loop**
-
-Show the current version and invite real payment without adding features. Record payment, explicit refusal, and the reasons given. Bring those results back to decide whether to continue, adjust, pause, or stop.
-
-This synthetic example deliberately invents no sample size, deadline, price, or successful outcome. It is not a real runtime transcript.
+When that signal arrives, the choice opens again: continue, adjust, pause, or stop. The example deliberately defines no result, success metric, sample size, price, or deadline; the diagram and explanation show a relationship, not evidence that any runtime behaved this way.
 
 ## When to use it
 
@@ -84,27 +57,60 @@ This synthetic example deliberately invents no sample size, deadline, price, or 
 
 | Decision moment | Bring this kind of issue |
 | --- | --- |
-| **Before starting** | Is this project or product worth doing, and what should be validated before full development? |
+| **Before starting** | Is this project worth doing, and what should be validated before full development? |
 | **Before choosing a path** | Which option better serves the real objective, and what unknown could change the ranking? |
-| **Before committing resources** | Should we begin development, hire, buy, launch, promote, partner, or make a harder-to-reverse promise? |
+| **Before committing resources** | Should we develop, hire, buy, launch, promote, partner, or make a harder-to-reverse promise? |
 | **Before doubling down** | Does the evidence justify more time, budget, scope, or reputation risk? |
-| **After results arrive** | Given what actually happened, should we continue, adjust, pause, or stop? |
+| **After results arrive** | Given what happened, should we continue, adjust, pause, or stop? |
 
-You do not need to prepare a framework or polished brief. Paste the choice, what you are about to do, and any constraint you already know. If you only have a vague sense that something is off, say that—the Skill will start by clarifying the decision.
+No framework or polished brief is required. Paste the choice, the action you are considering, and any constraint you already know. A vague “something feels off” is enough to begin.
 
-This is a decision tool, not a project-management or task-execution layer. It should stay out of the way for factual lookup, a clear low-risk task after the decision is made, pure creation, or technical review and research with no unresolved choice. In emergencies, take immediate protective action first; do not use it to replace licensed medical, legal, investment, or other professional judgment.
+Skip the full flow for factual lookup, clear low-risk execution after a decision is made, pure creation, or technical review and research with no unresolved user choice. In emergencies, take immediate protective action first. It does not replace licensed medical, legal, investment, or other professional judgment.
 
-## How it works
+## Install and try it
 
-<img src="assets/demo-flow.svg" alt="Clarify what matters, answer one deciding question, use an optional authorized evidence or participation branch only when needed, then receive a judgment and bring real results back for reassessment." width="1200">
+> [!IMPORTANT]
+> **v0.3.0 is the current stable source and formal product contract on maintained `main`.** There is currently no public Git tag, GitHub Release, or downloadable `.skill` asset. `main` is a moving reference, so record the exact source commit when you install or report a problem.
 
-1. **Share what you are considering.** A problem, choice, plan, or sense that something is off is enough.
-2. **Clarify what actually matters.** The Skill separates the requested task from the result you want to achieve or protect.
-3. **Answer one deciding question.** It asks for the single answer most likely to change the direction, ranking, or commitment.
-4. **Receive a judgment and a real-world check.** You get a conditional direction, one primary evidence loop, and a copyable decision snapshot.
-5. **Bring results back to reassess.** New evidence can change the judgment instead of being forced to fit it.
+You need Git and an existing Claude Code installation. The non-overwrite check stops if another copy is already installed.
 
-Evidence or independent participation is a conditional side branch—a Gate—not a mandatory stage. It is proposed only when it could change the judgment, and it requires the relevant authorization before use.
+```bash
+git clone --depth 1 --branch main https://github.com/zemu2718/think-it-through-skill.git
+cd think-it-through-skill
+git rev-parse HEAD
+test ! -e ~/.claude/skills/think-it-through
+mkdir -p ~/.claude/skills
+cp -R skills/think-it-through ~/.claude/skills/
+```
+
+If the top-level Skill directory did not exist when your current Claude Code session started, restart Claude Code. Then invoke it explicitly:
+
+```text
+/think-it-through
+```
+
+Paste this synthetic prompt—or replace it with your own real choice:
+
+```text
+I built a scheduling SaaS for small shops, but no unfamiliar customer has paid yet.
+Before I spend three more months building and write a launch campaign,
+help me decide what to validate first.
+```
+
+**First success signal:** instead of immediately writing the campaign, the Skill first helps clarify the decision you are actually making. It should not search, read private data, add agents, save files, or act externally merely because you installed or invoked it.
+
+This installs stable source from the repository, not a GitHub Release. Copying files proves only that files were copied; it does not certify loading or behavior in a particular runtime/version. If the destination already exists, inspect it rather than merging two versions; rename or remove the old copy yourself before reinstalling.
+
+## What happens in a full check
+
+1. **Separate action from purpose.** Clarify what the requested task is meant to achieve or protect.
+2. **Confirm only useful angles.** Basic analysis is always present; an extra method appears only when it adds distinct value and you confirm it.
+3. **Answer one deciding question.** Focus on the single answer most likely to change direction, ranking, or commitment.
+4. **Escalate only when it matters.** Evidence or independent participation stays conditional, bounded, and separately authorized after your answer—not a mandatory pipeline.
+5. **Receive one integrated result.** Get a conditional judgment, one primary real-world evidence loop, and a copyable decision snapshot with facts, inferences, assumptions, unknowns, and reversal signals kept distinct.
+6. **Bring reality back.** New results can revise the judgment instead of being forced to validate it.
+
+Methods, research, extra agents, and human input serve this result; they are not separate report piles or votes.
 
 ## Safe by default
 
@@ -116,50 +122,42 @@ Without a separate, specific authorization, the Skill defaults to:
 - **no file or remote persistence**;
 - **no external action** such as sending, publishing, purchasing, deleting, or contacting someone.
 
-A capability is used only when the current session actually provides it, it has clear decision value, and the corresponding authorization is granted. A refusal, failure, or unexecuted action must not be presented as completed. See the normative [behavior and safety contract](REQUIREMENTS.md) **[Chinese]** and the [Security Policy](SECURITY.md).
+Capability calls, participation delegation, private-data access, and external action are four independent authorization classes. Confirming a method, choosing a contextual checkpoint, setting an agent limit, or giving feedback does not authorize any of them. A refused, failed, or unexecuted action must not be presented as completed.
 
-## Compatibility and evidence status
+See the normative [behavior and safety contract](REQUIREMENTS.md) **[Chinese]** and the [Security Policy](SECURITY.md).
+
+## Version, compatibility, and evidence
+
+**Stable source:** v0.3.0 on maintained [`main`](https://github.com/zemu2718/think-it-through-skill/tree/main/skills/think-it-through). **Public release objects:** no Git tag, GitHub Release, or downloadable `.skill` asset currently exists. Stable source status describes the reviewed product contract and deterministic acceptance path; it does not certify every client or promote unrun compatibility levels.
+
+<details>
+<summary>Compatibility levels and current public status</summary>
 
 “Open format,” “installer can copy files,” “runtime loads the Skill,” “the model follows it,” and “native features work” are different claims.
 
-| Claim | Current public status |
-| --- | --- |
-| Agent Skills format and repository contracts | Static validators, schemas, fixtures, and harnesses are present in this source candidate. |
-| Installer target mappings | Eight mappings are defined; a target mapping is not a verified runtime. |
-| Runtime loading and text behavior | The public matrix currently records every L0–L5 level as `not_run`. |
-| Native controls, search, extra agents, private data, persistence, or external actions | Session-dependent and not implied by format or installation. |
+| Level | What it means | Current public status |
+| --- | --- | --- |
+| L0 | Format validation | `not_run` in the public runtime matrix |
+| L1 | Installer discovery | `not_run` |
+| L2 | Exact installation | `not_run` |
+| L3 | Real runtime loading | `not_run` |
+| L4 | Real text behavior | `not_run` |
+| L5 | Real native capabilities | `not_run` |
 
-The machine-readable source of truth is [`compatibility/runtime-support.json`](compatibility/runtime-support.json). Static CI, schemas, fixtures, and wireframes cannot prove a real model run or native host experience.
+v0.3.0 provides a portable text baseline for hosts that load an Agent Skills directory and follow text instructions. Eight installer target mappings are maintained for Claude Code, Codex, Cursor, Gemini CLI, Hermes Agent, OpenClaw, OpenCode, and CodeBuddy / WorkBuddy. Unlisted compatible hosts can use the same text contract through their own Skill-directory convention. A mapping or portable contract is not a verified runtime: the machine-readable evidence source is [`compatibility/runtime-support.json`](compatibility/runtime-support.json). Static CI, schemas, fixtures, graders, and diagrams can establish contracts; they cannot prove a real model run, natural-language discovery, or native host experience.
+
+</details>
+
+<details>
+<summary>Discovery and contextual checkpoint limits</summary>
 
 Automatic discovery is not the reliable entry point: the frozen v0.1 holdout scored **9/16 overall—1/8 positives triggered, while 8/8 negatives stayed out**. See the exact [trigger evidence and limitations](benchmarks/trigger-v0.1/README.md). Historical [v0.1 behavior evidence](benchmarks/behavior-v0.1/README.md) covers only three fixed scenarios with one run per configuration; it does not establish v0.2.0 or v0.3.0 behavior.
 
-## FAQ
+The v0.3.0 formal contract defines a lightweight contextual checkpoint only when the Skill is already loaded, no formal flow is active, and a conversation crosses into project initiation, direction selection, major investment, continued escalation, or result reassessment. Real multi-turn status remains `not_run`; the contract does not prove natural-language discovery, automatic loading, or reliable mid-conversation triggering. Explicit `/think-it-through` remains the reliable entry.
 
-### Is there a downloadable release?
+</details>
 
-Not yet. There is currently no public Git tag, GitHub Release, or downloadable `.skill` asset. The Quick Start installs the repository-designated v0.2.0 source snapshot at a fixed commit.
-
-### Why pin a commit after cloning?
-
-A normal clone checks out the current default branch, which can move. Pinning `3b9320b8890d36e592e86e89bf98e5103d4cf7d1` makes the version you install explicit and reviewable.
-
-### How can I inspect the v0.3.0 candidate?
-
-Review the `feat/v0.3.0-agent-skills` branch and its diff. It remains a moving, unreleased source candidate; do not treat it as a stable download or public compatibility claim.
-
-### Why does it not start automatically?
-
-The frozen discovery evidence did not meet its positive-recall target. Explicit `/think-it-through` invocation is currently more reliable than expecting natural-language auto-discovery.
-
-### Will it automatically search, read files, or call several agents?
-
-No. Those capabilities are off by default and independent from one another. Need, current-session availability, and the relevant authorization must all be established before use.
-
-### How do I install it for one project, update it, or build a local candidate?
-
-For a project-scoped install, copy `skills/think-it-through` into that project's `.claude/skills/` directory with the same non-overwrite protection. To update or uninstall, first inspect the exact installed directory and avoid merging versions. Maintainer validation and local candidate build steps are in [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## Documentation map
+## Documentation and contributing
 
 | You want to… | Read… |
 | --- | --- |
@@ -168,23 +166,14 @@ For a project-scoped install, copy `skills/think-it-through` into that project's
 | Inspect the runtime source | [`skills/think-it-through/SKILL.md`](skills/think-it-through/SKILL.md) **[primarily Chinese]** |
 | Verify the exact `.skill` file set | [`distribution/package-manifest.json`](distribution/package-manifest.json) |
 | Check runtime evidence status | [`compatibility/runtime-support.json`](compatibility/runtime-support.json) |
-| Understand the non-normative architecture rationale | [`docs/product-architecture-v0.3.0.md`](docs/product-architecture-v0.3.0.md) **[Chinese]** |
-| Contribute a case or fix | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
+| Report an installation or runtime observation | [Open the feedback form](https://github.com/zemu2718/think-it-through-skill/issues/new?template=install-or-runtime-feedback.yml) |
+| Contribute a concrete case or fix | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
 | Report a vulnerability privately | [`SECURITY.md`](SECURITY.md) |
 | Review source-version history | [`CHANGELOG.md`](CHANGELOG.md) **[Chinese]** |
 
-## Contributing
+The most useful contributions are concrete and testable: real decision cases, positive or close-negative trigger examples, reproducible installation observations, and accessibility, privacy, safety, or provenance corrections. For installation or runtime feedback, include the `git rev-parse HEAD` value, exact runtime version, OS, install method, reproduction steps, expected result, and actual result. A report is a lead for reproduction and improvement; it changes the compatibility matrix only after version binding, redaction, review, and approved evidence.
 
-The most useful contributions are concrete and testable:
-
-- a real decision case that exposes a failure;
-- a positive or close-negative trigger example;
-- a reproducible installation or compatibility observation;
-- an accessibility, privacy, safety, or provenance correction.
-
-Start with [CONTRIBUTING.md](CONTRIBUTING.md). Report security issues privately through [SECURITY.md](SECURITY.md).
-
-If you have tried Think It Through and found it useful, a Star makes the project easier to find again. Concrete issues and decision cases are equally valuable.
+If Think It Through has been useful, a Star makes the project easier to find again. Concrete issues and decision cases are equally valuable.
 
 ## License
 

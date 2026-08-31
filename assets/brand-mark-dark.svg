@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Think It Through decision hinge</title>
+  <desc id="desc">Three inputs converge at a decision hinge, turn into one committed path, and return in a short reassessment loop.</desc>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <g id="input-paths" stroke="#8894A0" stroke-width="5">
+      <path d="M12 28 C30 28 39 43 54 56"/>
+      <path d="M12 64 H53"/>
+      <path d="M12 100 C30 100 39 85 54 72"/>
+    </g>
+    <path id="committed-path" d="M75 63 C88 63 89 43 104 43 H116" stroke="#E8ECEF" stroke-width="7"/>
+    <path id="reassessment-loop" d="M114 51 C119 86 96 108 70 96 C61 92 56 85 55 78" stroke="#58C7B5" stroke-width="5"/>
+  </g>
+  <g id="decision-hinge">
+    <path d="M55 50 C60 45 68 45 73 50 L82 59 C85 62 85 66 82 69 L73 78 C68 83 60 83 55 78 L46 69 C43 66 43 62 46 59 Z" fill="#0B1117" stroke="#58C7B5" stroke-width="6"/>
+    <path d="M62 51 V63 H74" fill="none" stroke="#58C7B5" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="64" cy="70" r="3.5" fill="#58C7B5"/>
+  </g>
+  <path d="M51 83 L55 77 L61 82" fill="none" stroke="#58C7B5" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

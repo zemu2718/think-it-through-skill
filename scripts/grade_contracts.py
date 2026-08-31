@@ -164,6 +164,48 @@ DECISION_STATES = {
     "pause",
     "stop",
 }
+CHECKPOINT_TRIGGER_TYPES = {
+    "project-initiation",
+    "direction-selection",
+    "major-investment",
+    "continued-escalation",
+    "result-reassessment",
+    "close-negative",
+}
+CHECKPOINT_HIGH_VALUE_TRIGGERS = CHECKPOINT_TRIGGER_TYPES - {"close-negative"}
+CHECKPOINT_MATERIAL_CHANGES = {
+    "none",
+    "new-evidence",
+    "purpose-change",
+    "commitment-scope-expanded",
+    "new-reassessment-node",
+    "new-topic",
+}
+CHECKPOINT_RESPONSES = {
+    "not-applicable",
+    "pending",
+    "ambiguous",
+    "enter-full-check",
+    "continue-current-task",
+}
+CHECKPOINT_OPTION_IDS = ("enter-full-check", "continue-current-task")
+CHECKPOINT_NUMBERED_RE = re.compile(r"(?m)^\s*([1-2])[.)、]\s*(.+?)\s*$")
+CHECKPOINT_PSEUDO_RE = re.compile(
+    r"(?m)^\s*(?:[-*+]\s+)?(?:\[[^]\n]+\]|\[[ xX]\]\s*.+|[○◯◉☐☑]\s*.+|<input\b[^>]*>.*)$",
+    re.IGNORECASE,
+)
+CHECKPOINT_FORBIDDEN_ANALYSIS_PATTERNS = (
+    r"（当前判断：|\(current judgment:",
+    r"(?:建议|结论|判断)[：:]",
+    r"你(?:现在|应该|应当|最好)",
+    r"(?:双向钢人|失败预演|对象校准|系统瓶颈|阶段匹配|资源支点|边界契约|沟通匹配|证据闭环)",
+    r"(?:核心假设|本轮动作|观察信号|复判条件)",
+)
+CHECKPOINT_FORBIDDEN_GATE_PATTERNS = (
+    r"Evidence Gate|Participation Gate",
+    r"(?:发起|开始|进行|建议|需要)(?:联网|搜索|调研|读取文件|读取数据|调用工具|启动 Agent|真人参与)",
+    r"(?:授权我|需要你授权|同意联网|同意搜索|同意委派)",
+)
 FEEDBACK_DIRECTION_IDS = (
     "accept",
     "adjust-next-step",
@@ -253,13 +295,34 @@ class InteractionOption:
     recommended: bool | None = None
 
     @classmethod
-    def from_value(cls, value: object) -> InteractionOption:
+    def from_value(
+        cls,
+        value: object,
+        *,
+        option_contract: str = "standard",
+    ) -> InteractionOption:
+        if option_contract not in {"standard", "checkpoint"}:
+            raise ValueError(f"不支持的 option_contract：{option_contract}")
         if isinstance(value, str):
+            if option_contract == "checkpoint":
+                raise ValueError("checkpoint interaction option 必须包含稳定 id 与 label")
             if not value.strip():
                 raise ValueError("interaction option 字符串不能为空")
             return cls(label=value)
         if not isinstance(value, dict):
             raise ValueError("interaction option 必须是字符串或对象")
+
+        if option_contract == "checkpoint":
+            if set(value) != {"id", "label"}:
+                raise ValueError("checkpoint interaction option 必须且只能包含 id、label")
+            option_id = value["id"]
+            label = value["label"]
+            if option_id not in CHECKPOINT_OPTION_IDS:
+                raise ValueError("checkpoint interaction option id 不在稳定集合中")
+            if not isinstance(label, str) or not label.strip():
+                raise ValueError("interaction option label 必须是非空字符串")
+            return cls(id=option_id, label=label)
+
         if set(value) != {"id", "label", "description", "recommended"}:
             raise ValueError("结构化 interaction option 必须且只能包含 id、label、description、recommended")
         option_id = value["id"]
@@ -311,14 +374,26 @@ class InteractionEvidence:
 
     @property
     def method_options(self) -> tuple[InteractionOption, ...]:
-        return tuple(option for option in self.options if option.id is not None)
+        return tuple(
+            option
+            for option in self.options
+            if option.id is not None and option.recommended is not None
+        )
 
     @classmethod
-    def from_dict(cls, data: dict[str, object]) -> InteractionEvidence:
+    def from_dict(
+        cls,
+        data: dict[str, object],
+        *,
+        option_contract: str = "standard",
+    ) -> InteractionEvidence:
         options = data.get("options", [])
         if not isinstance(options, list):
             raise ValueError("interaction options 必须是数组")
-        normalized_options = tuple(InteractionOption.from_value(option) for option in options)
+        normalized_options = tuple(
+            InteractionOption.from_value(option, option_contract=option_contract)
+            for option in options
+        )
         values = {
             "host_control_status": data.get("host_control_status"),
             "surface": data.get("surface"),
@@ -354,11 +429,15 @@ class InteractionEvidence:
         )
 
 
-def parse_interaction_evidence(path: Path) -> InteractionEvidence:
+def parse_interaction_evidence(
+    path: Path,
+    *,
+    option_contract: str = "standard",
+) -> InteractionEvidence:
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
         raise ValueError("interaction evidence 必须是 JSON 对象")
-    return InteractionEvidence.from_dict(data)
+    return InteractionEvidence.from_dict(data, option_contract=option_contract)
 
 
 def parse_json_object(path: Path, label: str) -> dict[str, object]:
@@ -366,6 +445,114 @@ def parse_json_object(path: Path, label: str) -> dict[str, object]:
     if not isinstance(data, dict):
         raise ValueError(f"{label} 必须是 JSON 对象")
     return data
+
+
+@dataclass(frozen=True)
+class CheckpointContext:
+    trigger_type: str
+    explicit_invocation: bool
+    active_flow: bool
+    same_decision_cooling_down: bool
+    material_change: str
+    response: str
+    next_stage: str
+    waited_for_user: bool
+    commitment: str
+    decision_sensitive_unknown: str
+    why_now: str
+    decision_scope: dict[str, object]
+    capability_calls: tuple[str, ...]
+    consent_ids: tuple[str, ...]
+    decision_record_created: bool
+    persistence_written: bool
+
+    @classmethod
+    def from_dict(cls, data: dict[str, object]) -> CheckpointContext:
+        required = {
+            "trigger_type",
+            "explicit_invocation",
+            "active_flow",
+            "same_decision_cooling_down",
+            "material_change",
+            "response",
+            "next_stage",
+            "waited_for_user",
+            "commitment",
+            "decision_sensitive_unknown",
+            "why_now",
+            "decision_scope",
+            "capability_calls",
+            "consent_ids",
+            "decision_record_created",
+            "persistence_written",
+        }
+        if set(data) != required:
+            raise ValueError(
+                f"checkpoint context 字段必须精确匹配；缺少={sorted(required - set(data))}；"
+                f"多余={sorted(set(data) - required)}"
+            )
+        trigger_type = data["trigger_type"]
+        material_change = data["material_change"]
+        response = data["response"]
+        next_stage = data["next_stage"]
+        if trigger_type not in CHECKPOINT_TRIGGER_TYPES:
+            raise ValueError(f"不支持的 checkpoint trigger_type：{trigger_type}")
+        if material_change not in CHECKPOINT_MATERIAL_CHANGES:
+            raise ValueError(f"不支持的 checkpoint material_change：{material_change}")
+        if response not in CHECKPOINT_RESPONSES:
+            raise ValueError(f"不支持的 checkpoint response：{response}")
+        if next_stage not in {
+            "pre-entry",
+            "R-align",
+            "R-method",
+            "resume-current-task",
+            "active-flow",
+        }:
+            raise ValueError(f"不支持的 checkpoint next_stage：{next_stage}")
+        for field in (
+            "explicit_invocation",
+            "active_flow",
+            "same_decision_cooling_down",
+            "waited_for_user",
+            "decision_record_created",
+            "persistence_written",
+        ):
+            if not isinstance(data[field], bool):
+                raise ValueError(f"checkpoint {field} 必须是布尔值")
+        for field in ("commitment", "decision_sensitive_unknown", "why_now"):
+            if not isinstance(data[field], str):
+                raise ValueError(f"checkpoint {field} 必须是字符串")
+        decision_scope = data["decision_scope"]
+        if not isinstance(decision_scope, dict):
+            raise ValueError("checkpoint decision_scope 必须是对象")
+        for field in ("capability_calls", "consent_ids"):
+            value = data[field]
+            if not isinstance(value, list) or not all(
+                isinstance(item, str) and item.strip() for item in value
+            ):
+                raise ValueError(f"checkpoint {field} 必须是非空字符串数组或空数组")
+        return cls(
+            trigger_type=str(trigger_type),
+            explicit_invocation=data["explicit_invocation"],
+            active_flow=data["active_flow"],
+            same_decision_cooling_down=data["same_decision_cooling_down"],
+            material_change=str(material_change),
+            response=str(response),
+            next_stage=str(next_stage),
+            waited_for_user=data["waited_for_user"],
+            commitment=data["commitment"],
+            decision_sensitive_unknown=data["decision_sensitive_unknown"],
+            why_now=data["why_now"],
+            decision_scope=dict(decision_scope),
+            capability_calls=tuple(data["capability_calls"]),
+            consent_ids=tuple(data["consent_ids"]),
+            decision_record_created=data["decision_record_created"],
+            persistence_written=data["persistence_written"],
+        )
+
+
+def parse_checkpoint_context(path: Path) -> CheckpointContext:
+    return CheckpointContext.from_dict(parse_json_object(path, "checkpoint context"))
 
 
 def _matches_any(text: str, patterns: tuple[str, ...]) -> list[str]:
@@ -709,6 +896,273 @@ def _provided_number_keys(user_numbers: list[str] | None) -> set[tuple[str, str]
         for source in (user_numbers or [])
         for phrase in extract_number_phrases(source)
     }
+
+
+def _checkpoint_should_present(context: CheckpointContext) -> bool:
+    return bool(
+        context.trigger_type in CHECKPOINT_HIGH_VALUE_TRIGGERS
+        and not context.explicit_invocation
+        and not context.active_flow
+        and (
+            not context.same_decision_cooling_down
+            or context.material_change != "none"
+        )
+    )
+
+
+def _checkpoint_scope_valid(context: CheckpointContext) -> bool:
+    expected = {"decision_object", "true_objective", "commitment_scope"}
+    return set(context.decision_scope) == expected and all(
+        _nonempty_string(context.decision_scope.get(field))
+        for field in expected
+    )
+
+
+def _checkpoint_option_ids(interaction: InteractionEvidence | None) -> tuple[str, ...]:
+    if interaction is None:
+        return ()
+    return tuple(option.id or "" for option in interaction.options)
+
+
+def _checkpoint_numbered_options(text: str) -> tuple[str, ...]:
+    matches = list(CHECKPOINT_NUMBERED_RE.finditer(text))
+    if [match.group(1) for match in matches] != ["1", "2"]:
+        return ()
+    return tuple(match.group(2).strip() for match in matches)
+
+
+def _checkpoint_interaction_valid(
+    text: str,
+    interaction: InteractionEvidence | None,
+) -> bool:
+    if interaction is None or interaction.selection_mode != "single":
+        return False
+    if interaction.host_control_status == "available":
+        return bool(
+            interaction.surface == "native-control"
+            and interaction.tool_call_observed
+            and _checkpoint_option_ids(interaction) == CHECKPOINT_OPTION_IDS
+            and interaction.host_free_text_available
+        )
+    expected_call = interaction.host_control_status in {"failed", "rejected"}
+    return bool(
+        interaction.surface == "text-fallback"
+        and interaction.tool_call_observed is expected_call
+        and not interaction.options
+        and _checkpoint_numbered_options(text)
+    )
+
+
+def _checkpoint_layout_valid(
+    text: str,
+    interaction: InteractionEvidence | None,
+) -> bool:
+    if interaction is None:
+        return False
+    if interaction.surface == "native-control":
+        return bool(
+            _selection_question_layout(interaction.question_text, "single")
+            and len(QUESTION_MARK_RE.findall(interaction.question_text)) == 1
+            and not _options_have_questions(interaction.option_labels)
+            and CHECKPOINT_PSEUDO_RE.search(text) is None
+        )
+    if interaction.surface != "text-fallback":
+        return False
+    matches = list(CHECKPOINT_NUMBERED_RE.finditer(text))
+    if not matches:
+        return False
+    prompt = text[:matches[0].start()].rstrip()
+    tail = text[matches[-1].end():].strip()
+    return bool(
+        not tail
+        and len(QUESTION_MARK_RE.findall(prompt)) == 1
+        and _last_paragraph_is_only_question(prompt, require_prior_paragraph=True)
+        and (
+            _has_free_expression(prompt)
+            or re.search(r"(?:直接|自由).{0,16}(?:纠正|补充|说明)", prompt) is not None
+        )
+        and _checkpoint_numbered_options(text)
+        and CHECKPOINT_PSEUDO_RE.search(text) is None
+    )
+
+
+def _checkpoint_route_valid(
+    context: CheckpointContext,
+    should_present: bool,
+) -> bool:
+    if not should_present:
+        if context.response != "not-applicable" or context.waited_for_user:
+            return False
+        if context.explicit_invocation:
+            return context.next_stage in {"R-align", "R-method"}
+        if context.active_flow:
+            return context.next_stage == "active-flow"
+        return context.next_stage == "resume-current-task"
+    expected_stages = {
+        "pending": {"pre-entry"},
+        "ambiguous": {"pre-entry"},
+        "enter-full-check": {"R-align", "R-method"},
+        "continue-current-task": {"resume-current-task"},
+    }
+    return bool(
+        context.response in expected_stages
+        and context.next_stage in expected_stages[context.response]
+        and context.waited_for_user
+    )
+
+
+def grade_checkpoint(
+    text: str,
+    context: CheckpointContext,
+    interaction: InteractionEvidence | None = None,
+) -> list[Check]:
+    should_present = _checkpoint_should_present(context)
+    visible_text = _visible_interaction_text(text, interaction)
+    interaction_valid = (
+        _checkpoint_interaction_valid(text, interaction)
+        if should_present
+        else interaction is None
+    )
+    layout_valid = (
+        _checkpoint_layout_valid(text, interaction)
+        if should_present
+        else not text.strip()
+    )
+    scope_valid = (
+        _checkpoint_scope_valid(context)
+        if context.trigger_type in CHECKPOINT_HIGH_VALUE_TRIGGERS
+        else not context.decision_scope
+    )
+    checkpoint_fields_valid = (
+        all(
+            _nonempty_string(value)
+            and value in visible_text
+            for value in (
+                context.commitment,
+                context.decision_sensitive_unknown,
+                context.why_now,
+            )
+        )
+        if should_present
+        else not any(
+            value.strip()
+            for value in (
+                context.commitment,
+                context.decision_sensitive_unknown,
+                context.why_now,
+            )
+        )
+    )
+    forbidden_analysis = _matches_any(
+        visible_text,
+        CHECKPOINT_FORBIDDEN_ANALYSIS_PATTERNS,
+    )
+    forbidden_gate = _matches_any(
+        visible_text,
+        CHECKPOINT_FORBIDDEN_GATE_PATTERNS,
+    )
+    authorization_inference = _matches_any(
+        visible_text,
+        AUTHORIZATION_INFERENCE_PATTERNS,
+    )
+    no_side_effects = bool(
+        not context.capability_calls
+        and not context.consent_ids
+        and not context.decision_record_created
+        and not context.persistence_written
+    )
+    return [
+        _check(
+            "上下文检查点只在高价值承诺节点且无跳过条件时出现",
+            should_present == (interaction is not None or bool(text.strip())),
+            (
+                f"trigger={context.trigger_type}；explicit={context.explicit_invocation}；"
+                f"active_flow={context.active_flow}；cooldown={context.same_decision_cooling_down}；"
+                f"material_change={context.material_change}；should_present={should_present}；"
+                f"output_present={interaction is not None or bool(text.strip())}"
+            ),
+            severe=True,
+        ),
+        _check(
+            "上下文检查点记录同一决定的会话内语义范围",
+            scope_valid,
+            f"decision_scope={context.decision_scope!r}",
+            severe=True,
+        ),
+        _check(
+            "上下文检查点按宿主能力使用固定原生单选或普通编号降级",
+            interaction_valid,
+            (
+                "无检查点时没有交互证据"
+                if interaction is None
+                else (
+                    f"host={interaction.host_control_status}；surface={interaction.surface}；"
+                    f"tool_call={interaction.tool_call_observed}；mode={interaction.selection_mode}；"
+                    f"option_ids={list(_checkpoint_option_ids(interaction))}；"
+                    f"fallback_options={list(_checkpoint_numbered_options(text))}"
+                )
+            ),
+            severe=True,
+        ),
+        _check(
+            "上下文检查点说清承诺、一个决定敏感未知和 why-now",
+            checkpoint_fields_valid,
+            (
+                f"commitment={context.commitment!r}；"
+                f"unknown={context.decision_sensitive_unknown!r}；why_now={context.why_now!r}"
+            ),
+            severe=True,
+        ),
+        _check(
+            "上下文检查点保留自由纠正并把唯一问题放在选项前",
+            layout_valid,
+            (
+                "无检查点时正文为空"
+                if interaction is None
+                else (
+                    f"surface={interaction.surface}；question={interaction.question_text!r}；"
+                    f"伪控件={CHECKPOINT_PSEUDO_RE.search(text) is not None}"
+                )
+            ),
+            severe=True,
+        ),
+        _check(
+            "上下文检查点等待明确选择并按进入、继续或模糊回应路由",
+            _checkpoint_route_valid(context, should_present),
+            (
+                f"response={context.response}；next_stage={context.next_stage}；"
+                f"waited={context.waited_for_user}；should_present={should_present}"
+            ),
+            severe=True,
+        ),
+        _check(
+            "上下文检查点确认前不进入正式分析、方法、判断或行动",
+            not forbidden_analysis,
+            f"命中模式={forbidden_analysis}" if forbidden_analysis else "未命中正式流程内容",
+            severe=True,
+        ),
+        _check(
+            "上下文检查点不触发 Gate、能力调用或授权请求",
+            not forbidden_gate and no_side_effects,
+            (
+                f"Gate/能力模式={forbidden_gate}；calls={list(context.capability_calls)}；"
+                f"consents={list(context.consent_ids)}"
+            ),
+            severe=True,
+        ),
+        _check(
+            "上下文检查点选择不推定授权且不创建记录或持久化",
+            not authorization_inference
+            and not context.decision_record_created
+            and not context.persistence_written,
+            (
+                f"授权推定={authorization_inference}；"
+                f"decision_record={context.decision_record_created}；"
+                f"persistence={context.persistence_written}"
+            ),
+            severe=True,
+        ),
+    ]
 
 
 def _unmatched_a_numbers(text: str, user_numbers: list[str] | None) -> list[NumberPhrase]:
@@ -2024,10 +2478,15 @@ def grade(
     r_mode: str,
     interaction: InteractionEvidence | None = None,
     answer_shape: str | None = None,
+    checkpoint_context: CheckpointContext | None = None,
 ) -> list[Check]:
     resolved_answer_shape = answer_shape or (
         "compatible-set" if stage == "R" else "open"
     )
+    if stage == "CHECKPOINT":
+        if checkpoint_context is None:
+            raise ValueError("CHECKPOINT 阶段必须提供 checkpoint context")
+        return grade_checkpoint(text, checkpoint_context, interaction)
     if stage == "R":
         return grade_r(
             text,
@@ -2055,7 +2514,7 @@ def main() -> int:
     parser.add_argument(
         "--stage",
         required=True,
-        choices=("R", "A", "B", "EVIDENCE", "PARTICIPATION", "HUMAN", "DECISION_RECORD"),
+        choices=("CHECKPOINT", "R", "A", "B", "EVIDENCE", "PARTICIPATION", "HUMAN", "DECISION_RECORD"),
     )
     parser.add_argument("--input", required=True, type=Path, help="待评分的 Markdown、文本或 JSON 文件")
     parser.add_argument("--already-executed", action="store_true")
@@ -2066,7 +2525,8 @@ def main() -> int:
         default=None,
         help="答案形态；未提供时 R 默认 compatible-set，A 默认 open",
     )
-    parser.add_argument("--interaction-json", type=Path, help="R/A/B 的本轮结构化交互证据 JSON")
+    parser.add_argument("--interaction-json", type=Path, help="CHECKPOINT/R/A/B 的本轮结构化交互证据 JSON")
+    parser.add_argument("--context-json", type=Path, help="CHECKPOINT 的结构化会话上下文 JSON")
     parser.add_argument("--consent-json", type=Path, help="Evidence / Participation 的授权记录 JSON")
     parser.add_argument("--receipt-json", type=Path, help="Evidence / Participation 的能力回执 JSON")
     parser.add_argument("--cancelled-method", action="append", default=[])
@@ -2076,23 +2536,53 @@ def main() -> int:
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
 
-    if args.stage in {"R", "A", "B"}:
-        if args.interaction_json is None:
-            parser.error("R/A/B 阶段必须提供 --interaction-json")
-        text = args.input.read_text(encoding="utf-8")
-        interaction = parse_interaction_evidence(args.interaction_json)
-        checks = grade(
-            args.stage,
-            text,
-            args.already_executed,
-            args.cancelled_method,
-            args.confirmed_method,
-            args.recommended_method,
-            args.user_number,
-            args.r_mode,
-            interaction,
-            args.answer_shape,
-        )
+    if args.stage in {"CHECKPOINT", "R", "A", "B"}:
+        if args.stage == "CHECKPOINT":
+            if args.context_json is None:
+                parser.error("CHECKPOINT 阶段必须提供 --context-json")
+            context = parse_checkpoint_context(args.context_json)
+            should_present = _checkpoint_should_present(context)
+            if should_present and args.interaction_json is None:
+                parser.error("需要呈现 CHECKPOINT 时必须提供 --interaction-json")
+            interaction = (
+                parse_interaction_evidence(
+                    args.interaction_json,
+                    option_contract="checkpoint",
+                )
+                if args.interaction_json is not None
+                else None
+            )
+            text = args.input.read_text(encoding="utf-8")
+            checks = grade(
+                args.stage,
+                text,
+                args.already_executed,
+                args.cancelled_method,
+                args.confirmed_method,
+                args.recommended_method,
+                args.user_number,
+                args.r_mode,
+                interaction,
+                args.answer_shape,
+                checkpoint_context=context,
+            )
+        else:
+            if args.interaction_json is None:
+                parser.error("R/A/B 阶段必须提供 --interaction-json")
+            text = args.input.read_text(encoding="utf-8")
+            interaction = parse_interaction_evidence(args.interaction_json)
+            checks = grade(
+                args.stage,
+                text,
+                args.already_executed,
+                args.cancelled_method,
+                args.confirmed_method,
+                args.recommended_method,
+                args.user_number,
+                args.r_mode,
+                interaction,
+                args.answer_shape,
+            )
     else:
         record = parse_json_object(args.input, args.stage)
         if args.stage in {"EVIDENCE", "PARTICIPATION"}:

@@ -1,0 +1,189 @@
+{
+  "schema_version": "2",
+  "assets": [
+    {
+      "id": "readme-banner",
+      "role": "readme-opening-brand-banner",
+      "source": "assets/readme-banner-source.png",
+      "source_sha256": "af20a9b5224c77e9367f7e9c748461cba63c16533355bb38fc84d6f56d435d6b",
+      "source_canvas": {
+        "width": 1774,
+        "height": 887
+      },
+      "output_canvas": {
+        "width": 1200,
+        "height": 600
+      },
+      "variants": [
+        {
+          "locale": "neutral",
+          "theme": "light",
+          "output": "assets/readme-banner-light.png"
+        },
+        {
+          "locale": "neutral",
+          "theme": "dark",
+          "output": "assets/readme-banner-dark.png"
+        }
+      ],
+      "max_source_bytes": 1600000,
+      "max_output_bytes": 900000,
+      "generator": {
+        "script": "scripts/render_assets.py",
+        "decoder": "Pillow",
+        "decoder_version": "11.3.0",
+        "source_pixel_mode": "RGB",
+        "output_pixel_mode": "RGB",
+        "resize_filter": "LANCZOS",
+        "png_optimize": true,
+        "png_compress_level": 9,
+        "light_theme": {
+          "background_rgb": [
+            242,
+            239,
+            231
+          ],
+          "background_luma_max": 104,
+          "background_chroma_max": 32,
+          "feather_radius": 5,
+          "aperture_box": [
+            760,
+            210,
+            1014,
+            805
+          ],
+          "neutral_luma_scale": 0.72,
+          "neutral_luma_offset": 46,
+          "teal_rgb": [
+            20,
+            104,
+            98
+          ],
+          "amber_rgb": [
+            166,
+            104,
+            29
+          ],
+          "contact_shadow_box": [
+            610,
+            748,
+            1164,
+            838
+          ],
+          "contact_shadow_alpha": 30,
+          "contact_shadow_blur": 22
+        }
+      },
+      "provenance": {
+        "generator": "imagegen Skill CLI",
+        "model": "gpt-image-1.5",
+        "selection": "user-selected original 2:1 composition",
+        "reference_scope": "Darwin Skill README banner use and canvas intent only; no copied composition or brand elements"
+      }
+    },
+    {
+      "id": "brand-mark",
+      "role": "repository-brand-mark",
+      "variants": [
+        {
+          "locale": "neutral",
+          "theme": "light",
+          "source": "assets/brand-mark-light.svg"
+        },
+        {
+          "locale": "neutral",
+          "theme": "dark",
+          "source": "assets/brand-mark-dark.svg"
+        }
+      ],
+      "canvas": {
+        "width": 128,
+        "height": 128
+      },
+      "required_ids": [
+        "observation-frames",
+        "clarity-aperture",
+        "clarity-channel",
+        "reassessment-pivot"
+      ],
+      "max_bytes": 16384
+    },
+    {
+      "id": "decision-case",
+      "role": "readme-informational-case",
+      "variants": [
+        {
+          "locale": "en",
+          "theme": "light",
+          "source": "assets/decision-case-light.svg"
+        },
+        {
+          "locale": "en",
+          "theme": "dark",
+          "source": "assets/decision-case-dark.svg"
+        },
+        {
+          "locale": "zh-CN",
+          "theme": "light",
+          "source": "assets/decision-case-light.zh-CN.svg"
+        },
+        {
+          "locale": "zh-CN",
+          "theme": "dark",
+          "source": "assets/decision-case-dark.zh-CN.svg"
+        }
+      ],
+      "canvas": {
+        "width": 1200,
+        "height": 680
+      },
+      "required_ids": [
+        "surface-request",
+        "execution-first-path",
+        "decision-hinge",
+        "decision-first-path",
+        "optional-gate",
+        "outcome-set",
+        "reassessment-loop",
+        "synthetic-label"
+      ],
+      "max_bytes": 65536
+    },
+    {
+      "id": "social-preview",
+      "role": "social-preview",
+      "variants": [
+        {
+          "locale": "bilingual",
+          "theme": "dark",
+          "source": "assets/social-preview.svg",
+          "output": "assets/social-preview.png"
+        }
+      ],
+      "canvas": {
+        "width": 1280,
+        "height": 640
+      },
+      "required_ids": [
+        "wordmark",
+        "tagline",
+        "thinking-light",
+        "clarity-aperture",
+        "decision-thread",
+        "optional-gate",
+        "reassessment-loop"
+      ],
+      "max_source_bytes": 49152,
+      "max_output_bytes": 409600,
+      "generator": {
+        "script": "scripts/render_assets.py",
+        "renderer": "resvg-py",
+        "renderer_version": "0.5.0",
+        "decoder": "Pillow",
+        "decoder_version": "11.3.0",
+        "skip_system_fonts": true,
+        "pixel_mode": "RGBA"
+      }
+    }
+  ]
+}

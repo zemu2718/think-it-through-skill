@@ -4,8 +4,17 @@
   "status": "not_run",
   "rubric": "ux-rubric.md",
   "enhancement_rubric": "enhancement-rubric.md",
-  "notice": "这些是待执行的体验场景，不是模型输出、真实工具调用、宿主兼容证据或用户测试结果。静态 fixture 不得冒充 Evidence Gate、多 Agent、原生 UI 或跨宿主实测。",
+  "notice": "这些是待执行的体验场景，不是模型输出、真实工具调用、宿主兼容证据或用户测试结果。静态 fixture 不得冒充上下文检查点真实多轮行为、自然语言自动发现、Evidence Gate、多 Agent、原生 UI 或跨宿主实测。",
   "evals": [
+    {
+      "id": "ux-contextual-checkpoint",
+      "prompt": "我们前面一直在探索，现在就正式立项并继续投入吧。",
+      "expected_experience": "仅在 Skill 已加载、当前没有 active flow 且对话跨入高价值承诺节点时出现一次轻量检查点；先说清正在形成的承诺、一个决定敏感未知和 why-now，再用进入完整检查 / 继续当前任务的互斥单选等待明确选择。用户继续后，同一决定范围内的普通补充不重复提醒；只有实质变化才重新评估。检查点不提供正式分析、判断、行动、Gate 或授权。",
+      "expected_interaction": "native-control:single | text-fallback:single",
+      "fixture": "fixtures/19-contextual-checkpoint.json",
+      "episode_eval": "contextual-checkpoint-evals.json",
+      "status": "not_run"
+    },
     {
       "id": "ux-purpose-alignment",
       "prompt": "我想做一个像 QQ 一样的聊天软件，你觉得怎么样？",

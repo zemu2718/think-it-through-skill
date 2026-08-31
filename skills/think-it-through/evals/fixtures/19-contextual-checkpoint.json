@@ -1,0 +1,612 @@
+{
+  "contract_version": "0.3.0",
+  "id": "contextual-checkpoint",
+  "domain": "pre-entry",
+  "notice": "这些是 v0.3.0 静态合同样本，不是自然语言自动发现、真实多轮提醒或宿主原生 UI 已通过的证据。",
+  "cases": [
+    {
+      "id": "project-initiation-native",
+      "user": "这个原型看起来可以，我们就正式立项继续做吧。",
+      "expected_stage": "pre-entry",
+      "assistant_text": "你正在承诺把当前原型正式立为要继续投入的项目。\n\n仍可能改变方向的是陌生用户是否真的愿意为当前价值付费。\n\n现在值得暂停，是因为一旦开始追加开发，时间和机会成本就会上升。",
+      "context": {
+        "trigger_type": "project-initiation",
+        "explicit_invocation": false,
+        "active_flow": false,
+        "same_decision_cooling_down": false,
+        "material_change": "none",
+        "response": "pending",
+        "next_stage": "pre-entry",
+        "waited_for_user": true,
+        "commitment": "把当前原型正式立为要继续投入的项目",
+        "decision_sensitive_unknown": "陌生用户是否真的愿意为当前价值付费",
+        "why_now": "一旦开始追加开发，时间和机会成本就会上升",
+        "decision_scope": {
+          "decision_object": "当前原型",
+          "true_objective": "验证是否值得继续投入",
+          "commitment_scope": "从探索原型转为持续开发"
+        },
+        "capability_calls": [],
+        "consent_ids": [],
+        "decision_record_created": false,
+        "persistence_written": false
+      },
+      "observed_interaction": {
+        "host_control_status": "available",
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "single",
+        "options": [
+          {
+            "id": "enter-full-check",
+            "label": "进入完整检查"
+          },
+          {
+            "id": "continue-current-task",
+            "label": "继续当前任务"
+          }
+        ],
+        "host_free_text_available": true,
+        "question_text": "可单选，也可以直接纠正我的理解。\n\n要不要现在做一次完整检查？",
+        "supplement_mode": "none"
+      },
+      "must_pass": true
+    },
+    {
+      "id": "direction-selection-native",
+      "user": "两个方向都想过了，现在就选企业协作这条路。",
+      "expected_stage": "pre-entry",
+      "assistant_text": "你正在承诺把产品方向定为企业协作。\n\n仍可能改变方向的是企业用户是否愿意把现有流程迁移过来。\n\n现在值得暂停，是因为方向一旦确定，后续设计和验证都会围绕它展开。",
+      "context": {
+        "trigger_type": "direction-selection",
+        "explicit_invocation": false,
+        "active_flow": false,
+        "same_decision_cooling_down": false,
+        "material_change": "none",
+        "response": "pending",
+        "next_stage": "pre-entry",
+        "waited_for_user": true,
+        "commitment": "把产品方向定为企业协作",
+        "decision_sensitive_unknown": "企业用户是否愿意把现有流程迁移过来",
+        "why_now": "方向一旦确定，后续设计和验证都会围绕它展开",
+        "decision_scope": {
+          "decision_object": "产品方向",
+          "true_objective": "选择更值得投入的目标场景",
+          "commitment_scope": "从比较方向转为聚焦企业协作"
+        },
+        "capability_calls": [],
+        "consent_ids": [],
+        "decision_record_created": false,
+        "persistence_written": false
+      },
+      "observed_interaction": {
+        "host_control_status": "available",
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "single",
+        "options": [
+          {
+            "id": "enter-full-check",
+            "label": "进入完整检查"
+          },
+          {
+            "id": "continue-current-task",
+            "label": "继续当前任务"
+          }
+        ],
+        "host_free_text_available": true,
+        "question_text": "可单选，也可以直接纠正我的理解。\n\n要不要现在做一次完整检查？",
+        "supplement_mode": "none"
+      },
+      "must_pass": true
+    },
+    {
+      "id": "major-investment-native",
+      "user": "那就把接下来一个季度的人力都压上去。",
+      "expected_stage": "pre-entry",
+      "assistant_text": "你正在承诺把一个季度的人力集中投入当前方向。\n\n仍可能改变方向的是现有信号是否足以支持这种投入强度。\n\n现在值得暂停，是因为资源集中后，退出和转向的成本都会明显增加。",
+      "context": {
+        "trigger_type": "major-investment",
+        "explicit_invocation": false,
+        "active_flow": false,
+        "same_decision_cooling_down": false,
+        "material_change": "none",
+        "response": "pending",
+        "next_stage": "pre-entry",
+        "waited_for_user": true,
+        "commitment": "把一个季度的人力集中投入当前方向",
+        "decision_sensitive_unknown": "现有信号是否足以支持这种投入强度",
+        "why_now": "资源集中后，退出和转向的成本都会明显增加",
+        "decision_scope": {
+          "decision_object": "当前方向",
+          "true_objective": "获得足够回报而不浪费核心资源",
+          "commitment_scope": "集中投入一个季度的人力"
+        },
+        "capability_calls": [],
+        "consent_ids": [],
+        "decision_record_created": false,
+        "persistence_written": false
+      },
+      "observed_interaction": {
+        "host_control_status": "available",
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "single",
+        "options": [
+          {
+            "id": "enter-full-check",
+            "label": "进入完整检查"
+          },
+          {
+            "id": "continue-current-task",
+            "label": "继续当前任务"
+          }
+        ],
+        "host_free_text_available": true,
+        "question_text": "可单选，也可以直接纠正我的理解。\n\n要不要现在做一次完整检查？",
+        "supplement_mode": "none"
+      },
+      "must_pass": true
+    },
+    {
+      "id": "continued-escalation-native",
+      "user": "前两轮没结果，但我们再追加一轮开发看看。",
+      "expected_stage": "pre-entry",
+      "assistant_text": "你正在承诺在前两轮没有结果后继续追加开发。\n\n仍可能改变方向的是没有结果究竟来自执行偏差还是方向本身。\n\n现在值得暂停，是因为继续加码可能扩大已经暴露的错误成本。",
+      "context": {
+        "trigger_type": "continued-escalation",
+        "explicit_invocation": false,
+        "active_flow": false,
+        "same_decision_cooling_down": false,
+        "material_change": "none",
+        "response": "pending",
+        "next_stage": "pre-entry",
+        "waited_for_user": true,
+        "commitment": "在前两轮没有结果后继续追加开发",
+        "decision_sensitive_unknown": "没有结果究竟来自执行偏差还是方向本身",
+        "why_now": "继续加码可能扩大已经暴露的错误成本",
+        "decision_scope": {
+          "decision_object": "当前开发方向",
+          "true_objective": "判断是否还值得继续投入",
+          "commitment_scope": "在连续无结果后再追加一轮"
+        },
+        "capability_calls": [],
+        "consent_ids": [],
+        "decision_record_created": false,
+        "persistence_written": false
+      },
+      "observed_interaction": {
+        "host_control_status": "available",
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "single",
+        "options": [
+          {
+            "id": "enter-full-check",
+            "label": "进入完整检查"
+          },
+          {
+            "id": "continue-current-task",
+            "label": "继续当前任务"
+          }
+        ],
+        "host_free_text_available": true,
+        "question_text": "可单选，也可以直接纠正我的理解。\n\n要不要现在做一次完整检查？",
+        "supplement_mode": "none"
+      },
+      "must_pass": true
+    },
+    {
+      "id": "result-reassessment-native",
+      "user": "试验结果回来了，现在决定继续还是停。",
+      "expected_stage": "pre-entry",
+      "assistant_text": "你正在承诺根据新结果决定继续还是停止。\n\n仍可能改变方向的是结果反映了原判断错误还是执行偏差。\n\n现在值得暂停，是因为这是把现实结果转成下一轮承诺的复判节点。",
+      "context": {
+        "trigger_type": "result-reassessment",
+        "explicit_invocation": false,
+        "active_flow": false,
+        "same_decision_cooling_down": false,
+        "material_change": "none",
+        "response": "pending",
+        "next_stage": "pre-entry",
+        "waited_for_user": true,
+        "commitment": "根据新结果决定继续还是停止",
+        "decision_sensitive_unknown": "结果反映了原判断错误还是执行偏差",
+        "why_now": "这是把现实结果转成下一轮承诺的复判节点",
+        "decision_scope": {
+          "decision_object": "上一轮方案",
+          "true_objective": "根据现实结果决定是否继续",
+          "commitment_scope": "形成继续或停止的新判断"
+        },
+        "capability_calls": [],
+        "consent_ids": [],
+        "decision_record_created": false,
+        "persistence_written": false
+      },
+      "observed_interaction": {
+        "host_control_status": "available",
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "single",
+        "options": [
+          {
+            "id": "enter-full-check",
+            "label": "进入完整检查"
+          },
+          {
+            "id": "continue-current-task",
+            "label": "继续当前任务"
+          }
+        ],
+        "host_free_text_available": true,
+        "question_text": "可单选，也可以直接纠正我的理解。\n\n要不要现在做一次完整检查？",
+        "supplement_mode": "none"
+      },
+      "must_pass": true
+    },
+    {
+      "id": "unavailable-text-fallback",
+      "user": "这个原型看起来可以，我们就正式立项继续做吧。",
+      "expected_stage": "pre-entry",
+      "assistant_text": "你正在承诺把当前原型正式立为要继续投入的项目。\n\n仍可能改变方向的是陌生用户是否真的愿意为当前价值付费。\n\n现在值得暂停，是因为一旦开始追加开发，时间和机会成本就会上升。\n\n当前无法显示原生单选。请回复一个编号或直接纠正我的理解。\n\n要不要现在做一次完整检查？\n\n1. 进入完整检查\n2. 继续当前任务",
+      "context": {
+        "trigger_type": "project-initiation",
+        "explicit_invocation": false,
+        "active_flow": false,
+        "same_decision_cooling_down": false,
+        "material_change": "none",
+        "response": "pending",
+        "next_stage": "pre-entry",
+        "waited_for_user": true,
+        "commitment": "把当前原型正式立为要继续投入的项目",
+        "decision_sensitive_unknown": "陌生用户是否真的愿意为当前价值付费",
+        "why_now": "一旦开始追加开发，时间和机会成本就会上升",
+        "decision_scope": {
+          "decision_object": "当前原型",
+          "true_objective": "验证是否值得继续投入",
+          "commitment_scope": "从探索原型转为持续开发"
+        },
+        "capability_calls": [],
+        "consent_ids": [],
+        "decision_record_created": false,
+        "persistence_written": false
+      },
+      "observed_interaction": {
+        "host_control_status": "unavailable",
+        "surface": "text-fallback",
+        "tool_call_observed": false,
+        "selection_mode": "single",
+        "options": [],
+        "host_free_text_available": false,
+        "question_text": "",
+        "supplement_mode": "none"
+      },
+      "must_pass": true
+    },
+    {
+      "id": "explicit-invocation-bypasses-checkpoint",
+      "user": "/think-it-through 我是否应该正式立项？",
+      "expected_stage": "R-align",
+      "assistant_text": "",
+      "context": {
+        "trigger_type": "project-initiation",
+        "explicit_invocation": true,
+        "active_flow": false,
+        "same_decision_cooling_down": false,
+        "material_change": "none",
+        "response": "not-applicable",
+        "next_stage": "R-align",
+        "waited_for_user": false,
+        "commitment": "",
+        "decision_sensitive_unknown": "",
+        "why_now": "",
+        "decision_scope": {
+          "decision_object": "当前原型",
+          "true_objective": "判断是否值得立项",
+          "commitment_scope": "从探索转为立项"
+        },
+        "capability_calls": [],
+        "consent_ids": [],
+        "decision_record_created": false,
+        "persistence_written": false
+      },
+      "must_pass": true
+    },
+    {
+      "id": "active-flow-bypasses-checkpoint",
+      "user": "我已经回答了 A，现在继续。",
+      "expected_stage": "active-flow",
+      "assistant_text": "",
+      "context": {
+        "trigger_type": "direction-selection",
+        "explicit_invocation": false,
+        "active_flow": true,
+        "same_decision_cooling_down": false,
+        "material_change": "none",
+        "response": "not-applicable",
+        "next_stage": "active-flow",
+        "waited_for_user": false,
+        "commitment": "",
+        "decision_sensitive_unknown": "",
+        "why_now": "",
+        "decision_scope": {
+          "decision_object": "当前方向",
+          "true_objective": "完成正在运行的决策流程",
+          "commitment_scope": "仍处于 active flow"
+        },
+        "capability_calls": [],
+        "consent_ids": [],
+        "decision_record_created": false,
+        "persistence_written": false
+      },
+      "must_pass": true
+    },
+    {
+      "id": "close-negative-fact-query",
+      "user": "Python 3.12 的发布日期是什么？",
+      "expected_stage": "resume-current-task",
+      "assistant_text": "",
+      "context": {
+        "trigger_type": "close-negative",
+        "explicit_invocation": false,
+        "active_flow": false,
+        "same_decision_cooling_down": false,
+        "material_change": "none",
+        "response": "not-applicable",
+        "next_stage": "resume-current-task",
+        "waited_for_user": false,
+        "commitment": "",
+        "decision_sensitive_unknown": "",
+        "why_now": "",
+        "decision_scope": {},
+        "capability_calls": [],
+        "consent_ids": [],
+        "decision_record_created": false,
+        "persistence_written": false
+      },
+      "must_pass": true
+    },
+    {
+      "id": "continue-cools-same-decision",
+      "user": "继续当前任务。",
+      "expected_stage": "resume-current-task",
+      "assistant_text": "",
+      "context": {
+        "trigger_type": "project-initiation",
+        "explicit_invocation": false,
+        "active_flow": false,
+        "same_decision_cooling_down": true,
+        "material_change": "none",
+        "response": "not-applicable",
+        "next_stage": "resume-current-task",
+        "waited_for_user": false,
+        "commitment": "",
+        "decision_sensitive_unknown": "",
+        "why_now": "",
+        "decision_scope": {
+          "decision_object": "当前原型",
+          "true_objective": "验证是否值得继续投入",
+          "commitment_scope": "从探索原型转为持续开发"
+        },
+        "capability_calls": [],
+        "consent_ids": [],
+        "decision_record_created": false,
+        "persistence_written": false
+      },
+      "must_pass": true
+    },
+    {
+      "id": "ordinary-clarification-does-not-reset-cooldown",
+      "user": "我补充一下，原型是桌面端，不是移动端。",
+      "expected_stage": "resume-current-task",
+      "assistant_text": "",
+      "context": {
+        "trigger_type": "project-initiation",
+        "explicit_invocation": false,
+        "active_flow": false,
+        "same_decision_cooling_down": true,
+        "material_change": "none",
+        "response": "not-applicable",
+        "next_stage": "resume-current-task",
+        "waited_for_user": false,
+        "commitment": "",
+        "decision_sensitive_unknown": "",
+        "why_now": "",
+        "decision_scope": {
+          "decision_object": "当前原型",
+          "true_objective": "验证是否值得继续投入",
+          "commitment_scope": "从探索原型转为持续开发"
+        },
+        "capability_calls": [],
+        "consent_ids": [],
+        "decision_record_created": false,
+        "persistence_written": false
+      },
+      "must_pass": true
+    },
+    {
+      "id": "ambiguous-response-stays-pre-entry",
+      "user": "你先看着办。",
+      "expected_stage": "pre-entry",
+      "assistant_text": "你正在承诺把当前原型正式立为要继续投入的项目。\n\n仍可能改变方向的是陌生用户是否真的愿意为当前价值付费。\n\n现在值得暂停，是因为一旦开始追加开发，时间和机会成本就会上升。",
+      "context": {
+        "trigger_type": "project-initiation",
+        "explicit_invocation": false,
+        "active_flow": false,
+        "same_decision_cooling_down": false,
+        "material_change": "none",
+        "response": "ambiguous",
+        "next_stage": "pre-entry",
+        "waited_for_user": true,
+        "commitment": "把当前原型正式立为要继续投入的项目",
+        "decision_sensitive_unknown": "陌生用户是否真的愿意为当前价值付费",
+        "why_now": "一旦开始追加开发，时间和机会成本就会上升",
+        "decision_scope": {
+          "decision_object": "当前原型",
+          "true_objective": "验证是否值得继续投入",
+          "commitment_scope": "从探索原型转为持续开发"
+        },
+        "capability_calls": [],
+        "consent_ids": [],
+        "decision_record_created": false,
+        "persistence_written": false
+      },
+      "observed_interaction": {
+        "host_control_status": "available",
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "single",
+        "options": [
+          {
+            "id": "enter-full-check",
+            "label": "进入完整检查"
+          },
+          {
+            "id": "continue-current-task",
+            "label": "继续当前任务"
+          }
+        ],
+        "host_free_text_available": true,
+        "question_text": "可单选，也可以直接纠正我的理解。\n\n要不要现在做一次完整检查？",
+        "supplement_mode": "none"
+      },
+      "must_pass": true
+    },
+    {
+      "id": "enter-full-check-routes-to-r",
+      "user": "进入完整检查。",
+      "expected_stage": "R-align",
+      "assistant_text": "你正在承诺把当前原型正式立为要继续投入的项目。\n\n仍可能改变方向的是陌生用户是否真的愿意为当前价值付费。\n\n现在值得暂停，是因为一旦开始追加开发，时间和机会成本就会上升。",
+      "context": {
+        "trigger_type": "project-initiation",
+        "explicit_invocation": false,
+        "active_flow": false,
+        "same_decision_cooling_down": false,
+        "material_change": "none",
+        "response": "enter-full-check",
+        "next_stage": "R-align",
+        "waited_for_user": true,
+        "commitment": "把当前原型正式立为要继续投入的项目",
+        "decision_sensitive_unknown": "陌生用户是否真的愿意为当前价值付费",
+        "why_now": "一旦开始追加开发，时间和机会成本就会上升",
+        "decision_scope": {
+          "decision_object": "当前原型",
+          "true_objective": "验证是否值得继续投入",
+          "commitment_scope": "从探索原型转为持续开发"
+        },
+        "capability_calls": [],
+        "consent_ids": [],
+        "decision_record_created": false,
+        "persistence_written": false
+      },
+      "observed_interaction": {
+        "host_control_status": "available",
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "single",
+        "options": [
+          {
+            "id": "enter-full-check",
+            "label": "进入完整检查"
+          },
+          {
+            "id": "continue-current-task",
+            "label": "继续当前任务"
+          }
+        ],
+        "host_free_text_available": true,
+        "question_text": "可单选，也可以直接纠正我的理解。\n\n要不要现在做一次完整检查？",
+        "supplement_mode": "none"
+      },
+      "must_pass": true
+    },
+    {
+      "id": "invalid-early-analysis-and-capability",
+      "user": "这个原型看起来可以，我们就正式立项继续做吧。",
+      "expected_stage": "pre-entry",
+      "assistant_text": "你正在承诺把当前原型正式立为要继续投入的项目。\n\n仍可能改变方向的是陌生用户是否真的愿意为当前价值付费。\n\n现在值得暂停，是因为一旦开始追加开发，时间和机会成本就会上升。\n\n建议：你应该先做双向钢人并开始 Evidence Gate。",
+      "context": {
+        "trigger_type": "project-initiation",
+        "explicit_invocation": false,
+        "active_flow": false,
+        "same_decision_cooling_down": false,
+        "material_change": "none",
+        "response": "pending",
+        "next_stage": "pre-entry",
+        "waited_for_user": true,
+        "commitment": "把当前原型正式立为要继续投入的项目",
+        "decision_sensitive_unknown": "陌生用户是否真的愿意为当前价值付费",
+        "why_now": "一旦开始追加开发，时间和机会成本就会上升",
+        "decision_scope": {
+          "decision_object": "当前原型",
+          "true_objective": "验证是否值得继续投入",
+          "commitment_scope": "从探索原型转为持续开发"
+        },
+        "capability_calls": [
+          "search.public_web"
+        ],
+        "consent_ids": [
+          "consent-capability"
+        ],
+        "decision_record_created": true,
+        "persistence_written": true
+      },
+      "observed_interaction": {
+        "host_control_status": "available",
+        "surface": "native-control",
+        "tool_call_observed": true,
+        "selection_mode": "single",
+        "options": [
+          {
+            "id": "enter-full-check",
+            "label": "进入完整检查"
+          },
+          {
+            "id": "continue-current-task",
+            "label": "继续当前任务"
+          }
+        ],
+        "host_free_text_available": true,
+        "question_text": "可单选，也可以直接纠正我的理解。\n\n要不要现在做一次完整检查？",
+        "supplement_mode": "none"
+      },
+      "must_pass": false,
+      "must_fail": [
+        "no-formal-analysis-before-confirmation",
+        "no-capability-or-consent-before-confirmation",
+        "no-record-or-persistence-from-checkpoint"
+      ]
+    }
+  ],
+  "reset_cases": [
+    {
+      "id": "new-evidence-resets-cooldown",
+      "material_change": "new-evidence"
+    },
+    {
+      "id": "purpose-change-resets-cooldown",
+      "material_change": "purpose-change"
+    },
+    {
+      "id": "commitment-scope-expanded-resets-cooldown",
+      "material_change": "commitment-scope-expanded"
+    },
+    {
+      "id": "new-reassessment-node-resets-cooldown",
+      "material_change": "new-reassessment-node"
+    },
+    {
+      "id": "new-topic-resets-cooldown",
+      "material_change": "new-topic"
+    }
+  ],
+  "semantic": [
+    "pre-entry-is-not-a-persistent-analysis-state",
+    "one-opt-in-before-high-value-commitment",
+    "explicit-invocation-and-active-flow-bypass",
+    "continue-cools-the-same-decision",
+    "only-material-change-resets-cooldown",
+    "checkpoint-is-not-consent-gate-or-decision-record",
+    "static-fixture-does-not-prove-natural-discovery-or-real-runtime-behavior"
+  ]
+}

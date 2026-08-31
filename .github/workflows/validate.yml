@@ -30,13 +30,16 @@ jobs:
       - name: Run contract and repository tests
         run: python -m unittest discover -s scripts -p 'test_*.py' -v
 
+      - name: Check generated visual assets
+        run: python scripts/render_assets.py --check
+
       - name: Validate repository
         run: python scripts/validate_repo.py
 
-      - name: Build and verify candidate archive
+      - name: Build and verify distribution archive
         run: |
-          python scripts/build_distribution.py --output-dir dist/ci-candidate
-          unzip -t dist/ci-candidate/think-it-through.skill
+          python scripts/build_distribution.py --output-dir dist/ci-package
+          unzip -t dist/ci-package/think-it-through.skill
 
       - name: Validate fixed Agent Skills format reference
         run: |
@@ -50,7 +53,7 @@ jobs:
           node-version: "22.20.0"
 
       - name: Smoke fixed installer discovery and target copies
-        run: python scripts/smoke_installer.py --archive dist/ci-candidate/think-it-through.skill
+        run: python scripts/smoke_installer.py --archive dist/ci-package/think-it-through.skill
 
       - name: Ensure checks do not modify tracked files
         run: git diff --exit-code

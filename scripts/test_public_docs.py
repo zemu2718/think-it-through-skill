@@ -1,170 +1,127 @@
 #!/usr/bin/env python3
-"""验证发布级 README 与视觉资产的事实和职责边界。"""
+"""验证正式双语 README 的信息架构、事实与声明边界。"""
 
 from __future__ import annotations
 
 import shutil
-import struct
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
-from validate_repo import ROOT, Validation, all_repo_files, validate_assets, validate_public_docs
+from validate_repo import ROOT, Validation, validate_public_docs
 
 
 class PublicDocsTests(unittest.TestCase):
-    def test_canonical_public_docs_and_assets_validate(self) -> None:
-        validation = Validation()
-        validate_public_docs(validation)
-        validate_assets(validation, all_repo_files())
-        self.assertEqual([], validation.errors)
-
-    def test_readme_required_facts_fail_independently(self) -> None:
-        mutations = (
-            ("/think-it-through", "/wrong-entry", "可靠显式入口"),
-            ("synthetic, not a runtime transcript", "illustrative example", "合成示例边界"),
-            ("3b9320b8890d36e592e86e89bf98e5103d4cf7d1", "3b9320b", "固定 v0.2.0"),
-            ("no network access", "network access depends on context", "五项默认安全语义"),
-            ("Before starting", "At some point", "五个具体调用时机"),
-            (
-                "not a project-management or task-execution layer",
-                "a project-management and task-execution layer",
-                "决策工具与执行工具边界",
-            ),
-        )
-        for old, new, expected in mutations:
-            with self.subTest(old=old):
-                validation = self._validate_doc_mutation("README.md", old, new)
-                self.assertTrue(any(expected in error for error in validation.errors))
-
-    def test_chinese_readme_requires_project_start_and_reassessment_moments(self) -> None:
-        validation = self._validate_doc_mutation(
-            "README.zh-CN.md",
-            "立项前",
-            "开始以后",
-        )
-        self.assertTrue(any("五个具体调用时机" in error for error in validation.errors))
-
-        validation = self._validate_doc_mutation(
-            "README.zh-CN.md",
-            "结果回来后",
-            "完成以后",
-        )
-        self.assertTrue(any("五个具体调用时机" in error for error in validation.errors))
-
-    def test_candidate_release_url_and_runtime_claim_fail(self) -> None:
-        validation = self._validate_doc_mutation(
-            "README.md",
-            "## FAQ",
-            "[Download](https://example.com/releases/download/v0.3.0/think-it-through.skill)\n\n## FAQ",
-        )
-        self.assertTrue(any("候选 Release" in error for error in validation.errors))
-
-        validation = self._validate_doc_mutation(
-            "README.md",
-            "Eight mappings are defined",
-            "Supports 50+ runtimes; eight mappings are defined",
-        )
-        self.assertTrue(any("矩阵只有 0 个" in error for error in validation.errors))
-
-    def test_quick_start_position_and_flow_language_fail(self) -> None:
-        validation = self._validate_doc_mutation(
-            "README.md",
-            "## Quick Start",
-            "<!-- " + ("x" * 5000) + " -->\n\n## Quick Start",
-        )
-        self.assertTrue(any("Quick Start 出现过晚" in error for error in validation.errors))
-
-        validation = self._validate_doc_mutation(
-            "README.md",
-            "assets/demo-flow.svg",
-            "assets/demo-flow.zh-CN.svg",
-        )
-        self.assertTrue(any("错误语言流程图" in error for error in validation.errors))
-
-    def test_readme_does_not_repeat_normative_contract(self) -> None:
-        readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertNotIn("R-align", readme)
-        self.assertNotIn("DecisionRecord", readme)
-        self.assertNotIn("（核心假设）", readme)
+    def test_canonical_public_docs_validate(self) -> None:
         validation = Validation()
         validate_public_docs(validation)
         self.assertEqual([], validation.errors)
 
-    def test_svg_security_structure_and_dimensions_fail(self) -> None:
+    def test_required_facts_fail_independently(self) -> None:
         mutations = (
-            (
-                "assets/hero-light.svg",
-                "<rect width=\"1200\"",
-                "<script>alert(1)</script><rect width=\"1200\"",
-                "不得包含脚本",
-            ),
-            (
-                "assets/hero-light.svg",
-                "</svg>",
-                '<image href="https://example.com/a.png"/></svg>',
-                "不得引用远程资源",
-            ),
-            (
-                "assets/hero-light.svg",
-                "</svg>",
-                '<image href="data:image/png;base64,AA=="/></svg>',
-                "不得嵌入 raster image",
-            ),
-            (
-                "assets/demo-flow.svg",
-                'id="step-4"',
-                'id="missing-step"',
-                "英文流程图缺少稳定结构 ID",
-            ),
-            (
-                "assets/hero-dark.svg",
-                'height="480" viewBox="0 0 1200 480"',
-                'height="481" viewBox="0 0 1200 481"',
-                "dark Hero 必须是 1200×480",
-            ),
+            ("README.md", "```text\n/think-it-through\n```", "```text\n/wrong-entry\n```", "可靠显式入口"),
+            ("README.md", "Illustrative synthetic case", "Illustrative example", "合成示例"),
+            ("README.md", "not a runtime transcript", "example transcript", "合成示例"),
+            ("README.md", "defines no result", "shows a result", "合成示例"),
+            ("README.md", "git clone --depth 1 --branch main", "git clone", "稳定 main 源码安装"),
+            ("README.md", "cd think-it-through-skill\ngit rev-parse HEAD\ntest ! -e", "cd think-it-through-skill\ngit status --short\ntest ! -e", "准确源码 revision"),
+            ("README.md", "v0.3.0 is the current stable source", "v0.3.0 is the source candidate", "稳定源码状态"),
+            ("README.md", "installation or runtime feedback", "general feedback", "反馈入口"),
+            ("README.md", "no network access", "network access depends on context", "五项默认安全语义"),
+            ("README.md", "Before starting", "At some point", "五个具体调用时机"),
+            ("README.md", "not a project-management or task-execution layer", "also executes projects", "决策工具与执行工具边界"),
+            ("README.zh-CN.md", "立项前", "开始以后", "五个具体调用时机"),
+            ("README.zh-CN.md", "| **结果回来后** |", "| **完成以后** |", "五个具体调用时机"),
         )
         for relative, old, new, expected in mutations:
-            with self.subTest(relative=relative, expected=expected):
-                validation = self._validate_asset_mutation(relative, old, new)
-                self.assertTrue(any(expected in error for error in validation.errors))
+            with self.subTest(relative=relative, old=old):
+                errors = self.validate_doc_mutation(relative, old, new).errors
+                self.assertTrue(any(expected in error for error in errors), errors)
 
-    def test_social_preview_png_dimensions_fail(self) -> None:
-        with self._repository_copy() as root:
-            png = root / "assets" / "social-preview.png"
-            data = bytearray(png.read_bytes())
-            data[16:24] = struct.pack(">II", 640, 320)
-            png.write_bytes(data)
-            validation = self._validate_assets(root)
-            self.assertTrue(any("Social Preview PNG 必须是 1280×640" in error for error in validation.errors))
+    def test_h2_missing_reordered_and_legacy_heading_fail(self) -> None:
+        errors = self.validate_doc_mutation("README.md", "## Why it matters", "### Why it matters").errors
+        self.assertTrue(any("十个 H2" in error for error in errors), errors)
+        errors = self.validate_doc_mutation(
+            "README.md",
+            "## A concrete case",
+            "## Install and try it\n\n## A concrete case",
+        ).errors
+        self.assertTrue(any("十个 H2" in error for error in errors), errors)
+        errors = self.validate_doc_mutation("README.md", "## What it is", "## Quick Start").errors
+        self.assertTrue(any("旧版入口章节" in error or "十个 H2" in error for error in errors), errors)
 
-    def _validate_doc_mutation(self, relative: str, old: str, new: str) -> Validation:
-        with self._repository_copy() as root:
+    def test_brand_mark_and_language_assets_fail(self) -> None:
+        errors = self.validate_doc_mutation(
+            "README.md", "assets/brand-mark-light.svg", "assets/hero-light.svg"
+        ).errors
+        self.assertTrue(any("Brand Mark" in error or "旧视觉资产" in error for error in errors), errors)
+        errors = self.validate_doc_mutation(
+            "README.md", "assets/decision-case-light.svg", "assets/decision-case-light.zh-CN.svg"
+        ).errors
+        self.assertTrue(any("错误语言 Decision Case" in error or "对应语言" in error for error in errors), errors)
+        errors = self.validate_doc_mutation(
+            "README.zh-CN.md", "assets/decision-case-dark.zh-CN.svg", "assets/decision-case-dark.svg"
+        ).errors
+        self.assertTrue(any("错误语言 Decision Case" in error or "对应语言" in error for error in errors), errors)
+
+    def test_badge_count_style_workflow_commit_and_license_fail(self) -> None:
+        validate_line = "[![Validate](https://img.shields.io/github/actions/workflow/status/zemu2718/think-it-through-skill/validate.yml?branch=main&style=flat-square&label=Validate)](https://github.com/zemu2718/think-it-through-skill/actions/workflows/validate.yml?query=branch%3Amain)"
+        errors = self.validate_doc_mutation("README.md", validate_line + "\n", "").errors
+        self.assertTrue(any("恰好包含四枚" in error for error in errors), errors)
+        errors = self.validate_doc_mutation("README.md", "style=flat-square&label=Validate", "style=plastic&label=Validate").errors
+        self.assertTrue(any("flat-square" in error or "徽章职责" in error for error in errors), errors)
+        errors = self.validate_doc_mutation("README.md", "validate.yml?branch=main", "other.yml?branch=dev").errors
+        self.assertTrue(any("徽章职责" in error for error in errors), errors)
+        errors = self.validate_doc_mutation(
+            "README.md",
+            "tree/main/skills/think-it-through",
+            "tree/dev/skills/think-it-through",
+        ).errors
+        self.assertTrue(any("徽章职责" in error for error in errors), errors)
+        errors = self.validate_doc_mutation("README.md", "](LICENSE)", "](https://example.com/license)").errors
+        self.assertTrue(any("徽章职责" in error for error in errors), errors)
+
+    def test_forbidden_marketing_badges_fail(self) -> None:
+        insertion = "[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen?style=flat-square)](https://example.com)\n"
+        errors = self.validate_doc_mutation("README.md", "**Reliable entry today:**", insertion + "\n**Reliable entry today:**").errors
+        self.assertTrue(any("恰好包含四枚" in error or "徽章不得宣称" in error for error in errors), errors)
+        insertion = "[![L5 certified](https://img.shields.io/badge/L5-certified-blue?style=flat-square)](https://example.com)\n"
+        errors = self.validate_doc_mutation("README.md", "**Reliable entry today:**", insertion + "\n**Reliable entry today:**").errors
+        self.assertTrue(any("恰好包含四枚" in error or "徽章不得宣称" in error for error in errors), errors)
+
+    def test_nonexistent_release_url_and_runtime_claim_fail(self) -> None:
+        errors = self.validate_doc_mutation(
+            "README.md",
+            "## License",
+            "[Download](https://example.com/releases/download/v0.3.0/think-it-through.skill)\n\n## License",
+        ).errors
+        self.assertTrue(any("不存在或未经核验" in error for error in errors), errors)
+        errors = self.validate_doc_mutation(
+            "README.md",
+            "Eight installer target mappings",
+            "Supports 50+ runtimes; eight installer target mappings",
+        ).errors
+        self.assertTrue(any("矩阵只有 0 个" in error for error in errors), errors)
+
+    def test_normative_contract_terms_fail(self) -> None:
+        for term in ("R-align", "R-method", "DecisionRecord"):
+            with self.subTest(term=term):
+                errors = self.validate_doc_mutation("README.md", "## License", f"{term}\n\n## License").errors
+                self.assertTrue(any("正式行为合同术语" in error for error in errors), errors)
+
+    def validate_doc_mutation(self, relative: str, old: str, new: str) -> Validation:
+        with self.repository_copy() as root:
             path = root / relative
             text = path.read_text(encoding="utf-8")
             self.assertIn(old, text)
-            path.write_text(text.replace(old, new), encoding="utf-8")
+            path.write_text(text.replace(old, new, 1), encoding="utf-8")
             validation = Validation()
             with mock.patch("validate_repo.ROOT", root):
                 validate_public_docs(validation)
             return validation
 
-    def _validate_asset_mutation(self, relative: str, old: str, new: str) -> Validation:
-        with self._repository_copy() as root:
-            path = root / relative
-            text = path.read_text(encoding="utf-8")
-            self.assertIn(old, text)
-            path.write_text(text.replace(old, new, 1), encoding="utf-8")
-            return self._validate_assets(root)
-
-    def _validate_assets(self, root: Path) -> Validation:
-        validation = Validation()
-        with mock.patch("validate_repo.ROOT", root):
-            validate_assets(validation, all_repo_files())
-        return validation
-
-    def _repository_copy(self):
+    def repository_copy(self):
         temporary = tempfile.TemporaryDirectory()
         root = Path(temporary.name)
         for relative in (
@@ -180,11 +137,14 @@ class PublicDocsTests(unittest.TestCase):
             "benchmarks/trigger-v0.1/holdout.json",
             "docs/product-architecture-v0.2.0.md",
             "docs/product-architecture-v0.3.0.md",
+            "CONTRIBUTING.md",
+            ".agents/brand-context.md",
+            ".github/ISSUE_TEMPLATE/install-or-runtime-feedback.yml",
+            ".github/workflows/validate.yml",
         ):
             target = root / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / relative, target)
-        shutil.copytree(ROOT / "assets", root / "assets")
 
         class RepositoryCopy:
             def __enter__(self) -> Path:

@@ -27,6 +27,7 @@ Use the document that matches your task:
 | Behavior, safety, or acceptance criteria | [`REQUIREMENTS.md`](REQUIREMENTS.md) |
 | Runtime instructions | The relevant part of [`SKILL.md`](skills/think-it-through/SKILL.md) |
 | Architecture rationale or future evidence work | [`docs/product-architecture-v0.3.0.md`](docs/product-architecture-v0.3.0.md) |
+| README, brand wording, or visual assets | [`PRODUCT.md`](PRODUCT.md), then [`.agents/brand-context.md`](.agents/brand-context.md) and [`assets/README.md`](assets/README.md) |
 
 Then:
 
@@ -38,24 +39,33 @@ Then:
    uv run --python 3.12 --with-requirements requirements-validation.txt \
      python -m unittest discover -s scripts -p 'test_*.py' -v
    uv run --python 3.12 --with-requirements requirements-validation.txt \
+     python scripts/render_assets.py --check
+   uv run --python 3.12 --with-requirements requirements-validation.txt \
      python scripts/validate_repo.py
    ```
 
 4. Keep English and Chinese README instructions synchronized when changing user-facing commands, compatibility, benchmarks, or security boundaries.
-5. Describe what changed, why it changes a decision, and how it was verified.
+5. Treat `assets/manifest.json` as the visual inventory. Edit `social-preview.svg`, then generate `social-preview.png`; do not hand-edit the PNG. Uploading that PNG to GitHub repository settings is a separate external action.
+6. Describe what changed, why it changes a decision, and how it was verified.
 
 Real Claude Code or Codex smoke is deliberately excluded from ordinary CI. Use the manual `Runtime smoke` workflow only after a person explicitly authorizes that one provider call and accepts the disclosed test prompt, four-turn limit, cost boundary, stop conditions, and fallback. The workflow injects only the selected provider secret and retains only redacted user/final-output artifacts; it does not promote `runtime-support.json` automatically.
 
-## Validate and build a local candidate
+## Report installation or runtime feedback
+
+Use the [installation and runtime feedback form](https://github.com/zemu2718/think-it-through-skill/issues/new?template=install-or-runtime-feedback.yml) for public, reproducible observations. Include the exact source commit from `git rev-parse HEAD`, runtime name and version, OS, install method and destination, minimal reproduction steps, and expected versus actual behavior. Redact API keys, tokens, private conversations, private file content, and personal paths.
+
+A report is an input to reproduction and improvement, not canonical compatibility evidence by itself. Only evidence bound to an exact source revision and runtime version, reproduced where needed, redacted, reviewed, and approved may update `compatibility/runtime-support.json`. Report vulnerabilities privately through [`SECURITY.md`](SECURITY.md), not through this public form.
+
+## Validate and build a local package
 
 After the checks above pass, build into a new output directory and verify the archive:
 
 ```bash
-python3 scripts/build_distribution.py --output-dir dist/local-candidate
-unzip -t dist/local-candidate/think-it-through.skill
+python3 scripts/build_distribution.py --output-dir dist/local-package
+unzip -t dist/local-package/think-it-through.skill
 ```
 
-The builder refuses to overwrite an existing archive or `unpacked/` directory. A local candidate is not a GitHub Release asset, and successful packaging does not prove that any runtime loaded or followed the Skill.
+The builder refuses to overwrite an existing archive or `unpacked/` directory. A local package is not a GitHub Release asset, and successful packaging does not prove that any runtime loaded or followed the Skill.
 
 ## Third-party material
 
@@ -109,6 +119,7 @@ By contributing, you agree that your contribution is licensed under the reposito
 | 行为、安全或验收标准 | [`REQUIREMENTS.md`](REQUIREMENTS.md) |
 | 运行时指令 | [`SKILL.md`](skills/think-it-through/SKILL.md) 的相关部分 |
 | 架构理由或后续实测路线 | [`docs/product-architecture-v0.3.0.md`](docs/product-architecture-v0.3.0.md) |
+| README、品牌表达或视觉资产 | 先读 [`PRODUCT.md`](PRODUCT.md)，再读 [`.agents/brand-context.md`](.agents/brand-context.md) 与 [`assets/README.md`](assets/README.md) |
 
 然后：
 
@@ -120,24 +131,33 @@ By contributing, you agree that your contribution is licensed under the reposito
    uv run --python 3.12 --with-requirements requirements-validation.txt \
      python -m unittest discover -s scripts -p 'test_*.py' -v
    uv run --python 3.12 --with-requirements requirements-validation.txt \
+     python scripts/render_assets.py --check
+   uv run --python 3.12 --with-requirements requirements-validation.txt \
      python scripts/validate_repo.py
    ```
 
 4. 修改用户命令、兼容性、benchmark 或安全边界时，同步英文和中文 README。
-5. 在 PR 中说明改了什么、为什么会改变决策，以及如何验证。
+5. 把 `assets/manifest.json` 作为视觉资产清单；修改 `social-preview.svg` 后生成 `social-preview.png`，不要手改 PNG。把 PNG 上传到 GitHub 仓库设置属于另一个外部行动。
+6. 在 PR 中说明改了什么、为什么会改变决策，以及如何验证。
 
 真实 Claude Code 或 Codex smoke 刻意不进入普通 CI。只有在真人明确授权该次 provider 调用，并接受已披露的测试议题、四轮上限、成本边界、停止条件与失败降级后，才使用手动 `Runtime smoke` workflow。workflow 只注入所选 provider 的 secret，只保留脱敏后的用户输入与最终输出 artifact，也不会自动提升 `runtime-support.json`。
 
-### 验证并构建本地候选包
+### 反馈安装或 runtime 问题
+
+公开、可复现的观察请使用[安装与 runtime 反馈表单](https://github.com/zemu2718/think-it-through-skill/issues/new?template=install-or-runtime-feedback.yml)。请提供 `git rev-parse HEAD` 得到的准确源码 commit、runtime 名称与版本、操作系统、安装方式与目标目录、最小复现步骤，以及预期和实际结果。提交前必须删除 API key、token、私有对话、私人文件内容和个人路径。
+
+普通报告只是复现和优化的输入，不会直接成为兼容证据。只有绑定准确源码 revision 与 runtime 版本、按需完成复现、脱敏、审阅并批准的 evidence，才能更新 `compatibility/runtime-support.json`。安全漏洞仍按 [`SECURITY.md`](SECURITY.md) 私下报告，不要使用公开表单。
+
+### 验证并构建本地包
 
 上述检查通过后，使用新的输出目录构建并验证归档：
 
 ```bash
-python3 scripts/build_distribution.py --output-dir dist/local-candidate
-unzip -t dist/local-candidate/think-it-through.skill
+python3 scripts/build_distribution.py --output-dir dist/local-package
+unzip -t dist/local-package/think-it-through.skill
 ```
 
-构建器会拒绝覆盖已有 archive 或 `unpacked/` 目录。本地候选包不是 GitHub Release asset；打包成功也不能证明任何 runtime 已加载或遵循 Skill。
+构建器会拒绝覆盖已有 archive 或 `unpacked/` 目录。本地包不是 GitHub Release asset；打包成功也不能证明任何 runtime 已加载或遵循 Skill。
 
 ### 第三方材料
 

@@ -7,6 +7,7 @@
   "properties": {
     "kind": {
       "enum": [
+        "request_contextual_checkpoint",
         "request_free_text",
         "request_selection",
         "present_method_recommendation",
@@ -26,6 +27,7 @@
     },
     "stage": {
       "enum": [
+        "pre-entry",
         "R-align",
         "R-method",
         "A",
@@ -41,6 +43,15 @@
   },
   "additionalProperties": false,
   "allOf": [
+    {
+      "if": {"properties": {"kind": {"const": "request_contextual_checkpoint"}}},
+      "then": {
+        "properties": {
+          "stage": {"const": "pre-entry"},
+          "body": {"$ref": "#/$defs/contextual_checkpoint_body"}
+        }
+      }
+    },
     {
       "if": {"properties": {"kind": {"const": "request_free_text"}}},
       "then": {"properties": {"body": {"$ref": "#/$defs/free_text_body"}}}
@@ -94,6 +105,53 @@
         "label": {"type": "string", "minLength": 1},
         "description": {"type": "string", "minLength": 12},
         "recommended": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "contextual_checkpoint_body": {
+      "type": "object",
+      "required": [
+        "why_now",
+        "commitment",
+        "decision_sensitive_unknown",
+        "selection_mode",
+        "options",
+        "allow_free_text",
+        "wait_for_user"
+      ],
+      "properties": {
+        "why_now": {"type": "string", "minLength": 1},
+        "commitment": {"type": "string", "minLength": 1},
+        "decision_sensitive_unknown": {"type": "string", "minLength": 1},
+        "selection_mode": {"const": "single"},
+        "options": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "object",
+              "required": ["id", "label"],
+              "properties": {
+                "id": {"const": "enter-full-check"},
+                "label": {"type": "string", "minLength": 1}
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": ["id", "label"],
+              "properties": {
+                "id": {"const": "continue-current-task"},
+                "label": {"type": "string", "minLength": 1}
+              },
+              "additionalProperties": false
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2,
+          "items": false
+        },
+        "allow_free_text": {"const": true},
+        "wait_for_user": {"const": true}
       },
       "additionalProperties": false
     },

@@ -10,6 +10,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 当前可靠调用方式是 `/think-it-through`。自动发现的冻结 v0.1 holdout 仅为 9/16（正例 1/8、负例 8/8），不要把自然语言自动加载或其他客户端兼容性描述为已经通过。
 
+README、品牌表达或视觉资产改动前先读 `.agents/brand-context.md`，但它只是 `REQUIREMENTS.md` 与 `PRODUCT.md` 的派生摘要，不是第二份合同。视觉资产由 `assets/manifest.json` 定义职责与变体；Social Preview 只编辑 SVG 源，通过 `scripts/render_assets.py` 生成 PNG，不手改派生文件，也不把本地生成误写成 GitHub 已启用。
+
 ## 常用命令
 
 仓库没有应用运行时、构建系统或常驻服务；开发工作主要是编辑 Markdown/YAML/JSON、运行 Python 合同测试、校验仓库和构建 `.skill` 包。CI 使用 Python 3.12 与 `requirements-validation.txt` 中固定的验证依赖；本机优先用 `uv` 复现：
@@ -21,6 +23,9 @@ uv run --python 3.12 --with-requirements requirements-validation.txt \
 
 # 仓库结构、合同、schema、链接、来源、冻结证据和分发集合
 uv run --python 3.12 --with-requirements requirements-validation.txt python scripts/validate_repo.py
+
+# 只检查派生视觉资产，不写 tracked 文件
+uv run --python 3.12 --with-requirements requirements-validation.txt python scripts/render_assets.py --check
 
 # 单个测试文件
 uv run --python 3.12 --with-requirements requirements-validation.txt \
@@ -230,13 +235,16 @@ DecisionRecord 默认：
 
 合同变化需要同步 `SKILL.md` metadata、方法 registry、core schema、policies、adapters、current fixtures、core / enhancement UX、评分器、validator 和公开文档中的版本。
 
-当前源码候选、稳定发布、兼容证据、内部评测状态与具体会话事实必须分层：
+稳定源码、公开发布对象、兼容证据、内部评测状态与具体会话事实必须分层：
 
-- v0.3.0 当前是未发布源码候选，v0.2.0 仍是最新稳定发布；不得把 candidate 冒充 Release，也不得改写 v0.2.0 历史事实；
-- README、PRODUCT、REQUIREMENTS 和当前架构说明可以说明候选状态与已由实际 evidence 建立的兼容层级；运行时包不复制仓库级矩阵或内部评测状态；
+- v0.3.0 是当前稳定源码版本与正式产品合同；v0.2.0 是历史稳定版本，不得改写其历史事实；
+- 稳定源码准入由合同、schema、fixtures、grader、公开文档、确定性仓库校验、归档复验、固定格式检查和安装器 L1/L2 smoke 建立，不要求逐客户端真实验证先完成；
+- Git commit、tag、GitHub Release 和可下载 asset 只在对应对象真实存在时声明；稳定源码状态不得冒充这些公开对象；
+- README、PRODUCT、REQUIREMENTS 和当前架构说明可以说明稳定源码状态与已由实际 evidence 建立的兼容层级；运行时包不复制仓库级矩阵或内部评测状态；
 - 当前可靠入口仍用“Claude Code 显式 `/think-it-through` + 纯文本跨宿主基线 + 条件能力逐会话协商”表达；
-- `evals/` 继续按实际执行情况维护内部机器状态，不得把未运行项改成 `passed`；
-- 普通 CI 只做合同、schema、L0 格式和 L1/L2 安装器检查，不调用模型 provider，也不自动修改兼容矩阵；
+- `evals/` 继续按实际执行情况维护内部机器状态，不得把未运行项改成 `passed`；v0.3.0 stable 与真实多轮状态 `not_run` 可以同时成立；
+- 普通 CI 做合同、schema、L0 格式和 L1/L2 安装器检查，不调用模型 provider，也不自动修改兼容矩阵；
+- 用户 Issue 和安装观察属于发布后反馈线索，只有绑定准确 revision/runtime version、可复现、脱敏并经人工审阅的 evidence 才能改变矩阵；
 - Claude Code / Codex 真实 smoke 只由手动 workflow 或本地 harness 生成候选 artifact；实际 provider 调用需要独立 `capability_call` 授权，且不会自动提升 L3～L5；
 - 静态规范、schema、fixtures、单元测试和线框只能证明合同定义，不能证明某次真实模型行为、原生 UI、搜索、Agent、真人参与、持久化、宿主兼容或真实 UX；
 - 具体能力是否发生只由当前会话 capability observation、consent、工具 trace 与 receipt 建立；未调用、拒绝和失败不得写成完成；

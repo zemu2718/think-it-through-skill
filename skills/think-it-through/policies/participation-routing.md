@@ -2,7 +2,7 @@
 
 ## 目标
 
-Participation Policy 决定谁应参与以及为什么参与。默认使用当前主 Agent；只有独立参与能带来明确决策增量时才升级。多 Agent 和真人参与是能力路由，不是方法卡，也不能用角色数量、投票或模型一致性制造权威。
+Participation Policy 决定谁应参与以及为什么参与。默认使用当前主 Agent；只有独立参与能带来明确决策增量时才升级。多 Agent 和真人参与是能力路由，不是方法卡，也不能用角色数量、投票或模型一致性制造权威。正式 Participation Gate 只在 A 的用户答案之后路由；上下文检查点不触发委派，也不构成 `participation_delegation` 授权。
 
 ## 参与类型
 

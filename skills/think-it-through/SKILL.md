@@ -4,7 +4,7 @@ description: >-
   Use this skill whenever the user needs decision support, decision framing, or trade-off analysis for an important choice—even if they ask for advice, a plan, or execution. Trigger on uncertain, costly, high-stakes, hard-to-reverse choices; A vs B; feeling stuck; testing before committing; choosing where scarce time or money matters; checking whether an action serves the goal or bottleneck; or deciding whether to continue, adjust, pause, or stop ongoing work. Use for product/business launches, hiring, solo-founder priorities, career, relocation, teams, partnerships, relationship boundaries, and searches for a decision-making skill. It uncovers the real objective, steelmans competing judgments or runs a confirmed pre-mortem, asks one decision-changing question, then gives one conditional judgment and one reversible test. 中文意图：帮我想清楚、值不值得做、A还是B、是否走偏、哪个投入更重要、继续调整还是停止。Do not use for factual lookup, definitions, decided low-risk execution, pure creation, technical review/FMEA, fixed project planning, or emergencies.
 license: MIT; see LICENSE and THIRD_PARTY_NOTICES.md
 compatibility: >-
-  Portable text behavior for Agent Skills-compatible runtimes; native controls,
+  Portable text contract for Agent Skills-compatible runtimes; native controls,
   tools, data access, delegation, persistence, and external actions require
   per-session capability observation, consent, trace, and receipt.
 metadata:
@@ -19,6 +19,31 @@ metadata:
 默认以当前主 Agent、零外部调用开始。调研、多 Agent、真人参与和持久化是条件能力，不是固定流程，也不是方法卡。完整宿主无关语义见 [Portable Decision Core](core/protocol.md)。
 
 像一个有经验、值得信赖的思考搭档：先接住，提供容易选择的方向，也允许用户直接说、纠正或拒绝；信息足够时给出明确但可调整的判断。完整用户体验见 [交互与表达](references/interaction-ux.md)。
+
+## 已加载后的上下文检查点
+
+显式调用 `/think-it-through` 时直接进入原有流程，不先加一道检查。已经处于 R、A、Gate、B 或反馈时也不二次提醒。
+
+Skill 已加载但用户没有显式调用时，只有多轮对话正从探索跨入下列高价值承诺节点，才在 R 之前给一次轻量检查点：
+
+- 决定正式立项或开始长期事项；
+- 在会改变资源去向的方向之间作选择；
+- 承诺较高的时间、金钱、声誉、关系或机会成本；
+- 在关键未知仍未解决时继续加码；
+- 结果回来后决定继续、调整、暂停或停止。
+
+不按关键词触发。事实查询、纯创作、普通开发、已决低风险执行、一般不确定性和紧急保护场景不提醒。若现在不检查不会明显增加错误方向上的承诺，也直接继续当前任务。
+
+检查点只用自然语言说明三件事：用户正在形成什么承诺、哪个决定敏感未知仍可能改变方向、为什么现在值得停一下。随后提供两个互斥方向：
+
+- `enter-full-check`：进入完整检查；
+- `continue-current-task`：继续当前任务。
+
+原生单选可用时必须实际调用，并保留自由纠正；不可用、失败或被拒绝时使用普通编号文本降级。问后等待明确选择。模糊回应、只补背景或宿主默认选中都不构成进入确认。
+
+用户明确进入后才转 R-align；现有信息已足以说清目的与决定时可转 R-method。用户选择继续后立即恢复原任务，并对同一“决定对象 + 真实目的 + 承诺范围”保持静默。只有新证据、目的变化、承诺范围升级、新复判节点或新议题才允许重新评估；普通补充、同义改写和时间经过本身不重置。
+
+检查点不是判断、方法确认、A、Gate、授权或 DecisionRecord。确认前不得搜索、读写文件、访问数据、增加 Agent、请求真人参与或执行外部行动；检查点选择也不授权这些能力。
 
 ## 首先判断是否适用
 
@@ -44,6 +69,8 @@ metadata:
 ## 识别本轮状态
 
 只处理一个核心议题。内部状态不向普通用户展示：
+
+`pre-entry` 只表示正式流程前的可观察交互位置，不是持久分析状态。
 
 ```text
 空状态：还没有具体议题
@@ -293,6 +320,8 @@ Adapter、安装器 target 或文件已复制都不构成原生兼容认证，�
 
 回复前确认：
 
+- 显式调用和 active flow 没有重复检查点；上下文检查点只在高价值承诺节点出现一次，拒绝后同一决定保持静默；
+- 检查点确认前没有进入 R 或调用能力，检查点选择没有被当作授权；
 - 状态与等待边界正确，只处理一个核心议题；
 - 可并存目的已先合并，没有虚假排他；
 - 原生控件可用时实际调用，控件由答案形态决定；

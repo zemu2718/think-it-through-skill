@@ -1,0 +1,144 @@
+name: Installation or runtime feedback
+description: Report a reproducible installation, loading, or behavior observation
+title: "[Runtime feedback]: "
+labels:
+  - compatibility
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing Think It Through. This public report helps maintainers reproduce and improve client support; it does not update the compatibility matrix by itself.
+
+        Do not include API keys, tokens, private conversations, private file contents, hidden reasoning, or unredacted personal paths. Report security vulnerabilities privately through SECURITY.md.
+
+  - type: dropdown
+    id: feedback-type
+    attributes:
+      label: Feedback type
+      options:
+        - Installation or target directory
+        - Skill discovery or explicit activation
+        - Text behavior
+        - Native capability or interaction
+        - Other reproducible runtime issue
+    validations:
+      required: true
+
+  - type: dropdown
+    id: runtime-family
+    attributes:
+      label: Runtime family
+      options:
+        - Claude Code
+        - Codex
+        - Cursor
+        - Gemini CLI
+        - Hermes Agent
+        - OpenClaw
+        - OpenCode
+        - CodeBuddy / WorkBuddy
+        - Other Agent Skills-compatible host
+    validations:
+      required: true
+
+  - type: input
+    id: runtime-version
+    attributes:
+      label: Exact runtime version
+      description: Paste the full version output from the client or CLI.
+      placeholder: "Example: 1.2.3"
+    validations:
+      required: true
+
+  - type: input
+    id: operating-system
+    attributes:
+      label: Operating system
+      description: Include the OS name, version, and architecture when relevant.
+      placeholder: "Example: macOS 15.6 arm64"
+    validations:
+      required: true
+
+  - type: input
+    id: skill-revision
+    attributes:
+      label: Skill version and source commit
+      description: Include v0.3.0 and the full output of git rev-parse HEAD.
+      placeholder: "v0.3.0 — 40-character commit SHA"
+    validations:
+      required: true
+
+  - type: textarea
+    id: installation
+    attributes:
+      label: Installation method and destination
+      description: State how the Skill was installed and the exact target directory, with personal path segments redacted.
+      placeholder: |
+        Method:
+        Destination:
+    validations:
+      required: true
+
+  - type: dropdown
+    id: discovered
+    attributes:
+      label: Was the Skill discovered by the runtime?
+      options:
+        - "Yes"
+        - "No"
+        - "Unknown or not applicable"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: activated
+    attributes:
+      label: Could you activate it explicitly?
+      options:
+        - "Yes"
+        - "No"
+        - "Unknown or not applicable"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction steps
+      description: Provide the shortest sequence that reproduces the observation.
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Redacted logs or screenshots
+      description: Optional. Include only the minimum needed to reproduce the issue and remove sensitive content.
+
+  - type: checkboxes
+    id: safety-confirmation
+    attributes:
+      label: Public-data confirmation
+      options:
+        - label: I removed API keys, tokens, private conversations, private file contents, hidden reasoning, and unredacted personal paths.
+          required: true
+        - label: I understand this report is a feedback lead and does not become approved compatibility evidence automatically.
+          required: true
