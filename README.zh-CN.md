@@ -19,7 +19,7 @@
 [![Stable source v0.3.0](https://img.shields.io/badge/stable%20source-v0.3.0-172033?style=flat-square)](https://github.com/zemu2718/think-it-through-skill/tree/v0.3.0/skills/think-it-through)
 [![MIT License](https://img.shields.io/badge/license-MIT-172033?style=flat-square)](LICENSE)
 
-**当前可靠入口：**在 Claude Code 中显式调用 `/think-it-through`。
+**当前可靠入口：** 在 Claude Code 中显式调用 `/think-it-through`。
 
 Validate 徽章只反映远端已提交 `main` 的 workflow 状态，不代表本地未提交工作区。
 
@@ -55,7 +55,7 @@ AI 已经可以很快产出方案、代码、投放文案、调研和漂亮的�
 
 ## 什么时候调用
 
-**记住一个简单规则：**重要投入前调用；现实结果回来后，别惯性继续，先调用。
+**记住一个简单规则：** 重要投入前调用；现实结果回来后，别惯性继续，先调用。
 
 | 决策节点 | 可以直接带来的议题 |
 | --- | --- |
@@ -140,7 +140,7 @@ cp -R skills/think-it-through ~/.claude/skills/
 在继续开发三个月并写投放方案前，帮我判断现在最该验证什么。
 ```
 
-**第一次成功的信号：**它不会立即替你写投放方案，而会先帮你说清这次真正要做的决定。仅仅安装或调用，并不会自动授权联网、读取私有数据、增加 Agent、保存文件或执行外部行动。
+**第一次成功的信号：** 它不会立即替你写投放方案，而会先帮你说清这次真正要做的决定。仅仅安装或调用，并不会自动授权联网、读取私有数据、增加 Agent、保存文件或执行外部行动。
 
 三条安装路径分发的是同一份 v0.3.0 运行时源码。文件复制成功只证明文件已复制，不能证明某个 runtime/version 已加载或遵循 Skill。
 
@@ -171,7 +171,7 @@ cp -R skills/think-it-through ~/.claude/skills/
 
 ## 版本、兼容性与证据
 
-**稳定发布：**[`v0.3.0`](https://github.com/zemu2718/think-it-through-skill/releases/tag/v0.3.0)，由不可变 Git tag、GitHub Release、可下载的 [`think-it-through.skill`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill) 与 [`SHA256SUMS`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/SHA256SUMS)共同建立；后续开发继续位于持续维护的 [`main`](https://github.com/zemu2718/think-it-through-skill/tree/main/skills/think-it-through)。发布状态表示产品合同和确定性准入链已经确立，不代表所有客户端均已认证，也不会把未运行的兼容层级自动改为通过。
+**稳定发布：** [`v0.3.0`](https://github.com/zemu2718/think-it-through-skill/releases/tag/v0.3.0)，由不可变 Git tag、GitHub Release、可下载的 [`think-it-through.skill`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill) 与 [`SHA256SUMS`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/SHA256SUMS) 共同建立；后续开发继续位于持续维护的 [`main`](https://github.com/zemu2718/think-it-through-skill/tree/main/skills/think-it-through)。发布状态表示产品合同和确定性准入链已经确立，不代表所有客户端均已认证，也不会把未运行的兼容层级自动改为通过。
 
 <details>
 <summary>兼容层级与当前公开状态</summary>
