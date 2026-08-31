@@ -35,14 +35,15 @@ This file is a concise derivative of `REQUIREMENTS.md` and `PRODUCT.md`, not a s
 
 ## Visual System
 
-- **Name**: Decision Thread
-- **Primary mark**: Decision Hinge—a small geometric pause where surface tasks, objectives, constraints, and unknowns converge before one path commits
-- **Solid current path**: A conditional judgment, never absolute certainty
-- **Dashed optional Gate**: Evidence or participation only when needed and authorized; always visually secondary
-- **Returning loop**: Real-world results reopen the decision
-- **Accessibility**: Meaning must also be carried by shape, line style, weight, position, and labels; color is never the only signal
-- **Asset roles**: Brand Mark creates recognition; Decision Case makes one concrete pain and transformation visible; Social Preview carries the mark and positioning into sharing contexts. No asset should duplicate the full formal protocol.
-- **Visual standard**: Premium through restraint—deep ink, warm neutral space, disciplined teal, rare amber, clear hierarchy, and only meaning-bearing geometry. Avoid generic AI workflows, robots, neural networks, pseudo interfaces, gradients, glow, glass effects, and decorative node clouds.
+- **Primary idea — Thinking Light / Clarity Aperture**: Multiple adjustable observation frames represent “thinking”; when they align, a clear central opening represents “seeing clearly.” The structure remains visibly open, and a small pivot signals that reality may revise the current view.
+- **Secondary grammar — Decision Thread**: Two paths, a conditional judgment, a dashed optional Gate, and a returning line explain how a decision moves. This is explanatory syntax, not the primary logo.
+- **Decision Hinge**: The point where the surface request turns into the underlying decision. It remains useful inside diagrams, but no longer carries the full brand alone.
+- **Solid current path**: A conditional judgment, never absolute certainty.
+- **Dashed optional Gate**: Evidence or participation only when needed and authorized; always visually secondary.
+- **Returning loop**: Real-world results reopen the decision.
+- **Accessibility**: Meaning must also be carried by shape, line style, weight, position, and labels; color is never the only signal.
+- **Asset roles**: README Banner is the opening brand experience; Brand Mark provides compact recognition; Decision Case explains one concrete pain and transformation; Social Preview carries brand plus positioning into sharing contexts. No asset should duplicate the full formal protocol.
+- **Visual standard**: Premium through restraint—deep ink, warm neutral space, graphite, disciplined dark teal, rare amber, clear hierarchy, and only meaning-bearing geometry. Natural 3D material shading and one contact shadow are acceptable in the canonical Banner; decorative gradients, glow, glass effects, stacked shadows, generic AI workflows, robots, neural networks, pseudo interfaces, and node clouds are not.
 - **Badge boundary**: The README may show only functional, verifiable status badges for the validation workflow, Agent Skill type, current stable source, and MIT license. Badges never imply a Release, runtime certification, discovery success, or real-model behavior.
 
 ## Evidence and Claim Boundaries
@@ -51,7 +52,7 @@ This file is a concise derivative of `REQUIREMENTS.md` and `PRODUCT.md`, not a s
 - The loaded-Skill contextual checkpoint is part of the v0.3.0 formal contract; real multi-turn behavior and natural-language discovery remain `not_run`.
 - Frozen v0.1 discovery evidence remains 9/16 overall, with 1/8 positives and 8/8 negatives.
 - Static contracts, schemas, fixtures, graders, diagrams, local installation, and installer mappings do not prove runtime loading, model behavior, native UI, or compatibility.
-- A local Social Preview PNG does not prove that GitHub repository settings use it.
+- Locally generated README or Social Preview images do not prove that GitHub repository settings use them.
 - Never invent users, testimonials, metrics, compatibility, model runs, or successful outcomes.
 
 ## Experience Goal

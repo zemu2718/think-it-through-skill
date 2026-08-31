@@ -22,10 +22,12 @@
     <text x="604" y="213" fill="#616C76" font-size="22">Buyer willingness to pay stays unknown</text>
     <circle cx="1091" cy="151" r="8" fill="#F5F4EF" stroke="#9AA3AA" stroke-width="4"/>
   </g>
-  <g id="decision-hinge">
-    <path d="M439 257 C449 247 465 247 475 257 L504 286 C511 293 511 305 504 312 L475 341 C465 351 449 351 439 341 L410 312 C403 305 403 293 410 286 Z" fill="#F5F4EF" stroke="#0F766E" stroke-width="8"/>
-    <path d="M455 258 V294 H486" fill="none" stroke="#0F766E" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="458" cy="313" r="5" fill="#0F766E"/>
+  <g id="decision-hinge" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M458 248 C490 248 512 270 512 299 C512 321 501 334 491 347 V350" stroke="#626A67" stroke-width="7"/>
+    <path d="M458 260 C482 260 500 277 500 299 C500 315 492 325 484 336 V350" stroke="#929793" stroke-width="6"/>
+    <path d="M458 270 C442 270 430 283 430 299 C430 311 437 319 445 328 V350 H477 V328 C485 319 492 311 492 299 C492 283 478 270 458 270 Z" fill="#F5F4EF" stroke="#0F766E" stroke-width="7"/>
+    <path d="M458 276 C474 276 486 286 486 299 C486 309 480 316 472 326 V346" stroke="#0F766E" stroke-width="5"/>
+    <circle cx="461" cy="336" r="5" fill="#A66A25" stroke="#F5F4EF" stroke-width="2"/>
   </g>
   <g id="decision-first-path" font-family="ui-sans-serif, system-ui, sans-serif">
     <path d="M504 300 C574 300 587 425 678 425 H1091" fill="none" stroke="#0F766E" stroke-width="9" stroke-linecap="round"/>

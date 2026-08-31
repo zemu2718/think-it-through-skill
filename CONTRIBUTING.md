@@ -45,7 +45,7 @@ Then:
    ```
 
 4. Keep English and Chinese README instructions synchronized when changing user-facing commands, compatibility, benchmarks, or security boundaries.
-5. Treat `assets/manifest.json` as the visual inventory. Edit `social-preview.svg`, then generate `social-preview.png`; do not hand-edit the PNG. Uploading that PNG to GitHub repository settings is a separate external action.
+5. Treat `assets/manifest.json` as the visual inventory. Keep the canonical README Banner source hash and provenance accurate; edit `social-preview.svg` as its source; then run `scripts/render_assets.py`. Do not hand-edit any manifest-declared derived PNG. Uploading Social Preview to GitHub repository settings is a separate external action.
 6. Describe what changed, why it changes a decision, and how it was verified.
 
 Real Claude Code or Codex smoke is deliberately excluded from ordinary CI. Use the manual `Runtime smoke` workflow only after a person explicitly authorizes that one provider call and accepts the disclosed test prompt, four-turn limit, cost boundary, stop conditions, and fallback. The workflow injects only the selected provider secret and retains only redacted user/final-output artifacts; it does not promote `runtime-support.json` automatically.
@@ -137,7 +137,7 @@ By contributing, you agree that your contribution is licensed under the reposito
    ```
 
 4. 修改用户命令、兼容性、benchmark 或安全边界时，同步英文和中文 README。
-5. 把 `assets/manifest.json` 作为视觉资产清单；修改 `social-preview.svg` 后生成 `social-preview.png`，不要手改 PNG。把 PNG 上传到 GitHub 仓库设置属于另一个外部行动。
+5. 把 `assets/manifest.json` 作为视觉资产清单；保持 README Banner canonical source 的哈希与来源准确，以 `social-preview.svg` 作为对应源文件，再运行 `scripts/render_assets.py`。不要手改 manifest 声明的任何派生 PNG。把 Social Preview 上传到 GitHub 仓库设置属于另一个外部行动。
 6. 在 PR 中说明改了什么、为什么会改变决策，以及如何验证。
 
 真实 Claude Code 或 Codex smoke 刻意不进入普通 CI。只有在真人明确授权该次 provider 调用，并接受已披露的测试议题、四轮上限、成本边界、停止条件与失败降级后，才使用手动 `Runtime smoke` workflow。workflow 只注入所选 provider 的 secret，只保留脱敏后的用户输入与最终输出 artifact，也不会自动提升 `runtime-support.json`。

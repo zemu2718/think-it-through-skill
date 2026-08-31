@@ -3,9 +3,9 @@
 [简体中文](README.zh-CN.md)
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/brand-mark-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="assets/brand-mark-light.svg">
-  <img src="assets/brand-mark-light.svg" alt="Three inputs meet at a decision hinge, turn into one committed path, and return for reassessment." width="104">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme-banner-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="assets/readme-banner-light.png">
+  <img src="assets/readme-banner-light.png" alt="Layered observation frames align around a clear opening, with a small pivot that keeps the judgment open to revision." width="1200">
 </picture>
 
 # Think It Through · 想清楚
@@ -33,7 +33,7 @@ It is a decision layer, not a project-management or task-execution layer. It hel
 
 AI can now produce plans, code, campaigns, research, and polished deliverables before the underlying choice is clear. That makes a wrong direction faster, more convincing, and more expensive—not less wrong.
 
-Think It Through inserts one deliberate hinge before commitment: separate the requested action from the result you actually want, identify the unknown that could change the choice, then let reality answer what reasoning alone cannot.
+Think It Through creates a clear opening before commitment: hold the request, desired result, constraints, and unknowns in view until the real decision comes into focus—then let reality answer what reasoning alone cannot.
 
 ## A concrete case
 

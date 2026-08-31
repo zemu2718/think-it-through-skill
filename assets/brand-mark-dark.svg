@@ -1,19 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
-  <title id="title">Think It Through decision hinge</title>
-  <desc id="desc">Three inputs converge at a decision hinge, turn into one committed path, and return in a short reassessment loop.</desc>
-  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <g id="input-paths" stroke="#8894A0" stroke-width="5">
-      <path d="M12 28 C30 28 39 43 54 56"/>
-      <path d="M12 64 H53"/>
-      <path d="M12 100 C30 100 39 85 54 72"/>
-    </g>
-    <path id="committed-path" d="M75 63 C88 63 89 43 104 43 H116" stroke="#E8ECEF" stroke-width="7"/>
-    <path id="reassessment-loop" d="M114 51 C119 86 96 108 70 96 C61 92 56 85 55 78" stroke="#58C7B5" stroke-width="5"/>
+  <title id="title">Think It Through thinking light</title>
+  <desc id="desc">Three adjustable observation frames align around a clear opening, with a small pivot left open for reassessment.</desc>
+  <g id="observation-frames" fill="none" stroke="#929A98" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M64 12 C92 12 112 34 112 61 C112 80 102 90 93 102 V116" stroke-width="8"/>
+    <path d="M64 23 C85 23 101 39 101 60 C101 75 93 84 84 94 V116" stroke="#68716F" stroke-width="7"/>
+    <path d="M64 34 C78 34 89 45 89 59 C89 69 83 76 76 84 V116" stroke="#464F4E" stroke-width="6"/>
   </g>
-  <g id="decision-hinge">
-    <path d="M55 50 C60 45 68 45 73 50 L82 59 C85 62 85 66 82 69 L73 78 C68 83 60 83 55 78 L46 69 C43 66 43 62 46 59 Z" fill="#0B1117" stroke="#58C7B5" stroke-width="6"/>
-    <path d="M62 51 V63 H74" fill="none" stroke="#58C7B5" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="64" cy="70" r="3.5" fill="#58C7B5"/>
+  <path id="clarity-aperture" d="M64 34 C50 34 39 45 39 59 C39 69 45 76 52 84 V116 H76 V84 C83 76 89 69 89 59 C89 45 78 34 64 34 Z" fill="#0B1117" stroke="#58C7B5" stroke-width="4" stroke-linejoin="round"/>
+  <path id="clarity-channel" d="M64 38 C76 38 85 47 85 59 C85 68 79 74 72 82 V113" fill="none" stroke="#58C7B5" stroke-width="4" stroke-linecap="round"/>
+  <g id="reassessment-pivot">
+    <circle cx="64" cy="105" r="11" fill="#E8ECEF" stroke="#0B1117" stroke-width="2"/>
+    <circle cx="64" cy="105" r="2.8" fill="#D3A051"/>
   </g>
-  <path d="M51 83 L55 77 L61 82" fill="none" stroke="#58C7B5" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

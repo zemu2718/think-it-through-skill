@@ -12,12 +12,13 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from PIL import Image
 from jsonschema import Draft202012Validator, FormatChecker
 from jsonschema.exceptions import SchemaError, ValidationError
 from referencing import Registry, Resource
 
 from build_distribution import load_manifest, source_files
-from render_assets import check_social_preview, decoded_pixels
+from render_assets import check_generated_assets, decoded_image
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILL_DIR = ROOT / "skills" / "think-it-through"
@@ -1825,6 +1826,22 @@ def _svg_subtree_has_path(element: ET.Element | None) -> bool:
     return element is not None and any(child.tag.rsplit("}", 1)[-1] == "path" for child in element.iter())
 
 
+def _manifest_asset(entries: list[object], asset_id: str) -> dict[str, object] | None:
+    matches = [entry for entry in entries if isinstance(entry, dict) and entry.get("id") == asset_id]
+    return matches[0] if len(matches) == 1 else None
+
+
+def _asset_path(validation: Validation, value: object, label: str) -> Path | None:
+    if not isinstance(value, str):
+        validation.require(False, f"{label} 必须是路径字符串")
+        return None
+    path = (ROOT / value).resolve()
+    root_resolved = ROOT.resolve()
+    validation.require(root_resolved in path.parents, f"{label} 不得逃逸仓库：{value}")
+    validation.require(path.parent == (ROOT / "assets").resolve(), f"{label} 必须位于 assets/：{value}")
+    return path
+
+
 def validate_assets(validation: Validation, files: list[Path]) -> None:
     manifest_path = ROOT / "assets" / "manifest.json"
     validation.require(manifest_path.exists(), "缺少 assets/manifest.json")
@@ -1837,16 +1854,16 @@ def validate_assets(validation: Validation, files: list[Path]) -> None:
         return
 
     entries = manifest.get("assets")
-    validation.require(manifest.get("schema_version") == "1", "资产 manifest schema_version 必须是 1")
+    validation.require(manifest.get("schema_version") == "2", "资产 manifest schema_version 必须是 2")
     validation.require(isinstance(entries, list), "资产 manifest 必须包含 assets 数组")
     if not isinstance(entries, list):
         return
     expected_specs = {
         "brand-mark": {
-            "role": "readme-brand-mark",
+            "role": "repository-brand-mark",
             "variants": {("neutral", "light"), ("neutral", "dark")},
             "canvas": {"width": 128, "height": 128},
-            "required_ids": {"input-paths", "decision-hinge", "committed-path", "reassessment-loop"},
+            "required_ids": {"observation-frames", "clarity-aperture", "clarity-channel", "reassessment-pivot"},
             "max_bytes": 16384,
         },
         "decision-case": {
@@ -1864,7 +1881,7 @@ def validate_assets(validation: Validation, files: list[Path]) -> None:
             "variants": {("bilingual", "dark")},
             "canvas": {"width": 1280, "height": 640},
             "required_ids": {
-                "wordmark", "tagline", "input-paths", "decision-hinge", "committed-path",
+                "wordmark", "tagline", "thinking-light", "clarity-aperture", "decision-thread",
                 "optional-gate", "reassessment-loop",
             },
             "max_source_bytes": 49152,
@@ -1873,8 +1890,8 @@ def validate_assets(validation: Validation, files: list[Path]) -> None:
     }
     entry_ids = [entry.get("id") for entry in entries if isinstance(entry, dict)]
     validation.require(
-        entry_ids == ["brand-mark", "decision-case", "social-preview"],
-        "资产 manifest 必须按职责定义 Brand Mark、Decision Case 和 Social Preview",
+        entry_ids == ["readme-banner", "brand-mark", "decision-case", "social-preview"],
+        "资产 manifest 必须按职责定义 README Banner、Brand Mark、Decision Case 和 Social Preview",
     )
     validation.require(len(entry_ids) == len(set(entry_ids)), "资产 manifest 的资产 ID 必须唯一")
 
@@ -1883,7 +1900,72 @@ def validate_assets(validation: Validation, files: list[Path]) -> None:
     declared_paths: set[Path] = {manifest_path.resolve(), (ROOT / "assets" / "README.md").resolve()}
     output_paths: list[Path] = []
     root_resolved = ROOT.resolve()
+
+    banner = _manifest_asset(entries, "readme-banner")
+    validation.require(banner is not None, "资产 manifest 缺少唯一 README Banner")
+    if banner is not None:
+        validation.require(banner.get("role") == "readme-opening-brand-banner", "README Banner role 不正确")
+        validation.require(banner.get("source_canvas") == {"width": 1774, "height": 887}, "README Banner source_canvas 不正确")
+        validation.require(banner.get("output_canvas") == {"width": 1200, "height": 600}, "README Banner output_canvas 不正确")
+        validation.require(banner.get("source_sha256") == "af20a9b5224c77e9367f7e9c748461cba63c16533355bb38fc84d6f56d435d6b", "README Banner canonical source SHA-256 合同不正确")
+        validation.require(banner.get("max_source_bytes") == 1600000, "README Banner max_source_bytes 预算不正确")
+        validation.require(banner.get("max_output_bytes") == 900000, "README Banner max_output_bytes 预算不正确")
+        source = _asset_path(validation, banner.get("source"), "README Banner source")
+        if source is not None:
+            declared_paths.add(source)
+            validation.require(source.name == "readme-banner-source.png", "README Banner canonical source 路径不正确")
+            validation.require(source.exists(), "缺少 README Banner canonical source")
+            if source.exists():
+                data = source.read_bytes()
+                validation.require(len(data) <= 1600000, "README Banner canonical source 超出字节预算")
+                validation.require(hashlib.sha256(data).hexdigest() == banner.get("source_sha256"), "README Banner canonical source SHA-256 不匹配")
+                try:
+                    size, mode, _ = decoded_image(data)
+                    validation.require(size == (1774, 887), "README Banner canonical source 必须是 1774×887")
+                    validation.require(mode == "RGB", "README Banner canonical source 必须是 RGB")
+                except Exception as error:
+                    validation.require(False, f"README Banner canonical source 无法完整解码：{error}")
+        variants = banner.get("variants")
+        validation.require(isinstance(variants, list) and len(variants) == 2, "README Banner 必须提供 light/dark 两个派生变体")
+        banner_keys: set[tuple[object, object]] = set()
+        if isinstance(variants, list):
+            for variant in variants:
+                if not isinstance(variant, dict):
+                    validation.require(False, "README Banner 含无效变体")
+                    continue
+                key = (variant.get("locale"), variant.get("theme"))
+                banner_keys.add(key)
+                output = _asset_path(validation, variant.get("output"), "README Banner output")
+                if output is not None:
+                    validation.require(output not in declared_paths, f"资产路径不得重复声明：{variant.get('output')}")
+                    declared_paths.add(output)
+                    output_paths.append(output)
+            validation.require(banner_keys == {("neutral", "light"), ("neutral", "dark")}, "README Banner 语言/主题变体不正确")
+        expected_banner_generator = {
+            "script": "scripts/render_assets.py", "decoder": "Pillow", "decoder_version": "11.3.0",
+            "source_pixel_mode": "RGB", "output_pixel_mode": "RGB", "resize_filter": "LANCZOS",
+            "png_optimize": True, "png_compress_level": 9,
+            "light_theme": {
+                "background_rgb": [242, 239, 231], "background_luma_max": 104,
+                "background_chroma_max": 32, "feather_radius": 5,
+                "aperture_box": [760, 210, 1014, 805], "neutral_luma_scale": 0.72,
+                "neutral_luma_offset": 46, "contact_shadow_box": [610, 748, 1164, 838],
+                "contact_shadow_alpha": 30, "contact_shadow_blur": 22,
+            },
+        }
+        validation.require(banner.get("generator") == expected_banner_generator, "README Banner generator 合同不正确")
+        provenance = banner.get("provenance")
+        validation.require(
+            isinstance(provenance, dict)
+            and provenance.get("generator") == "imagegen Skill CLI"
+            and provenance.get("model") == "gpt-image-1.5"
+            and "no copied composition or brand elements" in str(provenance.get("reference_scope")),
+            "README Banner 缺少准确 provenance",
+        )
+
     for entry in entries:
+        if isinstance(entry, dict) and entry.get("id") == "readme-banner":
+            continue
         if not isinstance(entry, dict):
             validation.require(False, "资产 manifest 的每个条目必须是对象")
             continue
@@ -2037,20 +2119,41 @@ def validate_assets(validation: Validation, files: list[Path]) -> None:
         validation.require(_svg_subtree_has_path(_svg_element_by_id(social_root, "tagline")), "Social Preview tagline 必须包含实际 path")
         validation.require(_svg_subtree_has_attribute(_svg_element_by_id(social_root, "optional-gate"), "stroke-dasharray"), "Social Preview 的可选 Gate 必须实际使用虚线")
 
-    social_png = output_paths[0] if len(output_paths) == 1 else ROOT / "assets" / "social-preview.png"
-    validation.require(len(output_paths) == 1, "Social Preview manifest 必须且只能声明一个 PNG 输出")
-    validation.require(social_png.exists(), "缺少 Social Preview PNG")
-    if social_png.exists():
+    expected_outputs = {
+        (ROOT / "assets" / "readme-banner-light.png").resolve(): ((1200, 600), "RGB"),
+        (ROOT / "assets" / "readme-banner-dark.png").resolve(): ((1200, 600), "RGB"),
+        (ROOT / "assets" / "social-preview.png").resolve(): ((1280, 640), "RGBA"),
+    }
+    validation.require(set(output_paths) == set(expected_outputs), "派生 PNG 输出必须精确包含两个 README Banner 与一个 Social Preview")
+    decoded: dict[Path, tuple[tuple[int, int], str, str]] = {}
+    for output, (expected_size, expected_mode) in expected_outputs.items():
+        validation.require(output.exists(), f"缺少派生 PNG：{output.name}")
+        if not output.exists():
+            continue
         try:
-            size, _ = decoded_pixels(social_png.read_bytes())
-            validation.require(size == (1280, 640), "Social Preview PNG 必须是 1280×640")
+            image = decoded_image(output.read_bytes())
+            decoded[output] = image
+            size, mode, _ = image
+            validation.require(size == expected_size, f"{output.name} 必须是 {expected_size[0]}×{expected_size[1]}")
+            validation.require(mode == expected_mode, f"{output.name} pixel mode 必须是 {expected_mode}")
         except Exception as error:
-            validation.require(False, f"Social Preview PNG 无法完整解码：{error}")
+            validation.require(False, f"{output.name} 无法完整解码：{error}")
+    light_path = (ROOT / "assets" / "readme-banner-light.png").resolve()
+    dark_path = (ROOT / "assets" / "readme-banner-dark.png").resolve()
+    if light_path in decoded and dark_path in decoded:
+        validation.require(decoded[light_path][2] != decoded[dark_path][2], "README Banner light/dark 不得是相同像素")
+        try:
+            with Image.open(light_path) as light_image, Image.open(dark_path) as dark_image:
+                light_corner = sum(light_image.convert("RGB").getpixel((0, 0)))
+                dark_corner = sum(dark_image.convert("RGB").getpixel((0, 0)))
+                validation.require(light_corner > dark_corner, "README Banner light 主题角落必须比 dark 主题更亮")
+        except Exception as error:
+            validation.require(False, f"README Banner 主题像素无法复核：{error}")
     try:
-        for error in check_social_preview(ROOT):
+        for error in check_generated_assets(ROOT):
             validation.require(False, error)
     except Exception as error:
-        validation.require(False, f"Social Preview 无法重渲染检查：{error}")
+        validation.require(False, f"派生视觉资产无法重渲染检查：{error}")
 
 
 def validate_repo_hygiene(validation: Validation, files: list[Path]) -> None:
@@ -2277,6 +2380,7 @@ def validate_public_docs(validation: Validation) -> None:
             "no_release": "no public Git tag, GitHub Release",
             "checkpoint": "formal contract defines a lightweight contextual checkpoint",
             "feedback": "installation or runtime feedback",
+            "banner_alt": "Layered observation frames align around a clear opening",
         },
         {
             "name": "README.zh-CN.md",
@@ -2295,6 +2399,7 @@ def validate_public_docs(validation: Validation) -> None:
             "no_release": "没有公开 Git tag、GitHub Release",
             "checkpoint": "正式合同只在 Skill 已经加载",
             "feedback": "反馈安装或 runtime 问题",
+            "banner_alt": "多层观察框架逐步对齐成一个清晰开口",
         },
     )
     old_sections = {
@@ -2320,7 +2425,29 @@ def validate_public_docs(validation: Validation) -> None:
         first_h2 = readme.find("## ")
         preface = readme[:first_h2] if first_h2 >= 0 else readme
         validation.require(first_h2 > 0, f"{name} 缺少 H2 章节")
-        validation.require("assets/brand-mark-light.svg" in preface and "assets/brand-mark-dark.svg" in preface, f"{name} 首屏缺少 light/dark Brand Mark")
+        validation.require(
+            "assets/readme-banner-dark.png" in preface
+            and "assets/readme-banner-light.png" in preface
+            and '<img src="assets/readme-banner-light.png"' in preface
+            and 'width="1200"' in preface,
+            f"{name} 首屏缺少正确的 light/dark README Banner 或 light fallback",
+        )
+        validation.require("assets/brand-mark-" not in preface, f"{name} 首屏不得继续使用 Brand Mark 代替 README Banner")
+        picture_position = preface.find("<picture>")
+        heading_position = preface.find("# ")
+        badge_position = preface.find("[![Validate]")
+        entry_position = preface.find("/think-it-through")
+        validation.require(
+            -1 < picture_position < heading_position < badge_position < entry_position,
+            f"{name} 首屏必须保持语言切换 → Banner → H1 → 定位/徽章 → 显式入口顺序",
+        )
+        alt_match = re.search(r'<img src="assets/readme-banner-light\.png" alt="([^"]+)" width="1200">', preface)
+        validation.require(
+            alt_match is not None
+            and bool(alt_match.group(1).strip())
+            and contract["banner_alt"] in alt_match.group(1),
+            f"{name} README Banner 必须提供准确的非空本地化 alt",
+        )
         validation.require(all(asset in readme for asset in contract["case_assets"]), f"{name} 缺少对应语言/主题 Decision Case")
         validation.require(all(asset not in readme for asset in contract["wrong_case_assets"]), f"{name} 引用了错误语言 Decision Case")
         validation.require(not any(asset in readme for asset in old_assets), f"{name} 不得引用旧视觉资产")

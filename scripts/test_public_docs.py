@@ -51,11 +51,11 @@ class PublicDocsTests(unittest.TestCase):
         errors = self.validate_doc_mutation("README.md", "## What it is", "## Quick Start").errors
         self.assertTrue(any("旧版入口章节" in error or "十个 H2" in error for error in errors), errors)
 
-    def test_brand_mark_and_language_assets_fail(self) -> None:
+    def test_readme_banner_and_language_assets_fail(self) -> None:
         errors = self.validate_doc_mutation(
-            "README.md", "assets/brand-mark-light.svg", "assets/hero-light.svg"
+            "README.md", "assets/readme-banner-light.png", "assets/brand-mark-light.svg"
         ).errors
-        self.assertTrue(any("Brand Mark" in error or "旧视觉资产" in error for error in errors), errors)
+        self.assertTrue(any("README Banner" in error or "Brand Mark" in error for error in errors), errors)
         errors = self.validate_doc_mutation(
             "README.md", "assets/decision-case-light.svg", "assets/decision-case-light.zh-CN.svg"
         ).errors
@@ -64,6 +64,23 @@ class PublicDocsTests(unittest.TestCase):
             "README.zh-CN.md", "assets/decision-case-dark.zh-CN.svg", "assets/decision-case-dark.svg"
         ).errors
         self.assertTrue(any("错误语言 Decision Case" in error or "对应语言" in error for error in errors), errors)
+
+    def test_banner_fallback_width_alt_and_preface_order_fail(self) -> None:
+        mutations = (
+            ("README.md", '<img src="assets/readme-banner-light.png"', '<img src="assets/readme-banner-dark.png"', "light fallback"),
+            ("README.md", 'width="1200"', 'width="104"', "README Banner"),
+            (
+                "README.zh-CN.md",
+                'alt="多层观察框架逐步对齐成一个清晰开口，并保留一个让判断可以再次修正的小轴点。"',
+                'alt=""',
+                "本地化 alt",
+            ),
+            ("README.md", "# Think It Through · 想清楚", "## What it is", "首屏"),
+        )
+        for relative, old, new, expected in mutations:
+            with self.subTest(relative=relative, expected=expected):
+                errors = self.validate_doc_mutation(relative, old, new).errors
+                self.assertTrue(any(expected in error for error in errors), errors)
 
     def test_badge_count_style_workflow_commit_and_license_fail(self) -> None:
         validate_line = "[![Validate](https://img.shields.io/github/actions/workflow/status/zemu2718/think-it-through-skill/validate.yml?branch=main&style=flat-square&label=Validate)](https://github.com/zemu2718/think-it-through-skill/actions/workflows/validate.yml?query=branch%3Amain)"

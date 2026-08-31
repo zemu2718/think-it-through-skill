@@ -54,16 +54,6 @@
           ],
           "neutral_luma_scale": 0.72,
           "neutral_luma_offset": 46,
-          "teal_rgb": [
-            20,
-            104,
-            98
-          ],
-          "amber_rgb": [
-            166,
-            104,
-            29
-          ],
           "contact_shadow_box": [
             610,
             748,

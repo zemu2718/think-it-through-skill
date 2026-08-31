@@ -3,9 +3,9 @@
 [English](README.md)
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/brand-mark-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="assets/brand-mark-light.svg">
-  <img src="assets/brand-mark-light.svg" alt="三类输入汇入一个决策转轴，转向一条明确路径，并通过短回路返回复判。" width="104">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme-banner-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="assets/readme-banner-light.png">
+  <img src="assets/readme-banner-light.png" alt="多层观察框架逐步对齐成一个清晰开口，并保留一个让判断可以再次修正的小轴点。" width="1200">
 </picture>
 
 # 想清楚 · Think It Through
@@ -33,7 +33,7 @@ Validate 徽章只反映远端已提交 `main` 的 workflow 状态，不代表�
 
 AI 已经可以很快产出方案、代码、投放文案、调研和漂亮的交付物，即使真正的选择还没有说清。于是，错误方向也会更快、更有说服力、更昂贵地推进。
 
-“想清楚”在承诺资源前放入一个决策转轴：先把请求的动作与真正想得到或保护的结果分开，识别哪个未知会改变选择，再把仅靠推理无法回答的问题交给现实。
+“想清楚”会在承诺资源前留出一个看清决定的开口：把眼前动作、真正想得到或保护的结果、约束和未知同时放在视野里，直到真正的选择浮现，再把仅靠推理无法回答的问题交给现实。
 
 ## 一个具体案例
 

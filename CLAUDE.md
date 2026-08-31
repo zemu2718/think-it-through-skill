@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 当前可靠调用方式是 `/think-it-through`。自动发现的冻结 v0.1 holdout 仅为 9/16（正例 1/8、负例 8/8），不要把自然语言自动加载或其他客户端兼容性描述为已经通过。
 
-README、品牌表达或视觉资产改动前先读 `.agents/brand-context.md`，但它只是 `REQUIREMENTS.md` 与 `PRODUCT.md` 的派生摘要，不是第二份合同。视觉资产由 `assets/manifest.json` 定义职责与变体；Social Preview 只编辑 SVG 源，通过 `scripts/render_assets.py` 生成 PNG，不手改派生文件，也不把本地生成误写成 GitHub 已启用。
+README、品牌表达或视觉资产改动前先读 `.agents/brand-context.md`，但它只是 `REQUIREMENTS.md` 与 `PRODUCT.md` 的派生摘要，不是第二份合同。视觉资产由 `assets/manifest.json` 定义职责与变体；README Banner 保留固定哈希的 canonical raster source，Social Preview 只编辑 SVG 源，所有 manifest 声明的派生 raster 都通过 `scripts/render_assets.py` 生成，不手改派生文件，也不把本地生成误写成 GitHub 已启用。
 
 ## 常用命令
 

@@ -1,12 +1,15 @@
 # Visual assets
 
-The repository uses an original geometric language called **Decision Thread**. Its primary symbol is the **Decision Hinge**: several surface inputs meet at a deliberate pause, one direction commits, and real results return to revise the judgment.
+The repository uses **Thinking Light / Clarity Aperture** as its primary visual identity. Adjustable observation frames represent the work of thinking; their alignment creates a clear opening, while a small pivot keeps the current view open to revision.
+
+**Decision Thread** is the secondary explanatory grammar: a surface request can follow an execution-first or decision-first path, an optional Gate stays visibly conditional, and real results return for reassessment. The Decision Hinge remains the turn inside that grammar, not the entire brand.
 
 ## Visual meaning
 
-- converging inputs: surface tasks, objectives, constraints, and unknowns;
-- a decision hinge: the answer that can change direction or commitment;
-- one solid path: the current conditional judgment, not absolute certainty;
+- observation frames: several relevant views held at once rather than collapsed too early;
+- clarity aperture and channel: alignment makes the underlying decision visible;
+- a small pivot: the current understanding remains correctable;
+- two weighted paths: execution-first versus decision-first movement;
 - a small dashed branch: optional evidence or participation, only when useful and authorized;
 - a returning loop: real-world results can reopen the decision.
 
@@ -14,21 +17,30 @@ Shape, weight, line style, position, and labels carry meaning alongside color. N
 
 ## Source of truth
 
-[`manifest.json`](manifest.json) is the machine-readable asset inventory. It records each asset's role, language and theme variants, canvas, stable structure IDs, byte budget, and—where applicable—generator.
+[`manifest.json`](manifest.json) is the machine-readable asset inventory. It records each asset's role, language and theme variants, canvas, stable structure IDs, byte budget, and—where applicable—canonical source hash and deterministic generator.
 
-| Role | Editable source | Output |
+| Role | Editable or canonical source | Output |
 | --- | --- | --- |
+| README Banner | `readme-banner-source.png` | `readme-banner-light.png`, `readme-banner-dark.png` |
 | Brand Mark | `brand-mark-light.svg`, `brand-mark-dark.svg` | the same SVG files |
 | Decision Case | four `decision-case-*.svg` locale/theme variants | the same SVG files |
 | Social Preview | `social-preview.svg` | `social-preview.png` |
 
-The Brand Mark carries recognition at small sizes. The Decision Case visualizes one synthetic SaaS decision and requires an adjacent text equivalent in each README; it is not a testimonial, runtime transcript, or behavior evidence. Social Preview is a restrained sharing card, not an installation or compatibility matrix.
+The README Banner is the opening brand experience. The Brand Mark carries recognition in compact contexts such as avatars and icons. The Decision Case visualizes one synthetic SaaS decision and requires an adjacent text equivalent in each README; it is not a testimonial, runtime transcript, or behavior evidence. Social Preview is a restrained sharing card, not an installation or compatibility matrix.
 
-## Social Preview generation
+All top-level SVG and PNG files under `assets/` must be declared by the manifest. Do not keep a second canonical copy under `output/` or reference exploration files from public documentation.
 
-`social-preview.svg` is the only editable source; do not hand-edit the PNG. Its wordmark and tagline use original SVG paths, not `<text>`, external fonts, remote resources, or embedded raster images.
+## README Banner provenance and generation
 
-Generate the PNG in a Python 3.12 environment with the pinned validation dependencies:
+`readme-banner-source.png` is the unchanged 1774×887 RGB canonical source selected by the project owner from an original imagegen exploration. Its SHA-256 is pinned in the manifest. The Darwin Skill README was referenced only for first-image use and canvas intent; no composition, mark, or brand element was copied. The selected image's actual composition is 2:1, so the maintained outputs remain 2:1 rather than being stretched or cropped to an earlier prompt ratio.
+
+The dark output is an aspect-preserving LANCZOS resize to 1200×600. The light output comes from the same source through a fixed, region-aware theme transform: only low-luminance, low-chroma background connected to the canvas edges is replaced with warm neutral space; the central aperture, subject material, restrained teal, rare amber, and a single contact shadow remain. This is not global inversion or a second generated source.
+
+The canonical source is not a generated output and must not be re-encoded casually. If it is intentionally replaced, update its dimensions, mode, SHA-256, provenance, budgets, derived outputs, tests, and documentation together.
+
+## Generated raster workflow
+
+`readme-banner-light.png`, `readme-banner-dark.png`, and `social-preview.png` are derived files. Do not hand-edit any of them. Edit the canonical Banner source or `social-preview.svg`, then regenerate all declared outputs in the pinned Python 3.12 environment:
 
 ```bash
 uv run --python 3.12 --with-requirements requirements-validation.txt \
@@ -42,15 +54,15 @@ uv run --python 3.12 --with-requirements requirements-validation.txt \
   python scripts/render_assets.py --check
 ```
 
-The renderer uses `resvg-py` with system fonts disabled. Pillow verifies the complete PNG stream, reopens and loads it, converts it to RGBA, and compares dimensions plus decoded pixel hashes. Different PNG compression is accepted when the pixels are identical.
+The Social Preview source uses original SVG paths for the wordmark and tagline, not `<text>`, external fonts, remote resources, or embedded raster images. `resvg-py` renders it with system fonts disabled. Pillow completely decodes each generated PNG, then compares dimensions and decoded pixel hashes. Different PNG compression is accepted when decoded pixels are identical. Source and output byte limits are defined in the manifest.
 
-A generated local PNG does not mean GitHub repository settings use it. Uploading it as the repository Social Preview remains an explicit external action.
+Locally generated PNGs prove only that repository outputs are fresh. Uploading Social Preview to GitHub repository settings is a separate external action, and local generation must not be described as if that action had occurred.
 
 ## Accessibility and negative standards
 
-All SVGs include `title` and `desc`. Brand Mark light/dark variants share geometry. Decision Case variants share non-text geometry and equivalent English/Chinese semantics. The optional Gate is dashed and secondary; the reassessment loop has a distinct returning shape.
+All SVGs include `title` and `desc`. Brand Mark light/dark variants share geometry. Decision Case variants share non-text geometry and equivalent English/Chinese semantics. The optional Gate is dashed and secondary; the reassessment loop has a distinct returning shape. README images use localized, meaningful alt text and have adjacent prose for the informational case.
 
-The visual character is premium through restraint: deep ink, warm neutral space, disciplined teal, rare amber, clear hierarchy, and only meaning-bearing geometry.
+The visual character is premium through restraint: deep ink, warm neutral space, graphite, disciplined teal, rare amber, clear hierarchy, and only meaning-bearing geometry. Natural continuous shading, grooves, and one contact shadow in the 3D Banner express physical form; they are not decorative effects.
 
 Reject an asset if it:
 
@@ -60,6 +72,6 @@ Reject an asset if it:
 - uses color as the only status signal;
 - invents a result, metric, user, testimonial, price, sample size, or deadline;
 - embeds paragraph-length product copy or pseudo UI;
-- uses gradients, glow, glass effects, stacked shadows, or decorative node clouds;
+- uses decorative gradients, glow, glass effects, stacked shadows, or decorative node clouds;
 - needs zooming before its primary relationship is understandable;
 - adds decoration whose removal would not change meaning.

@@ -8,6 +8,17 @@
 
 ## [Unreleased]
 
+### Added
+
+- 新增以 Thinking Light / Clarity Aperture 为一级识别的双主题 README Banner，并保留固定哈希 canonical source、来源说明和确定性派生参数。
+
+### Changed
+
+- 将 Brand Mark 调整为头像与紧凑场景资产，并把 Decision Thread / Decision Hinge 保留为 Decision Case 与 Social Preview 的二级解释语法。
+- 统一 Brand Mark、双语/主题 Decision Case 与 Social Preview 的暖中性色、深墨、克制深青和极少暖色视觉语言，同时保持可选 Gate、未知边界与结果复判语义。
+- 扩展资产生成与 freshness 检查，使 README Banner 与 Social Preview 的派生 PNG 均由同一脚本生成、完整解码并按像素校验；本地生成不代表 GitHub 已配置 Social Preview。
+- 更新双语 README 首图、品牌派生摘要、视觉资产说明与贡献维护流程；不改变产品行为、安全、授权、兼容性或 evidence 合同。
+
 ## [0.3.0] - 2026-08-31
 
 ### Added
