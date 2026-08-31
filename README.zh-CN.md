@@ -10,11 +10,13 @@
 
 # 想清楚 · Think It Through
 
-**先决定，再执行；让现实结果修正决定。**
+**AI 能把事情做得很快，但不能替你决定什么值得做。**
+
+重要投入之前，先确认真正要决定什么、哪个未知会改变方向；结果回来之后，再决定继续、调整、暂停还是停止。
 
 [![Validate](https://img.shields.io/github/actions/workflow/status/zemu2718/think-it-through-skill/validate.yml?branch=main&style=flat-square&label=Validate)](https://github.com/zemu2718/think-it-through-skill/actions/workflows/validate.yml?query=branch%3Amain)
 [![Agent Skill](https://img.shields.io/badge/type-Agent%20Skill-0F766E?style=flat-square)](skills/think-it-through/SKILL.md)
-[![Stable source v0.3.0](https://img.shields.io/badge/stable%20source-v0.3.0-172033?style=flat-square)](https://github.com/zemu2718/think-it-through-skill/tree/main/skills/think-it-through)
+[![Stable source v0.3.0](https://img.shields.io/badge/stable%20source-v0.3.0-172033?style=flat-square)](https://github.com/zemu2718/think-it-through-skill/tree/v0.3.0/skills/think-it-through)
 [![MIT License](https://img.shields.io/badge/license-MIT-172033?style=flat-square)](LICENSE)
 
 **当前可靠入口：**在 Claude Code 中显式调用 `/think-it-through`。
@@ -70,18 +72,60 @@ AI 已经可以很快产出方案、代码、投放文案、调研和漂亮的�
 ## 安装并完成第一次体验
 
 > [!IMPORTANT]
-> **v0.3.0 是维护分支 `main` 上的当前稳定源码和正式产品合同。** 目前没有公开 Git tag、GitHub Release 或可下载的 `.skill` asset。`main` 是移动引用，因此安装或反馈问题时请记录准确源码 commit。
+> **v0.3.0 是当前稳定源码和正式产品合同，已发布为不可变 Git tag、GitHub Release 与可下载的 `.skill` asset。** 安装成功只说明文件已经进入目标目录；runtime 是否真实加载、模型是否遵循、原生能力是否可用，仍是彼此独立的版本化事实。
 
-你需要 Git 和已安装的 Claude Code。非覆盖检查会在目标目录已存在时停止。
+### 使用 GitHub CLI 安装
+
+安装 [GitHub CLI 2.98.0 或更高版本](https://cli.github.com/)后，可以把固定版本安装到受支持的编程 Agent。下面以 Claude Code 和用户级安装为例：
 
 ```bash
-git clone --depth 1 --branch main https://github.com/zemu2718/think-it-through-skill.git
+gh skill install \
+  zemu2718/think-it-through-skill \
+  think-it-through@v0.3.0 \
+  --agent claude-code \
+  --scope user
+```
+
+可以把 `--agent` 换成当前 GitHub CLI 识别的其他目标。保留 `@v0.3.0`，就能固定安装来源，而不是跟随移动分支。
+
+### 从 Release asset 安装到不同客户端
+
+发布的 `.skill` 是 ZIP 兼容归档，只包含 manifest 声明的运行时文件。固定版本的 `skills` CLI 可以先交互选择安装目标：
+
+```bash
+npx -y skills@1.5.23 add \
+  https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill
+```
+
+如果要把复制式、用户级安装写入该安装器版本认识的全部目标：
+
+```bash
+npx -y skills@1.5.23 add \
+  https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill \
+  --agent '*' \
+  --global \
+  --copy \
+  --yes
+```
+
+`--agent '*'` 只表示 `skills@1.5.23` 认识的全部目标映射；不表示所有 AI 客户端都在其中，也不表示这些客户端已经通过真实 runtime 验证。需要交互选择时省略该参数；只装一个目标时，把 `'*'` 换成准确 target。
+
+安装前可以使用 Release 同时发布的 [`SHA256SUMS`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/SHA256SUMS) 核对下载归档。
+
+### 从不可变 tag 手动安装
+
+如果两个安装器都不支持你的宿主，请按该宿主的 Agent Skills 目录约定复制 Skill。Claude Code 的手动兜底命令如下：
+
+```bash
+git clone --depth 1 --branch v0.3.0 https://github.com/zemu2718/think-it-through-skill.git
 cd think-it-through-skill
 git rev-parse HEAD
 test ! -e ~/.claude/skills/think-it-through
 mkdir -p ~/.claude/skills
 cp -R skills/think-it-through ~/.claude/skills/
 ```
+
+非覆盖检查会在旧副本已存在时停止。不要混合两个版本；请先检查，再自行重命名或删除旧副本后重新安装。
 
 如果当前 Claude Code 会话启动时还没有顶层 Skill 目录，请重启 Claude Code。然后显式调用：
 
@@ -98,7 +142,7 @@ cp -R skills/think-it-through ~/.claude/skills/
 
 **第一次成功的信号：**它不会立即替你写投放方案，而会先帮你说清这次真正要做的决定。仅仅安装或调用，并不会自动授权联网、读取私有数据、增加 Agent、保存文件或执行外部行动。
 
-这里安装的是仓库稳定源码，不是 GitHub Release。文件复制成功只证明文件已复制，不能证明某个 runtime/version 已加载或遵循 Skill。目标目录已存在时不要混合两个版本；请先检查，再自行重命名或删除旧副本后重新安装。
+三条安装路径分发的是同一份 v0.3.0 运行时源码。文件复制成功只证明文件已复制，不能证明某个 runtime/version 已加载或遵循 Skill。
 
 ## 一次完整检查会发生什么
 
@@ -127,7 +171,7 @@ cp -R skills/think-it-through ~/.claude/skills/
 
 ## 版本、兼容性与证据
 
-**稳定源码：**v0.3.0，位于持续维护的 [`main`](https://github.com/zemu2718/think-it-through-skill/tree/main/skills/think-it-through)。**公开发布对象：**目前没有 Git tag、GitHub Release 或可下载的 `.skill` asset。稳定源码表示产品合同和确定性准入链已经确立，不代表所有客户端均已认证，也不会把未运行的兼容层级自动改为通过。
+**稳定发布：**[`v0.3.0`](https://github.com/zemu2718/think-it-through-skill/releases/tag/v0.3.0)，由不可变 Git tag、GitHub Release、可下载的 [`think-it-through.skill`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill) 与 [`SHA256SUMS`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/SHA256SUMS)共同建立；后续开发继续位于持续维护的 [`main`](https://github.com/zemu2718/think-it-through-skill/tree/main/skills/think-it-through)。发布状态表示产品合同和确定性准入链已经确立，不代表所有客户端均已认证，也不会把未运行的兼容层级自动改为通过。
 
 <details>
 <summary>兼容层级与当前公开状态</summary>

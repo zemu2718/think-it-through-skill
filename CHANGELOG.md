@@ -18,6 +18,8 @@
 - 统一 Brand Mark、双语/主题 Decision Case 与 Social Preview 的暖中性色、深墨、克制深青和极少暖色视觉语言，同时保持可选 Gate、未知边界与结果复判语义。
 - 扩展资产生成与 freshness 检查，使 README Banner 与 Social Preview 的派生 PNG 均由同一脚本生成、完整解码并按像素校验；本地生成不代表 GitHub 已配置 Social Preview。
 - 更新双语 README 首图、品牌派生摘要、视觉资产说明与贡献维护流程；不改变产品行为、安全、授权、兼容性或 evidence 合同。
+- 统一双语首屏、产品定位、品牌摘要与 Social Preview 为“AI 可以快速执行，但用户仍决定什么值得做”的表达，并补全重要投入前校准、结果回来后复判的价值说明；不改变产品行为、安全、授权、runtime、兼容性或 evidence 合同。
+- 发布不可变 `v0.3.0` Git tag 与 GitHub Release，提供经 manifest 复验的 `think-it-through.skill` 和 `SHA256SUMS`，并增加 GitHub CLI、固定 `skills@1.5.23` 与手动 tag 安装入口；安装结果不提升 L3～L5。
 
 ## [0.3.0] - 2026-08-31
 
@@ -33,15 +35,15 @@
 
 - 将当前源码合同、schema、fixtures 与评分器升级为 v0.3.0，同时保持冻结 v0.1 evidence 与 description 不变。
 - 把格式符合、安装器发现、可安装、runtime 加载、纯文本行为与原生能力分层声明；安装器 target 数不再被视为 runtime 认证。
-- 将 v0.3.0 设为当前稳定源码和正式产品合同；Git tag、GitHub Release、可下载 asset 与 runtime 兼容证据仍按各自真实对象独立声明，不覆盖或改写 v0.2.0 历史事实。
+- 将 v0.3.0 设为当前稳定源码和正式产品合同；同名 Git tag、GitHub Release 与可下载 asset 已分别创建，runtime 兼容证据仍按真实执行独立声明，不覆盖或改写 v0.2.0 历史事实。
 - 增加安装与 runtime 公开反馈表单；反馈只有绑定准确版本、完成复现、脱敏与审阅并形成 approved evidence 后，才能改变兼容矩阵。
 - 重构中英文 README 为“识别产品与可信状态 → 看见错误执行的代价 → 用具体案例判断适用性 → 安装并完成第一次体验 → 渐进披露安全与证据”的正式首次访客路径，并删除失效候选分支引用。
 - 用小尺寸 Brand Mark 取代抽象 Hero，用四个语言/主题 Decision Case 显化同一 SaaS 请求的执行优先与决定优先路径；Social Preview 重绘为深墨、留白和无字体依赖的原创路径字标。
 
 ### Validation
 
-- Python 单元测试：165 项通过。
-- 仓库发布前校验：2951 项通过；派生视觉资产完整解码、尺寸与像素 stale check 通过。
+- Python 单元测试：170 项通过。
+- 仓库发布前校验：2998 项通过；派生视觉资产完整解码、尺寸与像素 stale check 通过。
 - `.skill` 分发包：29 个 manifest 文件构建成功，归档完整性、解包文件集合与源码逐字节一致性复验通过。
 - 固定 Agent Skills revision 格式校验通过；固定 `skills@1.5.23` 在 Node 22.20.0 下完成 1 项 archive discovery 与 8 个 installer target 精确复制 smoke。该结果只建立格式与 L1/L2 机械路径，不提升 L3～L5。
 - 未运行 Claude Code / Codex real-runtime provider smoke；公开兼容矩阵继续如实保持 `not_run`。

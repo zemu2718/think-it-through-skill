@@ -10,11 +10,13 @@
 
 # Think It Through · 想清楚
 
-**Decide before you execute. Let reality revise the decision.**
+**AI can get things done fast, but it can't decide for you what's worth doing.**
+
+Before an important commitment, clarify what you really need to decide and which unknown could change your course. Once the results come in, decide whether to continue, adjust, pause, or stop.
 
 [![Validate](https://img.shields.io/github/actions/workflow/status/zemu2718/think-it-through-skill/validate.yml?branch=main&style=flat-square&label=Validate)](https://github.com/zemu2718/think-it-through-skill/actions/workflows/validate.yml?query=branch%3Amain)
 [![Agent Skill](https://img.shields.io/badge/type-Agent%20Skill-0F766E?style=flat-square)](skills/think-it-through/SKILL.md)
-[![Stable source v0.3.0](https://img.shields.io/badge/stable%20source-v0.3.0-172033?style=flat-square)](https://github.com/zemu2718/think-it-through-skill/tree/main/skills/think-it-through)
+[![Stable source v0.3.0](https://img.shields.io/badge/stable%20source-v0.3.0-172033?style=flat-square)](https://github.com/zemu2718/think-it-through-skill/tree/v0.3.0/skills/think-it-through)
 [![MIT License](https://img.shields.io/badge/license-MIT-172033?style=flat-square)](LICENSE)
 
 **Reliable entry today:** invoke `/think-it-through` explicitly in Claude Code.
@@ -70,18 +72,60 @@ Skip the full flow for factual lookup, clear low-risk execution after a decision
 ## Install and try it
 
 > [!IMPORTANT]
-> **v0.3.0 is the current stable source and formal product contract on maintained `main`.** There is currently no public Git tag, GitHub Release, or downloadable `.skill` asset. `main` is a moving reference, so record the exact source commit when you install or report a problem.
+> **v0.3.0 is the current stable source and formal product contract, published as an immutable Git tag, GitHub Release, and downloadable `.skill` asset.** Installation confirms only that files reached a target directory; real loading, behavior, and native capabilities remain separate runtime/version claims.
 
-You need Git and an existing Claude Code installation. The non-overwrite check stops if another copy is already installed.
+### Install with GitHub CLI
+
+With [GitHub CLI 2.98.0 or later](https://cli.github.com/), install the pinned release for a supported coding agent. This example uses Claude Code and user scope:
 
 ```bash
-git clone --depth 1 --branch main https://github.com/zemu2718/think-it-through-skill.git
+gh skill install \
+  zemu2718/think-it-through-skill \
+  think-it-through@v0.3.0 \
+  --agent claude-code \
+  --scope user
+```
+
+Change `--agent` to a target recognized by your installed GitHub CLI. Keeping `@v0.3.0` makes the installed source reproducible instead of following a moving branch.
+
+### Install the release asset across installer targets
+
+The published `.skill` is a ZIP-compatible archive containing only the manifest-declared runtime files. The pinned `skills` CLI can discover it interactively:
+
+```bash
+npx -y skills@1.5.23 add \
+  https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill
+```
+
+To install a copied, user-level package for every target known to that installer version:
+
+```bash
+npx -y skills@1.5.23 add \
+  https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill \
+  --agent '*' \
+  --global \
+  --copy \
+  --yes
+```
+
+`--agent '*'` means all target mappings recognized by `skills@1.5.23`; it does **not** mean every AI client exists in that list or has passed real-runtime validation. Omit the flag for interactive target selection, or replace `'*'` with the exact target you want.
+
+You can verify the downloaded archive before installation with the published [`SHA256SUMS`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/SHA256SUMS).
+
+### Manual fallback from the immutable tag
+
+If neither installer supports your host, copy the Skill directory according to that host's Agent Skills convention. For Claude Code:
+
+```bash
+git clone --depth 1 --branch v0.3.0 https://github.com/zemu2718/think-it-through-skill.git
 cd think-it-through-skill
 git rev-parse HEAD
 test ! -e ~/.claude/skills/think-it-through
 mkdir -p ~/.claude/skills
 cp -R skills/think-it-through ~/.claude/skills/
 ```
+
+The non-overwrite check stops if another copy already exists. Inspect that copy instead of merging versions; rename or remove it yourself before reinstalling.
 
 If the top-level Skill directory did not exist when your current Claude Code session started, restart Claude Code. Then invoke it explicitly:
 
@@ -99,7 +143,7 @@ help me decide what to validate first.
 
 **First success signal:** instead of immediately writing the campaign, the Skill first helps clarify the decision you are actually making. It should not search, read private data, add agents, save files, or act externally merely because you installed or invoked it.
 
-This installs stable source from the repository, not a GitHub Release. Copying files proves only that files were copied; it does not certify loading or behavior in a particular runtime/version. If the destination already exists, inspect it rather than merging two versions; rename or remove the old copy yourself before reinstalling.
+All three installation paths distribute the same v0.3.0 runtime source. Copying files proves only that files were copied; it does not certify loading or behavior in a particular runtime/version.
 
 ## What happens in a full check
 
@@ -128,7 +172,7 @@ See the normative [behavior and safety contract](REQUIREMENTS.md) **[Chinese]** 
 
 ## Version, compatibility, and evidence
 
-**Stable source:** v0.3.0 on maintained [`main`](https://github.com/zemu2718/think-it-through-skill/tree/main/skills/think-it-through). **Public release objects:** no Git tag, GitHub Release, or downloadable `.skill` asset currently exists. Stable source status describes the reviewed product contract and deterministic acceptance path; it does not certify every client or promote unrun compatibility levels.
+**Stable release:** [`v0.3.0`](https://github.com/zemu2718/think-it-through-skill/releases/tag/v0.3.0), backed by an immutable Git tag, a GitHub Release, the downloadable [`think-it-through.skill`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill), and [`SHA256SUMS`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/SHA256SUMS). Maintained development continues on [`main`](https://github.com/zemu2718/think-it-through-skill/tree/main/skills/think-it-through). Release status describes a reviewed product contract and deterministic acceptance path; it does not certify every client or promote unrun compatibility levels.
 
 <details>
 <summary>Compatibility levels and current public status</summary>

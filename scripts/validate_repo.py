@@ -27,6 +27,11 @@ SKILL_MD = SKILL_DIR / "SKILL.md"
 TEXT_SUFFIXES = {".md", ".json", ".yaml", ".yml", ".py", ".svg", ".txt"}
 IGNORED_SCAN_PARTS = {".git", ".claude", "dist", "review", "think-it-through-workspace", "__pycache__"}
 CURRENT_CONTRACT_VERSION = "0.3.0"
+POSITIONING_ZH = "AI 能把事情做得很快，但不能替你决定什么值得做。"
+POSITIONING_EN = "AI can get things done fast, but it can't decide for you what's worth doing."
+VALUE_STATEMENT_ZH = "重要投入之前，先确认真正要决定什么、哪个未知会改变方向；结果回来之后，再决定继续、调整、暂停还是停止。"
+VALUE_STATEMENT_EN = "Before an important commitment, clarify what you really need to decide and which unknown could change your course. Once the results come in, decide whether to continue, adjust, pause, or stop."
+SOCIAL_PREVIEW_TAGLINE = "AI gets things done fast. You decide what's worth doing."
 LEGACY_BEHAVIOR_PROFILE = "legacy-v0.1"
 EXPECTED_FIXTURE_STAGES = {"pre-entry", "R", "R-align", "A", "B", "Gate-routing", "direct", "emergency", "active-flow", "resume-current-task"}
 INTERACTIVE_FIXTURE_STAGES = {"pre-entry", "R", "A", "B"}
@@ -2115,8 +2120,12 @@ def validate_assets(validation: Validation, files: list[Path]) -> None:
         social_tags = {element.tag.rsplit("}", 1)[-1] for element in social_root.iter()}
         validation.require("text" not in social_tags, "Social Preview 不得包含 text 或依赖系统字体")
         validation.require("linearGradient" not in social_tags and "radialGradient" not in social_tags and "filter" not in social_tags, "Social Preview 不得使用 gradient 或 filter")
+        tagline = _svg_element_by_id(social_root, "tagline")
+        desc = _svg_element_by_id(social_root, "desc")
         validation.require(_svg_subtree_has_path(_svg_element_by_id(social_root, "wordmark")), "Social Preview wordmark 必须包含实际 path")
-        validation.require(_svg_subtree_has_path(_svg_element_by_id(social_root, "tagline")), "Social Preview tagline 必须包含实际 path")
+        validation.require(_svg_subtree_has_path(tagline), "Social Preview tagline 必须包含实际 path")
+        validation.require(tagline is not None and tagline.get("aria-label") == SOCIAL_PREVIEW_TAGLINE, "Social Preview tagline 必须提供准确的定位 aria-label")
+        validation.require(desc is not None and POSITIONING_EN in "".join(desc.itertext()), "Social Preview desc 必须包含完整 canonical 英文定位")
         validation.require(_svg_subtree_has_attribute(_svg_element_by_id(social_root, "optional-gate"), "stroke-dasharray"), "Social Preview 的可选 Gate 必须实际使用虚线")
 
     expected_outputs = {
@@ -2377,10 +2386,12 @@ def validate_public_docs(validation: Validation) -> None:
             "moments": ("Before starting", "Before choosing a path", "Before committing resources", "Before doubling down", "After results arrive"),
             "boundary": ("decision layer", "not a project-management or task-execution layer"),
             "stable": "v0.3.0 is the current stable source",
-            "no_release": "no public Git tag, GitHub Release",
+            "release": "published as an immutable Git tag, GitHub Release",
             "checkpoint": "formal contract defines a lightweight contextual checkpoint",
             "feedback": "installation or runtime feedback",
             "banner_alt": "Layered observation frames align around a clear opening",
+            "positioning": POSITIONING_EN,
+            "value_statement": VALUE_STATEMENT_EN,
         },
         {
             "name": "README.zh-CN.md",
@@ -2395,11 +2406,13 @@ def validate_public_docs(validation: Validation) -> None:
             "safety_phrases": ("不联网", "不读取私有数据", "只使用当前主 Agent", "不写入文件或远端保存", "不执行外部行动"),
             "moments": ("立项前", "选方向前", "投入资源前", "继续加码前", "结果回来后"),
             "boundary": ("决策层", "不是项目管理或任务执行层"),
-            "stable": "v0.3.0 是维护分支 `main` 上的当前稳定源码",
-            "no_release": "没有公开 Git tag、GitHub Release",
+            "stable": "v0.3.0 是当前稳定源码",
+            "release": "已发布为不可变 Git tag、GitHub Release",
             "checkpoint": "正式合同只在 Skill 已经加载",
             "feedback": "反馈安装或 runtime 问题",
             "banner_alt": "多层观察框架逐步对齐成一个清晰开口",
+            "positioning": POSITIONING_ZH,
+            "value_statement": VALUE_STATEMENT_ZH,
         },
     )
     old_sections = {
@@ -2410,10 +2423,14 @@ def validate_public_docs(validation: Validation) -> None:
     expected_badges = (
         ("Validate", "validate.yml?branch=main&style=flat-square&label=Validate", "actions/workflows/validate.yml?query=branch%3Amain"),
         ("Agent Skill", "type-Agent%20Skill-0F766E?style=flat-square", "skills/think-it-through/SKILL.md"),
-        ("Stable source v0.3.0", "stable%20source-v0.3.0-172033?style=flat-square", "tree/main/skills/think-it-through"),
+        ("Stable source v0.3.0", "stable%20source-v0.3.0-172033?style=flat-square", "tree/v0.3.0/skills/think-it-through"),
         ("MIT License", "license-MIT-172033?style=flat-square", "LICENSE"),
     )
     forbidden_badge_terms = re.compile(r"(?:release|latest|download|coverage|stars?|runtime|compatib|certif|L5|auto.?discovery)", re.IGNORECASE)
+    release_tag_url = "https://github.com/zemu2718/think-it-through-skill/releases/tag/v0.3.0"
+    release_asset_url = "https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill"
+    release_sums_url = "https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/SHA256SUMS"
+    release_urls = (release_tag_url, release_asset_url, release_sums_url)
 
     for contract in readme_contracts:
         name = contract["name"]
@@ -2435,11 +2452,13 @@ def validate_public_docs(validation: Validation) -> None:
         validation.require("assets/brand-mark-" not in preface, f"{name} 首屏不得继续使用 Brand Mark 代替 README Banner")
         picture_position = preface.find("<picture>")
         heading_position = preface.find("# ")
+        positioning_position = preface.find(contract["positioning"])
+        value_position = preface.find(contract["value_statement"])
         badge_position = preface.find("[![Validate]")
         entry_position = preface.find("/think-it-through")
         validation.require(
-            -1 < picture_position < heading_position < badge_position < entry_position,
-            f"{name} 首屏必须保持语言切换 → Banner → H1 → 定位/徽章 → 显式入口顺序",
+            -1 < picture_position < heading_position < positioning_position < value_position < badge_position < entry_position,
+            f"{name} 首屏必须保持语言切换 → Banner → H1 → 主定位 → 价值说明 → 徽章 → 显式入口顺序",
         )
         alt_match = re.search(r'<img src="assets/readme-banner-light\.png" alt="([^"]+)" width="1200">', preface)
         validation.require(
@@ -2448,10 +2467,12 @@ def validate_public_docs(validation: Validation) -> None:
             and contract["banner_alt"] in alt_match.group(1),
             f"{name} README Banner 必须提供准确的非空本地化 alt",
         )
+        validation.require(contract["positioning"] in preface, f"{name} 首屏缺少 canonical 产品定位")
+        validation.require(contract["value_statement"] in preface, f"{name} 首屏缺少投入前校准与结果后复判的价值说明")
         validation.require(all(asset in readme for asset in contract["case_assets"]), f"{name} 缺少对应语言/主题 Decision Case")
         validation.require(all(asset not in readme for asset in contract["wrong_case_assets"]), f"{name} 引用了错误语言 Decision Case")
         validation.require(not any(asset in readme for asset in old_assets), f"{name} 不得引用旧视觉资产")
-        validation.require("git clone --depth 1 --branch main" in readme, f"{name} 缺少稳定 main 源码安装")
+        validation.require("git clone --depth 1 --branch v0.3.0" in readme, f"{name} 缺少不可变 v0.3.0 tag 手动安装")
         validation.require("cd think-it-through-skill\ngit rev-parse HEAD\ntest ! -e" in readme, f"{name} 缺少安装时记录准确源码 revision 的命令")
         validation.require("```text\n/think-it-through\n```" in readme, f"{name} 缺少可靠显式入口")
         validation.require("test ! -e" in readme, f"{name} 缺少非覆盖式源码安装")
@@ -2464,7 +2485,16 @@ def validate_public_docs(validation: Validation) -> None:
         validation.require(all(phrase in readme for phrase in contract["boundary"]), f"{name} 缺少决策工具与执行工具边界")
         validation.require(all(link in readme for link in shared_links), f"{name} 缺少任务导向文档链接")
         validation.require(contract["stable"] in readme, f"{name} 缺少 v0.3.0 稳定源码状态")
-        validation.require(contract["no_release"] in readme, f"{name} 必须诚实说明无公开 Release")
+        validation.require(contract["release"] in readme, f"{name} 缺少已发布的 v0.3.0 公开对象状态")
+        validation.require(all(url in readme for url in release_urls), f"{name} 缺少准确的 v0.3.0 Release、asset 或校验和 URL")
+        validation.require("gh skill install" in readme and "think-it-through@v0.3.0" in readme, f"{name} 缺少 GitHub CLI 固定版本安装")
+        validation.require(readme.count("npx -y skills@1.5.23 add") == 2 and "--agent '*'" in readme, f"{name} 缺少固定通用安装器与全部目标入口；固定通用安装器版本必须保持 skills@1.5.23")
+        validation.require(
+            ("all target mappings recognized by `skills@1.5.23`" in readme and "does **not** mean every AI client" in readme)
+            if name == "README.md"
+            else ("`skills@1.5.23` 认识的全部目标映射" in readme and "不表示所有 AI 客户端" in readme),
+            f"{name} 缺少 --agent '*' 的真实支持边界",
+        )
         validation.require("not_run" in readme and "L0" in readme and "L5" in readme, f"{name} 缺少当前机器兼容状态摘要")
         validation.require("9/16" in readme and "1/8" in readme and "8/8" in readme, f"{name} 缺少完整自动发现限制")
         validation.require(contract["checkpoint"] in readme, f"{name} 缺少正式上下文检查点与实测边界")
@@ -2502,8 +2532,13 @@ def validate_public_docs(validation: Validation) -> None:
     negative_passed = sum(item.get("pass") is True for item in holdout_results if item.get("should_trigger") is False)
     validation.require((positive_passed, negative_passed) == (1, 8), "冻结 trigger 正负例摘要发生变化")
 
-    release_asset_re = re.compile(r"https?://[^\s)]+/releases/(?:download|tag)/v0\.3\.0", re.IGNORECASE)
-    validation.require(not release_asset_re.search(readme_en) and not release_asset_re.search(readme_zh), "README 不得链接不存在或未经核验的 v0.3.0 Release 对象")
+    release_url_re = re.compile(r"https?://[^\s)]+/releases/(?:download|tag)/v0\.3\.0[^\s)]*", re.IGNORECASE)
+    for name, readme in (("README.md", readme_en), ("README.zh-CN.md", readme_zh)):
+        found_release_urls = {match.rstrip(".,") for match in release_url_re.findall(readme)}
+        validation.require(
+            found_release_urls == set(release_urls),
+            f"{name} 只能链接准确、已核验的 v0.3.0 Release 对象：{sorted(found_release_urls ^ set(release_urls))}",
+        )
     support = _load_json(ROOT / "compatibility" / "runtime-support.json")
     _validate_runtime_support_claims(validation, readme_en + "\n" + readme_zh, support)
 
@@ -2545,6 +2580,8 @@ def validate_public_docs(validation: Validation) -> None:
         validation.require(phrase in requirements, f"REQUIREMENTS.md 缺少 v0.3.0 规则：{phrase}")
 
     validation.require("思考搭档" in product, "PRODUCT.md 缺少稳定用户体验定位")
+    validation.require(POSITIONING_ZH in product, "PRODUCT.md 缺少 canonical 中文产品定位")
+    validation.require(VALUE_STATEMENT_ZH in product, "PRODUCT.md 缺少投入前校准与结果后复判的价值说明")
     for phrase in (
         "重要行动前后的**决策与证据协议**",
         "首要 ICP",
@@ -2633,16 +2670,21 @@ def validate_public_docs(validation: Validation) -> None:
     validation.require("唯一正式行为、安全与验收依据" in requirements, "REQUIREMENTS.md 必须声明唯一正式合同角色")
 
     for phrase in (
+        POSITIONING_ZH,
+        POSITIONING_EN,
+        VALUE_STATEMENT_ZH,
+        VALUE_STATEMENT_EN,
         "v0.3.0 is the current stable source and formal product contract",
-        "no Git tag, GitHub Release, or downloadable asset is currently claimed",
+        "published as an immutable Git tag, GitHub Release, downloadable `think-it-through.skill`, and `SHA256SUMS`",
         "real multi-turn behavior and natural-language discovery remain `not_run`",
     ):
-        validation.require(phrase in brand_context, f"品牌摘要缺少稳定源码或证据边界：{phrase}")
+        validation.require(phrase in brand_context, f"品牌摘要缺少产品定位、价值说明、稳定源码或证据边界：{phrase}")
 
     for phrase in (
         feedback_path,
         "git rev-parse HEAD",
         "canonical compatibility evidence",
+        "exact release tag or source commit",
         "API keys, tokens, private conversations",
         "SECURITY.md",
         "dist/local-package",
@@ -2674,6 +2716,11 @@ def validate_public_docs(validation: Validation) -> None:
         "CHANGELOG.md 缺少 v0.3.0 稳定源码状态",
     )
     validation.require("反馈只有绑定准确版本、完成复现、脱敏与审阅并形成 approved evidence 后" in changelog, "CHANGELOG.md 缺少发布后反馈提升边界")
+    validation.require(
+        "不可变 `v0.3.0` Git tag 与 GitHub Release" in changelog
+        and "`think-it-through.skill` 和 `SHA256SUMS`" in changelog,
+        "CHANGELOG.md 缺少 v0.3.0 正式 Release 对象",
+    )
     for phrase in (
         "显式调用 `/think-it-through`",
         "纯文本协议作为跨宿主基线",

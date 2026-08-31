@@ -52,7 +52,7 @@ Real Claude Code or Codex smoke is deliberately excluded from ordinary CI. Use t
 
 ## Report installation or runtime feedback
 
-Use the [installation and runtime feedback form](https://github.com/zemu2718/think-it-through-skill/issues/new?template=install-or-runtime-feedback.yml) for public, reproducible observations. Include the exact source commit from `git rev-parse HEAD`, runtime name and version, OS, install method and destination, minimal reproduction steps, and expected versus actual behavior. Redact API keys, tokens, private conversations, private file content, and personal paths.
+Use the [installation and runtime feedback form](https://github.com/zemu2718/think-it-through-skill/issues/new?template=install-or-runtime-feedback.yml) for public, reproducible observations. Include the exact release tag or source commit from `git rev-parse HEAD`, runtime name and version, OS, install method and destination, minimal reproduction steps, and expected versus actual behavior. Redact API keys, tokens, private conversations, private file content, and personal paths.
 
 A report is an input to reproduction and improvement, not canonical compatibility evidence by itself. Only evidence bound to an exact source revision and runtime version, reproduced where needed, redacted, reviewed, and approved may update `compatibility/runtime-support.json`. Report vulnerabilities privately through [`SECURITY.md`](SECURITY.md), not through this public form.
 
@@ -144,7 +144,7 @@ By contributing, you agree that your contribution is licensed under the reposito
 
 ### 反馈安装或 runtime 问题
 
-公开、可复现的观察请使用[安装与 runtime 反馈表单](https://github.com/zemu2718/think-it-through-skill/issues/new?template=install-or-runtime-feedback.yml)。请提供 `git rev-parse HEAD` 得到的准确源码 commit、runtime 名称与版本、操作系统、安装方式与目标目录、最小复现步骤，以及预期和实际结果。提交前必须删除 API key、token、私有对话、私人文件内容和个人路径。
+公开、可复现的观察请使用[安装与 runtime 反馈表单](https://github.com/zemu2718/think-it-through-skill/issues/new?template=install-or-runtime-feedback.yml)。请提供准确 Release tag 或 `git rev-parse HEAD` 得到的源码 commit、runtime 名称与版本、操作系统、安装方式与目标目录、最小复现步骤，以及预期和实际结果。提交前必须删除 API key、token、私有对话、私人文件内容和个人路径。
 
 普通报告只是复现和优化的输入，不会直接成为兼容证据。只有绑定准确源码 revision 与 runtime 版本、按需完成复现、脱敏、审阅并批准的 evidence，才能更新 `compatibility/runtime-support.json`。安全漏洞仍按 [`SECURITY.md`](SECURITY.md) 私下报告，不要使用公开表单。
 

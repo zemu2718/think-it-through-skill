@@ -103,6 +103,24 @@ class AssetPipelineTests(unittest.TestCase):
                 errors = self.validate_asset_mutation(relative, old, new).errors
                 self.assertTrue(any(expected in error for error in errors), errors)
 
+    def test_social_preview_positioning_metadata_mutations_fail(self) -> None:
+        mutations = (
+            (
+                "AI can get things done fast, but it can't decide for you what's worth doing",
+                "AI can finish work quickly",
+                "desc 必须包含完整 canonical 英文定位",
+            ),
+            (
+                'aria-label="AI gets things done fast. You decide what\'s worth doing."',
+                'aria-label="AI works quickly."',
+                "tagline 必须提供准确的定位 aria-label",
+            ),
+        )
+        for old, new, expected in mutations:
+            with self.subTest(expected=expected):
+                errors = self.validate_asset_mutation("assets/social-preview.svg", old, new).errors
+                self.assertTrue(any(expected in error for error in errors), errors)
+
     def test_wordmark_and_tagline_require_actual_paths(self) -> None:
         for element_id, expected in (("wordmark", "wordmark 必须包含实际 path"), ("tagline", "tagline 必须包含实际 path")):
             with self.subTest(element_id=element_id), self.repository_copy() as root:

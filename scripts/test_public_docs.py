@@ -24,9 +24,11 @@ class PublicDocsTests(unittest.TestCase):
             ("README.md", "Illustrative synthetic case", "Illustrative example", "合成示例"),
             ("README.md", "not a runtime transcript", "example transcript", "合成示例"),
             ("README.md", "defines no result", "shows a result", "合成示例"),
-            ("README.md", "git clone --depth 1 --branch main", "git clone", "稳定 main 源码安装"),
+            ("README.md", "git clone --depth 1 --branch v0.3.0", "git clone", "不可变 v0.3.0 tag"),
             ("README.md", "cd think-it-through-skill\ngit rev-parse HEAD\ntest ! -e", "cd think-it-through-skill\ngit status --short\ntest ! -e", "准确源码 revision"),
             ("README.md", "v0.3.0 is the current stable source", "v0.3.0 is the source candidate", "稳定源码状态"),
+            ("README.md", "gh skill install", "gh extension install", "GitHub CLI 固定版本安装"),
+            ("README.md", "all target mappings recognized by `skills@1.5.23`", "all AI clients", "--agent '*'"),
             ("README.md", "installation or runtime feedback", "general feedback", "反馈入口"),
             ("README.md", "no network access", "network access depends on context", "五项默认安全语义"),
             ("README.md", "Before starting", "At some point", "五个具体调用时机"),
@@ -38,6 +40,73 @@ class PublicDocsTests(unittest.TestCase):
             with self.subTest(relative=relative, old=old):
                 errors = self.validate_doc_mutation(relative, old, new).errors
                 self.assertTrue(any(expected in error for error in errors), errors)
+
+    def test_positioning_value_statement_and_preface_order_fail(self) -> None:
+        mutations = (
+            (
+                "README.md",
+                "AI can get things done fast, but it can't decide for you what's worth doing.",
+                "AI can finish work quickly.",
+                "canonical 产品定位",
+            ),
+            (
+                "README.md",
+                "Before an important commitment, clarify what you really need to decide and which unknown could change your course. Once the results come in, decide whether to continue, adjust, pause, or stop.",
+                "Before a commitment, think carefully.",
+                "价值说明",
+            ),
+            (
+                "README.zh-CN.md",
+                "AI 能把事情做得很快，但不能替你决定什么值得做。",
+                "AI 能快速执行。",
+                "canonical 产品定位",
+            ),
+            (
+                "README.zh-CN.md",
+                "重要投入之前，先确认真正要决定什么、哪个未知会改变方向；结果回来之后，再决定继续、调整、暂停还是停止。",
+                "重要投入前后都要仔细考虑。",
+                "价值说明",
+            ),
+            (
+                "PRODUCT.md",
+                "AI 能把事情做得很快，但不能替你决定什么值得做。",
+                "AI 能快速执行。",
+                "canonical 中文产品定位",
+            ),
+            (
+                "PRODUCT.md",
+                "重要投入之前，先确认真正要决定什么、哪个未知会改变方向；结果回来之后，再决定继续、调整、暂停还是停止。",
+                "重要投入前后都要仔细考虑。",
+                "结果后复判的价值说明",
+            ),
+            (
+                ".agents/brand-context.md",
+                "AI can get things done fast, but it can't decide for you what's worth doing.",
+                "AI can finish work quickly.",
+                "品牌摘要缺少产品定位",
+            ),
+            (
+                ".agents/brand-context.md",
+                "Before an important commitment, clarify what you really need to decide and which unknown could change your course. Once the results come in, decide whether to continue, adjust, pause, or stop.",
+                "Before a commitment, think carefully.",
+                "品牌摘要缺少产品定位",
+            ),
+        )
+        for relative, old, new, expected in mutations:
+            with self.subTest(relative=relative, expected=expected):
+                errors = self.validate_doc_mutation(relative, old, new).errors
+                self.assertTrue(any(expected in error for error in errors), errors)
+
+        old = (
+            "**AI can get things done fast, but it can't decide for you what's worth doing.**\n\n"
+            "Before an important commitment, clarify what you really need to decide and which unknown could change your course. Once the results come in, decide whether to continue, adjust, pause, or stop."
+        )
+        new = (
+            "Before an important commitment, clarify what you really need to decide and which unknown could change your course. Once the results come in, decide whether to continue, adjust, pause, or stop.\n\n"
+            "**AI can get things done fast, but it can't decide for you what's worth doing.**"
+        )
+        errors = self.validate_doc_mutation("README.md", old, new).errors
+        self.assertTrue(any("主定位 → 价值说明" in error for error in errors), errors)
 
     def test_h2_missing_reordered_and_legacy_heading_fail(self) -> None:
         errors = self.validate_doc_mutation("README.md", "## Why it matters", "### Why it matters").errors
@@ -92,7 +161,7 @@ class PublicDocsTests(unittest.TestCase):
         self.assertTrue(any("徽章职责" in error for error in errors), errors)
         errors = self.validate_doc_mutation(
             "README.md",
-            "tree/main/skills/think-it-through",
+            "tree/v0.3.0/skills/think-it-through",
             "tree/dev/skills/think-it-through",
         ).errors
         self.assertTrue(any("徽章职责" in error for error in errors), errors)
@@ -107,13 +176,31 @@ class PublicDocsTests(unittest.TestCase):
         errors = self.validate_doc_mutation("README.md", "**Reliable entry today:**", insertion + "\n**Reliable entry today:**").errors
         self.assertTrue(any("恰好包含四枚" in error or "徽章不得宣称" in error for error in errors), errors)
 
-    def test_nonexistent_release_url_and_runtime_claim_fail(self) -> None:
+    def test_inaccurate_release_url_and_runtime_claim_fail(self) -> None:
         errors = self.validate_doc_mutation(
             "README.md",
-            "## License",
-            "[Download](https://example.com/releases/download/v0.3.0/think-it-through.skill)\n\n## License",
+            "npx -y skills@1.5.23 add",
+            "npx -y installer@1.5.22 add",
         ).errors
-        self.assertTrue(any("不存在或未经核验" in error for error in errors), errors)
+        self.assertTrue(any("固定通用安装器" in error for error in errors), errors)
+        release_mutations = (
+            (
+                "https://github.com/zemu2718/think-it-through-skill/releases/tag/v0.3.0",
+                "https://github.com/other/think-it-through-skill/releases/tag/v0.3.0",
+            ),
+            (
+                "https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill",
+                "https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/wrong.skill",
+            ),
+            (
+                "https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/SHA256SUMS",
+                "https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/checksums.txt",
+            ),
+        )
+        for old, new in release_mutations:
+            with self.subTest(new=new):
+                errors = self.validate_doc_mutation("README.md", old, new).errors
+                self.assertTrue(any("准确" in error or "核验" in error for error in errors), errors)
         errors = self.validate_doc_mutation(
             "README.md",
             "Eight installer target mappings",

@@ -7,8 +7,15 @@ This file is a concise derivative of `REQUIREMENTS.md` and `PRODUCT.md`, not a s
 - **Name**: 想清楚 · Think It Through
 - **Category**: Open Agent Skill for consequential decisions and evidence
 - **Description**: Turns an important request into the decision underneath it, one answer that could change it, and a next step reality can test.
-- **Stage**: v0.3.0 is the current stable source and formal product contract on maintained `main`; no Git tag, GitHub Release, or downloadable asset is currently claimed
+- **Stage**: v0.3.0 is the current stable source and formal product contract, published as an immutable Git tag, GitHub Release, downloadable `think-it-through.skill`, and `SHA256SUMS`; maintained development continues on `main`
 - **Website**: https://github.com/zemu2718/think-it-through-skill
+
+## Messaging
+
+- **Chinese Positioning**: AI 能把事情做得很快，但不能替你决定什么值得做。
+- **English Positioning**: AI can get things done fast, but it can't decide for you what's worth doing.
+- **Chinese Value Statement**: 重要投入之前，先确认真正要决定什么、哪个未知会改变方向；结果回来之后，再决定继续、调整、暂停还是停止。
+- **English Value Statement**: Before an important commitment, clarify what you really need to decide and which unknown could change your course. Once the results come in, decide whether to continue, adjust, pause, or stop.
 
 ## Audience
 
@@ -44,7 +51,7 @@ This file is a concise derivative of `REQUIREMENTS.md` and `PRODUCT.md`, not a s
 - **Accessibility**: Meaning must also be carried by shape, line style, weight, position, and labels; color is never the only signal.
 - **Asset roles**: README Banner is the opening brand experience; Brand Mark provides compact recognition; Decision Case explains one concrete pain and transformation; Social Preview carries brand plus positioning into sharing contexts. No asset should duplicate the full formal protocol.
 - **Visual standard**: Premium through restraint—deep ink, warm neutral space, graphite, disciplined dark teal, rare amber, clear hierarchy, and only meaning-bearing geometry. Natural 3D material shading and one contact shadow are acceptable in the canonical Banner; decorative gradients, glow, glass effects, stacked shadows, generic AI workflows, robots, neural networks, pseudo interfaces, and node clouds are not.
-- **Badge boundary**: The README may show only functional, verifiable status badges for the validation workflow, Agent Skill type, current stable source, and MIT license. Badges never imply a Release, runtime certification, discovery success, or real-model behavior.
+- **Badge boundary**: The README may show only functional, verifiable status badges for the validation workflow, Agent Skill type, current stable source, and MIT license. The stable-source badge may link to the matching immutable tag, but badges never imply runtime certification, discovery success, or real-model behavior.
 
 ## Evidence and Claim Boundaries
 
@@ -61,8 +68,8 @@ The README journey is:
 
 ```text
 5 seconds: identify the product, position, trustworthy status, and reliable entry
-→ 20–30 seconds: recognize the cost of flawlessly executing the wrong task
+→ 20–30 seconds: recognize that AI can execute quickly while the user must still decide what is worth doing
 → 45–60 seconds: judge fit through one concrete synthetic case
-→ 2 minutes: install the current stable source and try explicit invocation
+→ 2 minutes: install the pinned stable release and try explicit invocation
 → then: disclose safety, compatibility, and evidence boundaries progressively
 ```

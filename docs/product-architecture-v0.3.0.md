@@ -66,6 +66,6 @@ Claude Code / Codex smoke 是独立、手动、需授权的路径。它使用临
 
 ## 发布边界
 
-v0.3.0 的稳定源码身份由正式合同和可复验的静态准入链建立，不以逐客户端真实验证、Git tag、GitHub Release 或可下载 asset 为前置。当前可从仓库维护分支安装；因为分支是移动引用，人工反馈必须附准确 source commit，才能复现具体版本。
+v0.3.0 的稳定源码身份由正式合同和可复验的静态准入链建立，不以逐客户端真实验证、Git tag、GitHub Release 或可下载 asset 为前置。当前版本另已发布不可变 Git tag、GitHub Release、`.skill` asset 与校验和；人工反馈应附准确 tag 或 source commit，才能复现具体版本。
 
 Git commit、tag、GitHub Release 和可下载 asset 仍是彼此独立的公开对象，只有真实创建并复核后才能声明。真实 runtime 加载和行为则在发布后通过“人工安装观察 → 版本绑定反馈 → 维护者复现 → 脱敏审阅 evidence → 优化或提升矩阵”闭环建立；普通 Issue、文件复制或安装器映射本身不能提升 L3～L5。

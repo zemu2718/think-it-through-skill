@@ -1038,7 +1038,7 @@ v0.3.0 schema 必须：
 
 独立 `.skill` 包必须包含 `SKILL.md`、core、policies、adapters、必要 references、MIT 许可证和第三方通知；排除 evals、benchmarks、兼容证据、历史 transcript、workspace、缓存、私有数据和本机配置。`distribution/package-manifest.json` 是精确文件集合的唯一机器事实源；builder、validator 和 tests 必须共用它，不再复制固定文件数。构建必须使用新的空目录，并解包复验精确集合与字节内容。
 
-当前稳定源码可以从仓库维护分支安装；仓库直装可能包含不进入运行时的 `evals/`，复制时只取 `skills/think-it-through/`。经 manifest 构建和复验的 `.skill` 是更小的分发形式，但 Git tag、GitHub Release 或可下载 asset 不是稳定源码身份的前置条件。任何公开对象只有真实存在时才能声明或链接，不得伪造 Release URL、未来 commit 或覆盖历史 asset。
+当前稳定源码可以从不可变 `v0.3.0` tag、同名 GitHub Release 或仓库维护分支安装；仓库直装可能包含不进入运行时的 `evals/`，复制时只取 `skills/think-it-through/`。经 manifest 构建和复验的 `.skill` 是更小的分发形式。Git tag、GitHub Release 或可下载 asset 不是稳定源码身份的前置条件，但 v0.3.0 的这些对象已经分别创建；任何公开对象只有真实存在时才能声明或链接，不得伪造 Release URL、未来 commit 或覆盖历史 asset。
 
 ### 10.4 冻结历史证据
 
@@ -1295,7 +1295,7 @@ v0.3.0 current fixtures 至少覆盖：
 
 v0.3.0 是当前稳定源码版本与正式产品合同。稳定源码准入由合同、schema、fixtures、grader 和公开文档一致性，仓库确定性校验，manifest 驱动的归档构建与逐字节复验，固定 Agent Skills revision 的格式检查，以及固定安装器的发现和目标复制 smoke 共同建立。逐客户端真实加载、纯文本行为和原生能力属于发布后的兼容观察，不是稳定源码准入条件；没有对应运行时证据时可以继续保持 `not_run`。
 
-对外可以声明 v0.3.0 稳定源码、Claude Code 显式 `/think-it-through` 推荐入口、跨宿主纯文本基线、仓库维护的安装器目标映射、实际通过的机械校验，以及条件能力所遵守的路由、授权和回执合同。不得由此推导“所有 AI 客户端已验证”，也不得把不存在的 Git tag、GitHub Release 或可下载 asset 写成已经发布。
+对外可以声明 v0.3.0 稳定源码、已真实创建的同名 Git tag、GitHub Release、`.skill` asset 与校验和、Claude Code 显式 `/think-it-through` 推荐入口、跨宿主纯文本基线、仓库维护的安装器目标映射、实际通过的机械校验，以及条件能力所遵守的路由、授权和回执合同。不得由此推导“所有 AI 客户端已验证”，也不得把不存在的公开对象写成已经发布。
 
 兼容层级定义如下：
 
