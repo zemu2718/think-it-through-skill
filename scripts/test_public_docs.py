@@ -21,9 +21,9 @@ class PublicDocsTests(unittest.TestCase):
     def test_required_facts_fail_independently(self) -> None:
         mutations = (
             ("README.md", "```text\n/think-it-through\n```", "```text\n/wrong-entry\n```", "可靠显式入口"),
-            ("README.md", "Illustrative synthetic case", "Illustrative example", "合成示例"),
-            ("README.md", "not a runtime transcript", "example transcript", "合成示例"),
-            ("README.md", "defines no result", "shows a result", "合成示例"),
+            ("README.md", "AI bookkeeping", "AI ledger", "原话画廊第 2 条"),
+            ("README.md", "polished decision question", "polished prompt", "原话画廊必须说明"),
+            ("README.zh-CN.md", "第一版", "初始版本", "原话画廊第 3 条"),
             ("README.md", "git clone --depth 1 --branch v0.3.0", "git clone", "不可变 v0.3.0 tag"),
             ("README.md", "cd think-it-through-skill\ngit rev-parse HEAD\ntest ! -e", "cd think-it-through-skill\ngit status --short\ntest ! -e", "准确源码 revision"),
             ("README.md", "v0.3.0 is the current stable source", "v0.3.0 is the source candidate", "稳定源码状态"),
@@ -113,26 +113,24 @@ class PublicDocsTests(unittest.TestCase):
         self.assertTrue(any("十个 H2" in error for error in errors), errors)
         errors = self.validate_doc_mutation(
             "README.md",
-            "## A concrete case",
-            "## Install and try it\n\n## A concrete case",
+            "## Say it in your own words",
+            "## Install and try it\n\n## Say it in your own words",
         ).errors
         self.assertTrue(any("十个 H2" in error for error in errors), errors)
         errors = self.validate_doc_mutation("README.md", "## What it is", "## Quick Start").errors
         self.assertTrue(any("旧版入口章节" in error or "十个 H2" in error for error in errors), errors)
 
-    def test_readme_banner_and_language_assets_fail(self) -> None:
+    def test_readme_banner_and_text_gallery_fail(self) -> None:
         errors = self.validate_doc_mutation(
             "README.md", "assets/readme-banner-light.png", "assets/brand-mark-light.svg"
         ).errors
         self.assertTrue(any("README Banner" in error or "Brand Mark" in error for error in errors), errors)
         errors = self.validate_doc_mutation(
-            "README.md", "assets/decision-case-light.svg", "assets/decision-case-light.zh-CN.svg"
+            "README.md",
+            "- “I want to build a chat app like QQ. What do you think?”",
+            '<img src="assets/decision-case-light.svg" alt="case">',
         ).errors
-        self.assertTrue(any("错误语言 Decision Case" in error or "对应语言" in error for error in errors), errors)
-        errors = self.validate_doc_mutation(
-            "README.zh-CN.md", "assets/decision-case-dark.zh-CN.svg", "assets/decision-case-dark.svg"
-        ).errors
-        self.assertTrue(any("错误语言 Decision Case" in error or "对应语言" in error for error in errors), errors)
+        self.assertTrue(any("八条用户描述" in error or "纯文本" in error or "已移除" in error for error in errors), errors)
 
     def test_banner_fallback_width_alt_and_preface_order_fail(self) -> None:
         mutations = (

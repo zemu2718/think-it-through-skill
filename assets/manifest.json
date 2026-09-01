@@ -99,47 +99,6 @@
       "max_bytes": 16384
     },
     {
-      "id": "decision-case",
-      "role": "readme-informational-case",
-      "variants": [
-        {
-          "locale": "en",
-          "theme": "light",
-          "source": "assets/decision-case-light.svg"
-        },
-        {
-          "locale": "en",
-          "theme": "dark",
-          "source": "assets/decision-case-dark.svg"
-        },
-        {
-          "locale": "zh-CN",
-          "theme": "light",
-          "source": "assets/decision-case-light.zh-CN.svg"
-        },
-        {
-          "locale": "zh-CN",
-          "theme": "dark",
-          "source": "assets/decision-case-dark.zh-CN.svg"
-        }
-      ],
-      "canvas": {
-        "width": 1200,
-        "height": 680
-      },
-      "required_ids": [
-        "surface-request",
-        "execution-first-path",
-        "decision-hinge",
-        "decision-first-path",
-        "optional-gate",
-        "outcome-set",
-        "reassessment-loop",
-        "synthetic-label"
-      ],
-      "max_bytes": 65536
-    },
-    {
       "id": "social-preview",
       "role": "social-preview",
       "variants": [

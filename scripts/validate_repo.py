@@ -1871,16 +1871,6 @@ def validate_assets(validation: Validation, files: list[Path]) -> None:
             "required_ids": {"observation-frames", "clarity-aperture", "clarity-channel", "reassessment-pivot"},
             "max_bytes": 16384,
         },
-        "decision-case": {
-            "role": "readme-informational-case",
-            "variants": {("en", "light"), ("en", "dark"), ("zh-CN", "light"), ("zh-CN", "dark")},
-            "canvas": {"width": 1200, "height": 680},
-            "required_ids": {
-                "surface-request", "execution-first-path", "decision-hinge", "decision-first-path",
-                "optional-gate", "outcome-set", "reassessment-loop", "synthetic-label",
-            },
-            "max_bytes": 65536,
-        },
         "social-preview": {
             "role": "social-preview",
             "variants": {("bilingual", "dark")},
@@ -1895,8 +1885,8 @@ def validate_assets(validation: Validation, files: list[Path]) -> None:
     }
     entry_ids = [entry.get("id") for entry in entries if isinstance(entry, dict)]
     validation.require(
-        entry_ids == ["readme-banner", "brand-mark", "decision-case", "social-preview"],
-        "资产 manifest 必须按职责定义 README Banner、Brand Mark、Decision Case 和 Social Preview",
+        entry_ids == ["readme-banner", "brand-mark", "social-preview"],
+        "资产 manifest 必须按职责定义 README Banner、Brand Mark 和 Social Preview",
     )
     validation.require(len(entry_ids) == len(set(entry_ids)), "资产 manifest 的资产 ID 必须唯一")
 
@@ -2103,15 +2093,6 @@ def validate_assets(validation: Validation, files: list[Path]) -> None:
                 not any(element.tag.rsplit("}", 1)[-1] == "text" for element in svg_roots[path].iter()),
                 "Brand Mark 不得包含 text 或依赖系统字体",
             )
-
-    case_paths = variant_paths.get("decision-case", [])
-    validation.require(len(case_paths) == 4, "Decision Case 必须提供中英文 light/dark 四个变体")
-    if len(case_paths) == 4 and all(path in svg_roots for path in case_paths):
-        signatures = [_svg_structure_signature(svg_roots[path]) for path in case_paths]
-        validation.require(all(signature == signatures[0] for signature in signatures[1:]), "Decision Case 四个变体必须共享相同非文本几何")
-        for path in case_paths:
-            gate = _svg_element_by_id(svg_roots[path], "optional-gate")
-            validation.require(gate is not None and "stroke-dasharray" in gate.attrib, "Decision Case 的可选 Gate 必须实际使用虚线")
 
     social_paths = variant_paths.get("social-preview", [])
     validation.require(len(social_paths) == 1, "Social Preview 必须只有一个 dark SVG/PNG 变体")
@@ -2335,6 +2316,20 @@ def _markdown_h2(text: str) -> list[str]:
     return re.findall(r"^## (.+)$", text, re.MULTILINE)
 
 
+def _markdown_h2_section(text: str, heading: str) -> str:
+    marker = f"## {heading}\n"
+    start = text.find(marker)
+    if start < 0:
+        return ""
+    content_start = start + len(marker)
+    next_heading = text.find("\n## ", content_start)
+    return text[content_start:] if next_heading < 0 else text[content_start:next_heading]
+
+
+def _quoted_list_items(text: str) -> list[str]:
+    return re.findall(r"^- [“\"](.+?)[”\"]$", text, re.MULTILINE)
+
+
 def _readme_badges(text: str) -> list[tuple[str, str, str]]:
     pattern = re.compile(r"\[!\[([^]]+)\]\((https://img\.shields\.io/[^)]+)\)\]\(([^)]+)\)")
     return pattern.findall(text)
@@ -2375,13 +2370,22 @@ def validate_public_docs(validation: Validation) -> None:
             "name": "README.md",
             "text": readme_en,
             "sections": [
-                "What it is", "Why it matters", "A concrete case", "When to use it", "Install and try it",
+                "What it is", "Why it matters", "Say it in your own words", "When to use it", "Install and try it",
                 "What happens in a full check", "Safe by default", "Version, compatibility, and evidence",
                 "Documentation and contributing", "License",
             ],
-            "case_assets": ("assets/decision-case-light.svg", "assets/decision-case-dark.svg"),
-            "wrong_case_assets": ("assets/decision-case-light.zh-CN.svg", "assets/decision-case-dark.zh-CN.svg"),
-            "case_phrases": ("Illustrative synthetic case", "not a runtime transcript", "defines no result", "reassess"),
+            "gallery_heading": "Say it in your own words",
+            "gallery_intro": ("/think-it-through", "polished decision question", "product you are building"),
+            "gallery_concepts": (
+                ("chat app", "QQ"),
+                ("AI bookkeeping", "who"),
+                ("project-management", "freelancers", "first version"),
+                ("meeting notes", "action items", "users"),
+                ("invoice-organizing", "using", "pay"),
+                ("large customer", "inventory", "custom", "off course"),
+                ("browser extension", "growth", "features"),
+                ("developer tool", "main product", "stop"),
+            ),
             "safety_phrases": ("no network access", "no private-data access", "one current main agent", "no file or remote persistence", "no external action"),
             "moments": ("Before starting", "Before choosing a path", "Before committing resources", "Before doubling down", "After results arrive"),
             "boundary": ("decision layer", "not a project-management or task-execution layer"),
@@ -2397,12 +2401,21 @@ def validate_public_docs(validation: Validation) -> None:
             "name": "README.zh-CN.md",
             "text": readme_zh,
             "sections": [
-                "这是什么", "为什么需要它", "一个具体案例", "什么时候调用", "安装并完成第一次体验",
+                "这是什么", "为什么需要它", "直接说出你现在的想法", "什么时候调用", "安装并完成第一次体验",
                 "一次完整检查会发生什么", "默认安全与隐私", "版本、兼容性与证据", "文档与参与", "许可证",
             ],
-            "case_assets": ("assets/decision-case-light.zh-CN.svg", "assets/decision-case-dark.zh-CN.svg"),
-            "wrong_case_assets": ("assets/decision-case-light.svg", "assets/decision-case-dark.svg"),
-            "case_phrases": ("说明性合成案例", "不是真实 runtime transcript", "没有预设结果", "复判"),
+            "gallery_heading": "直接说出你现在的想法",
+            "gallery_intro": ("/think-it-through", "不用先把问题整理", "正在做的产品"),
+            "gallery_concepts": (
+                ("聊天软件", "QQ"),
+                ("AI 记账", "做给谁"),
+                ("项目管理", "自由职业者", "第一版"),
+                ("会议记录", "待办", "用户"),
+                ("发票整理", "有人用了", "付费"),
+                ("大客户", "库存", "定制", "带偏"),
+                ("浏览器插件", "增长", "改功能"),
+                ("开发者工具", "主产品", "停"),
+            ),
             "safety_phrases": ("不联网", "不读取私有数据", "只使用当前主 Agent", "不写入文件或远端保存", "不执行外部行动"),
             "moments": ("立项前", "选方向前", "投入资源前", "继续加码前", "结果回来后"),
             "boundary": ("决策层", "不是项目管理或任务执行层"),
@@ -2469,14 +2482,20 @@ def validate_public_docs(validation: Validation) -> None:
         )
         validation.require(contract["positioning"] in preface, f"{name} 首屏缺少 canonical 产品定位")
         validation.require(contract["value_statement"] in preface, f"{name} 首屏缺少投入前校准与结果后复判的价值说明")
-        validation.require(all(asset in readme for asset in contract["case_assets"]), f"{name} 缺少对应语言/主题 Decision Case")
-        validation.require(all(asset not in readme for asset in contract["wrong_case_assets"]), f"{name} 引用了错误语言 Decision Case")
+        gallery = _markdown_h2_section(readme, contract["gallery_heading"])
+        gallery_items = _quoted_list_items(gallery)
+        validation.require(all(phrase in gallery for phrase in contract["gallery_intro"]), f"{name} 原话画廊必须说明显式入口、无需预先整理和可直接描述产品处境")
+        validation.require(len(gallery_items) == 8, f"{name} 原话画廊必须恰好包含八条用户描述")
+        if len(gallery_items) == 8:
+            for index, (item, concepts) in enumerate(zip(gallery_items, contract["gallery_concepts"]), start=1):
+                validation.require(all(concept in item for concept in concepts), f"{name} 原话画廊第 {index} 条缺少对应产品阶段语义")
+        validation.require(not any(token in gallery for token in ("<picture>", "<img", "assets/")), f"{name} 原话画廊必须使用纯文本，不得继续嵌入案例图片")
+        validation.require("assets/decision-case-" not in readme, f"{name} 不得重新引用已移除的 Decision Case")
         validation.require(not any(asset in readme for asset in old_assets), f"{name} 不得引用旧视觉资产")
         validation.require("git clone --depth 1 --branch v0.3.0" in readme, f"{name} 缺少不可变 v0.3.0 tag 手动安装")
         validation.require("cd think-it-through-skill\ngit rev-parse HEAD\ntest ! -e" in readme, f"{name} 缺少安装时记录准确源码 revision 的命令")
         validation.require("```text\n/think-it-through\n```" in readme, f"{name} 缺少可靠显式入口")
         validation.require("test ! -e" in readme, f"{name} 缺少非覆盖式源码安装")
-        validation.require(all(phrase in readme for phrase in contract["case_phrases"]), f"{name} 缺少合成示例、非实测、无虚构结果或现实复判边界")
         validation.require(all(phrase in readme for phrase in contract["safety_phrases"]), f"{name} 缺少五项默认安全语义")
         validation.require(
             all(f"| **{moment}** |" in readme for moment in contract["moments"]),
@@ -2513,13 +2532,6 @@ def validate_public_docs(validation: Validation) -> None:
                 validation.require(label == expected_label and image_fragment in image and target_fragment in target, f"{name} 徽章职责、URL 或目标不正确：{label}")
                 validation.require("style=flat-square" in image, f"{name} 所有徽章必须使用 flat-square")
             validation.require(not any(forbidden_badge_terms.search(image + " " + label) for label, image, _ in badges), f"{name} 徽章不得宣称 Release、下载、coverage、stars、runtime、兼容认证、L5 或自动发现")
-        validation.require(
-            ("committed `main`" in readme and "uncommitted local work" in readme)
-            if name == "README.md"
-            else ("已提交 `main`" in readme and "本地未提交工作区" in readme),
-            f"{name} 缺少 Validate 徽章状态边界",
-        )
-
     validation.require("[简体中文](README.zh-CN.md)" in readme_en, "英文 README 缺少中文切换")
     validation.require("[English](README.md)" in readme_zh, "中文 README 缺少英文切换")
 

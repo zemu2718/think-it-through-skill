@@ -30,7 +30,7 @@ class AssetPipelineTests(unittest.TestCase):
     def test_manifest_has_required_roles_variants_and_generator(self) -> None:
         manifest = load_manifest()
         entries = {entry["id"]: entry for entry in manifest["assets"]}
-        self.assertEqual({"readme-banner", "brand-mark", "decision-case", "social-preview"}, set(entries))
+        self.assertEqual({"readme-banner", "brand-mark", "social-preview"}, set(entries))
         banner = entries["readme-banner"]
         self.assertEqual("readme-opening-brand-banner", banner["role"])
         self.assertEqual({"width": 1774, "height": 887}, banner["source_canvas"])
@@ -48,13 +48,7 @@ class AssetPipelineTests(unittest.TestCase):
             {("neutral", "light"), ("neutral", "dark")},
             {(item["locale"], item["theme"]) for item in entries["brand-mark"]["variants"]},
         )
-        self.assertEqual("readme-informational-case", entries["decision-case"]["role"])
-        self.assertEqual(
-            {("en", "light"), ("en", "dark"), ("zh-CN", "light"), ("zh-CN", "dark")},
-            {(item["locale"], item["theme"]) for item in entries["decision-case"]["variants"]},
-        )
         self.assertEqual({"width": 128, "height": 128}, entries["brand-mark"]["canvas"])
-        self.assertEqual({"width": 1200, "height": 680}, entries["decision-case"]["canvas"])
         generator = entries["social-preview"]["generator"]
         self.assertEqual("resvg-py", generator["renderer"])
         self.assertEqual("0.5.0", generator["renderer_version"])
@@ -69,7 +63,7 @@ class AssetPipelineTests(unittest.TestCase):
         self.assertEqual([], validation.errors)
 
     def test_missing_theme_or_locale_fails(self) -> None:
-        for asset_id, expected in (("readme-banner", "README Banner"), ("brand-mark", "Brand Mark"), ("decision-case", "Decision Case")):
+        for asset_id, expected in (("readme-banner", "README Banner"), ("brand-mark", "Brand Mark")):
             with self.subTest(asset_id=asset_id), self.repository_copy() as root:
                 manifest_path = root / "assets" / "manifest.json"
                 manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -89,12 +83,6 @@ class AssetPipelineTests(unittest.TestCase):
             ("assets/brand-mark-light.svg", "</svg>", '<text>font</text></svg>', "Brand Mark 不得包含 text"),
             ("assets/brand-mark-light.svg", 'id="clarity-channel"', 'id="missing-channel"', "缺少稳定结构 ID"),
             ("assets/brand-mark-dark.svg", 'd="M64 12 C92 12 112 34 112 61 C112 80 102 90 93 102 V116"', 'd="M64 11 C92 12 112 34 112 61 C112 80 102 90 93 102 V116"', "共享相同非颜色几何"),
-            (
-                "assets/decision-case-light.svg",
-                '<g id="optional-gate" font-family="ui-sans-serif, system-ui, sans-serif" stroke-dasharray="9 9">',
-                '<g id="optional-gate" font-family="ui-sans-serif, system-ui, sans-serif">',
-                "可选 Gate 必须实际使用虚线",
-            ),
             ("assets/social-preview.svg", "</svg>", '<text>font</text></svg>', "Social Preview 不得包含 text"),
             ("assets/social-preview.svg", "</svg>", '<linearGradient id="bad"/></svg>', "不得使用 gradient 或 filter"),
         )

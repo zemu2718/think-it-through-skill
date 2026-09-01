@@ -21,8 +21,6 @@ Before an important commitment, clarify what you really need to decide and which
 
 **Reliable entry today:** invoke `/think-it-through` explicitly in Claude Code.
 
-The Validate badge reports the workflow on committed `main`; it does not describe uncommitted local work.
-
 </div>
 
 ## What it is
@@ -37,21 +35,18 @@ AI can now produce plans, code, campaigns, research, and polished deliverables b
 
 Think It Through creates a clear opening before commitment: hold the request, desired result, constraints, and unknowns in view until the real decision comes into focus—then let reality answer what reasoning alone cannot.
 
-## A concrete case
+## Say it in your own words
 
-> **Illustrative synthetic case—not a runtime transcript, user story, testimonial, compatibility result, or real model run.**
+When using `/think-it-through`, you do not need to turn the situation into a polished decision question first. Describe the idea, the product you are building, and where you are now—for example:
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/decision-case-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="assets/decision-case-light.svg">
-  <img src="assets/decision-case-light.svg" alt="A synthetic SaaS case contrasts producing more features and launch material while willingness to pay remains unknown with first deciding whether continued investment is worthwhile, testing that through real behavior, and reassessing from the result." width="1200">
-</picture>
-
-You ask AI to **keep building a SaaS and write the launch plan**. An execution-first response can produce more features and campaign material while leaving the decisive unknown untouched: will an unfamiliar customer show real willingness to pay?
-
-Think It Through reframes the request as **whether continued investment is worth it now**. Instead of treating output as progress, it first directs the next commitment toward a real behavior that can support or oppose that judgment.
-
-When that signal arrives, the choice opens again: continue, adjust, pause, or stop. The example deliberately defines no result, success metric, sample size, price, or deadline; the diagram and explanation show a relationship, not evidence that any runtime behaved this way.
+- “I want to build a chat app like QQ. What do you think?”
+- “I have an idea for an AI bookkeeping product, but I still do not know who it should really be for.”
+- “I am building a project-management tool for freelancers. The feature list keeps growing, and I do not know how far the first version should go.”
+- “I built a prototype that turns meeting notes into action items, but I do not know which users to approach first.”
+- “People are using my invoice-organizing tool, but no one has been willing to pay for it.”
+- “A large customer wants to buy my inventory tool, but only if I add a lot of custom work. I am worried it will pull the product off course.”
+- “My browser extension still has regular users, but growth is slowing. I keep changing features and cannot tell whether I am improving the right thing.”
+- “I have been working on this developer tool for a long time. It is crowding out my main product, but I still cannot bring myself to stop.”
 
 ## When to use it
 

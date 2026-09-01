@@ -21,7 +21,7 @@ This file is a concise derivative of `REQUIREMENTS.md` and `PRODUCT.md`, not a s
 
 - **Primary Audience**: AI-native solo operators, independent builders, and small-team leads who control action but lack a dedicated research and challenge function
 - **Key Problem**: AI can execute a surface task convincingly before the user has confirmed that it serves the real objective, making a wrong direction faster and more expensive
-- **Their Language**: “Should I build this?”, “Which direction should I choose?”, “Is this worth more time or budget?”, “What should I validate first?”, “Should I continue, adjust, pause, or stop?”
+- **Their Language**: Raw product and business descriptions such as “I want to build…”, “I still don't know who this is really for”, “the first version keeps growing”, “people use it but won't pay”, or “I have invested too much to stop”
 
 ## Positioning
 
@@ -49,7 +49,7 @@ This file is a concise derivative of `REQUIREMENTS.md` and `PRODUCT.md`, not a s
 - **Dashed optional Gate**: Evidence or participation only when needed and authorized; always visually secondary.
 - **Returning loop**: Real-world results reopen the decision.
 - **Accessibility**: Meaning must also be carried by shape, line style, weight, position, and labels; color is never the only signal.
-- **Asset roles**: README Banner is the opening brand experience; Brand Mark provides compact recognition; Decision Case explains one concrete pain and transformation; Social Preview carries brand plus positioning into sharing contexts. No asset should duplicate the full formal protocol.
+- **Asset roles**: README Banner is the opening brand experience; Brand Mark provides compact recognition; Social Preview carries brand plus positioning into sharing contexts. Localized README text shows the raw product and business thoughts users can bring as-is. No asset should duplicate the full formal protocol.
 - **Visual standard**: Premium through restraint—deep ink, warm neutral space, graphite, disciplined dark teal, rare amber, clear hierarchy, and only meaning-bearing geometry. Natural 3D material shading and one contact shadow are acceptable in the canonical Banner; decorative gradients, glow, glass effects, stacked shadows, generic AI workflows, robots, neural networks, pseudo interfaces, and node clouds are not.
 - **Badge boundary**: The README may show only functional, verifiable status badges for the validation workflow, Agent Skill type, current stable source, and MIT license. The stable-source badge may link to the matching immutable tag, but badges never imply runtime certification, discovery success, or real-model behavior.
 
@@ -69,7 +69,7 @@ The README journey is:
 ```text
 5 seconds: identify the product, position, trustworthy status, and reliable entry
 → 20–30 seconds: recognize that AI can execute quickly while the user must still decide what is worth doing
-→ 45–60 seconds: judge fit through one concrete synthetic case
+→ 45–60 seconds: judge fit through several raw product and business thoughts the user could bring as-is
 → 2 minutes: install the pinned stable release and try explicit invocation
 → then: disclose safety, compatibility, and evidence boundaries progressively
 ```

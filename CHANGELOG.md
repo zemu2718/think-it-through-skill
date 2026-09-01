@@ -14,8 +14,9 @@
 
 ### Changed
 
-- 将 Brand Mark 调整为头像与紧凑场景资产，并把 Decision Thread / Decision Hinge 保留为 Decision Case 与 Social Preview 的二级解释语法。
-- 统一 Brand Mark、双语/主题 Decision Case 与 Social Preview 的暖中性色、深墨、克制深青和极少暖色视觉语言，同时保持可选 Gate、未知边界与结果复判语义。
+- 将 Brand Mark 调整为头像与紧凑场景资产，并把 Decision Thread / Decision Hinge 保留为 Social Preview 的二级解释语法。
+- 统一 Brand Mark 与 Social Preview 的暖中性色、深墨、克制深青和极少暖色视觉语言，同时保持可选 Gate、未知边界与结果复判语义。
+- 用双语原始产品与经营描述替换 README 中的单一合成 SaaS 案例，并移除四个 Decision Case SVG 及对应 manifest、文档和校验合同；不改变产品行为、安全、授权、runtime、兼容性或 evidence 合同。
 - 扩展资产生成与 freshness 检查，使 README Banner 与 Social Preview 的派生 PNG 均由同一脚本生成、完整解码并按像素校验；本地生成不代表 GitHub 已配置 Social Preview。
 - 更新双语 README 首图、品牌派生摘要、视觉资产说明与贡献维护流程；不改变产品行为、安全、授权、兼容性或 evidence 合同。
 - 统一双语首屏、产品定位、品牌摘要与 Social Preview 为“AI 可以快速执行，但用户仍决定什么值得做”的表达，并补全重要投入前校准、结果回来后复判的价值说明；不改变产品行为、安全、授权、runtime、兼容性或 evidence 合同。

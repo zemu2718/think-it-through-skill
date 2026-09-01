@@ -23,10 +23,9 @@ Shape, weight, line style, position, and labels carry meaning alongside color. N
 | --- | --- | --- |
 | README Banner | `readme-banner-source.png` | `readme-banner-light.png`, `readme-banner-dark.png` |
 | Brand Mark | `brand-mark-light.svg`, `brand-mark-dark.svg` | the same SVG files |
-| Decision Case | four `decision-case-*.svg` locale/theme variants | the same SVG files |
 | Social Preview | `social-preview.svg` | `social-preview.png` |
 
-The README Banner is the opening brand experience. The Brand Mark carries recognition in compact contexts such as avatars and icons. The Decision Case visualizes one synthetic SaaS decision and requires an adjacent text equivalent in each README; it is not a testimonial, runtime transcript, or behavior evidence. Social Preview is a restrained sharing card, not an installation or compatibility matrix.
+The README Banner is the opening brand experience. The Brand Mark carries recognition in compact contexts such as avatars and icons. Social Preview is a restrained sharing card, not an installation or compatibility matrix. Product inputs in the READMEs are localized text, not managed visual assets.
 
 All top-level SVG and PNG files under `assets/` must be declared by the manifest. Do not keep a second canonical copy under `output/` or reference exploration files from public documentation.
 
@@ -60,7 +59,7 @@ Locally generated PNGs prove only that repository outputs are fresh. Uploading S
 
 ## Accessibility and negative standards
 
-All SVGs include `title` and `desc`. Brand Mark light/dark variants share geometry. Decision Case variants share non-text geometry and equivalent English/Chinese semantics. The optional Gate is dashed and secondary; the reassessment loop has a distinct returning shape. README images use localized, meaningful alt text and have adjacent prose for the informational case.
+All SVGs include `title` and `desc`. Brand Mark light/dark variants share geometry. The optional Gate is dashed and secondary; the reassessment loop has a distinct returning shape. README images use localized, meaningful alt text.
 
 The visual character is premium through restraint: deep ink, warm neutral space, graphite, disciplined teal, rare amber, clear hierarchy, and only meaning-bearing geometry. Natural continuous shading, grooves, and one contact shadow in the 3D Banner express physical form; they are not decorative effects.
 
