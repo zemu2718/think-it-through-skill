@@ -5,52 +5,30 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme-banner-dark.png">
   <source media="(prefers-color-scheme: light)" srcset="assets/readme-banner-light.png">
-  <img src="assets/readme-banner-light.png" alt="多层观察框架逐步对齐成一个清晰开口，并保留一个让判断可以再次修正的小轴点。" width="1200">
+  <img src="assets/readme-banner-light.png" alt="多层观察框架逐步对齐成一个清晰开口，并保留一个让判断可以再次修正的小轴点。" width="960">
 </picture>
 
 # 想清楚 · Think It Through
 
 **AI 能把事情做得很快，但不能替你决定什么值得做。**
 
-重要投入之前，先确认真正要决定什么、哪个未知会改变方向；结果回来之后，再决定继续、调整、暂停还是停止。
+重要投入前，先把真正要做的决定想清楚，再行动。
 
-[![Validate](https://img.shields.io/github/actions/workflow/status/zemu2718/think-it-through-skill/validate.yml?branch=main&style=flat-square&label=Validate)](https://github.com/zemu2718/think-it-through-skill/actions/workflows/validate.yml?query=branch%3Amain)
-[![Agent Skill](https://img.shields.io/badge/type-Agent%20Skill-0F766E?style=flat-square)](skills/think-it-through/SKILL.md)
-[![Stable source v0.3.0](https://img.shields.io/badge/stable%20source-v0.3.0-172033?style=flat-square)](https://github.com/zemu2718/think-it-through-skill/tree/v0.3.0/skills/think-it-through)
-[![MIT License](https://img.shields.io/badge/license-MIT-172033?style=flat-square)](LICENSE)
+[![MIT License](https://img.shields.io/github/license/zemu2718/think-it-through-skill?style=flat-square)](LICENSE) [![Latest Release](https://img.shields.io/github/v/release/zemu2718/think-it-through-skill?style=flat-square&label=release)](https://github.com/zemu2718/think-it-through-skill/releases/latest) [![Validate](https://github.com/zemu2718/think-it-through-skill/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/zemu2718/think-it-through-skill/actions/workflows/validate.yml?query=branch%3Amain)
 
-**当前可靠入口：** 在 Claude Code 中显式调用 `/think-it-through`。
+[什么时候调用](#什么时候调用) · [如何工作](#它怎样帮你想清楚) · [安装](#安装与使用) · [默认安全](#默认安全与更多信息)
 
 </div>
 
-## 这是什么
+## 你会得到什么
 
-“想清楚”帮助你看清表面请求背后真正要做的决定，找出最可能改变方向的一个未知，再选出一个现实可以检验的下一步。
-
-它是决策层，不是项目管理或任务执行层。你可以在重要投入前调用它，也可以在现实结果回来后，用它判断要不要做、选哪条路、投入到什么边界，以及继续、调整、暂停还是停止。
-
-## 为什么需要它
-
-AI 已经可以很快产出方案、代码、投放文案、调研和漂亮的交付物，即使真正的选择还没有说清。于是，错误方向也会更快、更有说服力、更昂贵地推进。
-
-“想清楚”会在承诺资源前留出一个看清决定的开口：把眼前动作、真正想得到或保护的结果、约束和未知同时放在视野里，直到真正的选择浮现，再把仅靠推理无法回答的问题交给现实。
-
-## 直接说出你现在的想法
-
-使用 `/think-it-through` 时，不用先把问题整理成标准的决策题。直接说出你的想法、正在做的产品和眼前处境，例如：
-
-- “我想做一个像 QQ 一样的聊天软件，你觉得怎么样？”
-- “我有个 AI 记账产品的想法，但还没想清楚它到底该做给谁。”
-- “我在做一个给自由职业者用的项目管理工具，想加的功能越来越多，第一版不知道该做到什么程度。”
-- “我做了一个能把会议记录变成待办的原型，但不知道应该先找哪类用户。”
-- “我的发票整理工具已经有人用了，但一直没人愿意付费。”
-- “一个大客户愿意买我的库存工具，但要求做很多定制，我怕产品会被带偏。”
-- “我的浏览器插件还有固定用户，可增长越来越慢，我一直改功能也不知道改得对不对。”
-- “这个开发者工具已经做了很久，还在挤占主产品的时间，我舍不得停。”
+- **一个综合判断：** 现在更适合推进、先验证，还是对已经开始的事情继续、调整、暂停或停止，并说明这个判断成立的条件。
+- **一个现实检验：** 下一步做什么、观察什么，以及什么结果会改变当前判断。
+- **一份决策快照：** 保留目标、事实、推断、假设、未知、投入边界和重新判断的条件。
 
 ## 什么时候调用
 
-**记住一个简单规则：** 重要投入前调用；现实结果回来后，别惯性继续，先调用。
+**记住一个简单规则：** 重要投入前先想清楚；现实结果回来后，别惯性继续，先重新判断。
 
 | 决策节点 | 可以直接带来的议题 |
 | --- | --- |
@@ -60,98 +38,62 @@ AI 已经可以很快产出方案、代码、投放文案、调研和漂亮的�
 | **继续加码前** | 现有证据是否值得再投入时间、预算、范围或声誉成本？ |
 | **结果回来后** | 根据实际发生的事，应该继续、调整、暂停还是停止？ |
 
-不用先学方法，也不用整理正式文档。直接贴出正在考虑的选择、准备采取的动作和已知约束即可；哪怕只是觉得“哪里不对”，也可以从这句话开始。
-
 单纯查事实、决定已明确的低风险执行、纯创作，以及没有待决用户选择的代码审查或调研，不需要进入完整流程。紧急事件先采取保护动作；医疗、法律、投资等专业事项不能用它替代持证专业判断。
+
+## 它怎样帮你想清楚
+
+### 工作路径
+
+1. **先确认真正要决定什么。** 从表面任务出发，分清眼前动作和真正希望得到或保护的结果，把宽泛议题收敛为当前决定。
+2. **找到会改变方向的一个未知。** 区分事实、推断、假设和未知，只追问一个会改变方案排序、行动方向或投入边界的问题。
+3. **让答案来自正确的地方。** 价值、底线和风险承受由你回答；公开事实只有确实会改变判断时才调研；承诺、客户行为和专业责任交给对应真人或现实结果。
+4. **让现实结果修正判断。** 给出有成立条件和反转条件的综合判断，再设计一个尽量可撤回的现实检验，并在结果回来后重新判断。
+
+### 会用到哪些方法
+
+**每次都会先做基础分析。** 它会帮你对齐真正目的与当前决定，分清已经知道的、暂时推断的和仍需验证的，并找到最可能改变判断的关键未知。
+
+两种核心方法会按需加入：
+
+- **双向钢人：** 用相近的证据标准检验当前方向和最强替代方向，避免只为已有倾向寻找理由。
+- **失败预演：** 假设当前路径已经失败，倒推最可能的失败机制、早期信号和保护边界。
+
+<details>
+<summary><strong>查看七种专项方法</strong></summary>
+
+- **对象校准：** 分清使用者、付费者、受影响者和代价承担者，确认到底为谁解决什么问题。
+- **系统瓶颈：** 多个问题互相牵制时，分清表面症状和真正牵动全局的约束。
+- **阶段匹配：** 判断外部条件是否已经变化，以及过去有效的策略还适不适合现在。
+- **资源支点：** 时间、资金或能力有限时，找出最值得集中投入的位置和承诺边界。
+- **边界契约：** 把合作中的责任、投入、决定权、承诺和退出条件说清楚并变得可检验。
+- **沟通匹配：** 判断已经清楚后，让信息、证据、渠道和反馈方式适合对象与目的。
+- **证据闭环：** 把原目标和假设与已经发生的结果对齐，重新判断继续、调整、暂停还是停止。
+
+</details>
+
+你不需要预先了解或选择这些方法。它只会推荐当前问题真正需要的思考角度，并在使用前让你确认。
+
+需要查资料，或请其他 Agent、真人补充信息时，它会先说明原因并征得你的同意。
 
 ## 安装与使用
 
-### 安装到 Claude Code
+把下面这句话发给你正在使用的 Agent：
 
-安装 [GitHub CLI 2.98.0 或更高版本](https://cli.github.com/)后，使用下面的命令安装到 Claude Code 的用户目录：
-
-```bash
-gh skill install \
-  zemu2718/think-it-through-skill \
-  think-it-through@v0.3.0 \
-  --agent claude-code \
-  --scope user
+```text
+帮我安装这个 Skill：https://github.com/zemu2718/think-it-through-skill
 ```
 
-如果当前 Claude Code 会话启动时还没有顶层 Skill 目录，请在安装后重启 Claude Code。
+这是面向不同宿主的一句话安装请求；当前 Agent 会根据自身能力、权限和 Skill 目录约定尝试安装。无法完成时，请查看[详细安装指南](docs/installation.md)；宿主状态与证据边界见[兼容性说明](docs/compatibility-and-evidence.md)。安装只表示文件进入目标目录，不等于宿主已经通过真实运行验证。
 
-### 调用
-
-当前可靠入口是在 Claude Code 中显式调用：
+目前有可靠调用说明的入口是 Claude Code。在其中安装后，显式调用：
 
 ```text
 /think-it-through
 ```
 
-然后直接说出正在考虑的选择、准备采取的动作和已经知道的约束。也可以粘贴这个合成示例：
+然后直接说出正在考虑的选择、准备采取的动作和已经知道的约束。
 
-```text
-我做了一个面向小商家的排班 SaaS，但还没有陌生客户付费。
-在继续开发三个月并写投放方案前，帮我判断现在最该验证什么。
-```
-
-### 调用后会先发生什么
-
-它不会立即替你写投放方案，而会先帮你说清这次真正要做的决定，以及哪个未知最可能改变方向。
-
-安装或调用本身不会授权联网、读取私有数据、增加 Agent、写入文件或远端保存，也不会授权执行外部行动。这些能力仍是条件能力，只有取得各自具体授权后才会使用。
-
-### 其他安装方式
-
-**Release asset。** 发布的 `.skill` 是 ZIP 兼容归档，只包含 manifest 声明的运行时文件。固定版本的 `skills` CLI 可以先交互选择安装目标：
-
-```bash
-npx -y skills@1.5.23 add \
-  https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill
-```
-
-如果要把复制式、用户级安装写入该安装器版本认识的全部目标：
-
-```bash
-npx -y skills@1.5.23 add \
-  https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill \
-  --agent '*' \
-  --global \
-  --copy \
-  --yes
-```
-
-`--agent '*'` 只表示 `skills@1.5.23` 认识的全部目标映射；不表示所有 AI 客户端都在其中，也不表示这些客户端已经通过真实 runtime 验证。需要交互选择时省略该参数；只装一个目标时，把 `'*'` 换成准确 target。
-
-安装前可以使用 Release 同时发布的 [`SHA256SUMS`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/SHA256SUMS) 核对下载归档。
-
-**手动兜底。** 如果两个安装器都不支持你的宿主，请按该宿主的 Agent Skills 目录约定复制 Skill。Claude Code 的命令如下：
-
-```bash
-git clone --depth 1 --branch v0.3.0 https://github.com/zemu2718/think-it-through-skill.git
-cd think-it-through-skill
-git rev-parse HEAD
-test ! -e ~/.claude/skills/think-it-through
-mkdir -p ~/.claude/skills
-cp -R skills/think-it-through ~/.claude/skills/
-```
-
-非覆盖检查会在旧副本已存在时停止。不要混合两个版本；请先检查，再自行重命名或删除旧副本后重新安装。
-
-无论使用哪种方式，安装都只说明文件已经进入目标目录，不能证明某个 runtime/version 已经加载、遵循 Skill 或支持原生能力。
-
-## 一次完整检查会发生什么
-
-1. **把动作和目的分开。** 说清眼前任务究竟要带来或保护什么结果。
-2. **只确认有增量的思考角度。** 基础分析始终存在；额外方法只有在提供独特价值且经你确认时才加入。
-3. **只回答一个决定性问题。** 聚焦最可能改变方向、排序或投入边界的一个答案。
-4. **只有真正需要时才升级。** 证据或独立参与是在你回答后的条件支路，范围有界、另行授权，不是固定流水线。
-5. **得到一个综合结果。** 交付一个条件化判断、一个主现实证据闭环和一份可复制的决策快照，并把事实、推断、假设、未知和反转信号分开保留。
-6. **让现实回来复判。** 新结果可以修正判断，而不是被迫证明原判断正确。
-
-方法、调研、额外 Agent 和真人输入都服务于这一个结果，不会变成彼此分离的报告堆或多数票。
-
-## 默认安全与隐私
+## 默认安全与更多信息
 
 没有另行取得具体授权时，Skill 默认：
 
@@ -161,59 +103,12 @@ cp -R skills/think-it-through ~/.claude/skills/
 - **不写入文件或远端保存**；
 - **不执行外部行动**，包括发送、发布、购买、删除或联系他人。
 
-能力调用、参与委派、私有数据访问和外部行动是四类彼此独立的授权。确认方法、选择上下文检查点、设置 Agent 上限或提供反馈，都不会自动授权其中任何一类。被拒绝、失败或没有执行的动作不会写成已经完成。
+需要这些能力时，它会分别说明要做什么并先征得你的同意；一项同意不会自动扩张到其他能力。
 
-正式行为、安全与验收边界以 [`REQUIREMENTS.md`](REQUIREMENTS.md) 和 [`SECURITY.md`](SECURITY.md) 为准。
+- **开始使用：** [安装指南](docs/installation.md) · [兼容性与证据](docs/compatibility-and-evidence.md)
+- **了解边界：** [产品说明](PRODUCT.md) · [正式合同](REQUIREMENTS.md) · [安全政策](SECURITY.md)
+- **参与改进：** [参与贡献](CONTRIBUTING.md) · [反馈问题](https://github.com/zemu2718/think-it-through-skill/issues/new?template=install-or-runtime-feedback.yml)
 
-## 版本、兼容性与证据
+如果你实际用过后觉得有帮助，欢迎 Star，方便以后再次找到。
 
-**稳定发布：** [`v0.3.0`](https://github.com/zemu2718/think-it-through-skill/releases/tag/v0.3.0)，由不可变 Git tag、GitHub Release、可下载的 [`think-it-through.skill`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill) 与 [`SHA256SUMS`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/SHA256SUMS) 共同建立；后续开发继续位于持续维护的 [`main`](https://github.com/zemu2718/think-it-through-skill/tree/main/skills/think-it-through)。发布状态表示产品合同和确定性准入链已经确立，不代表所有客户端均已认证，也不会把未运行的兼容层级自动改为通过。
-
-<details>
-<summary>兼容层级与当前公开状态</summary>
-
-“符合开放格式”“安装器能发现”“完成精确安装”“runtime 真实加载”“模型真实遵循”和“原生能力可用”是不同事实。
-
-| 层级 | 含义 | 当前公开状态 |
-| --- | --- | --- |
-| L0 | 格式校验 | 公开 runtime 矩阵为 `not_run` |
-| L1 | 安装器发现 | `not_run` |
-| L2 | 精确安装 | `not_run` |
-| L3 | 真实 runtime 加载 | `not_run` |
-| L4 | 真实纯文本行为 | `not_run` |
-| L5 | 真实原生能力 | `not_run` |
-
-v0.3.0 为能够加载 Agent Skills 目录并遵循文本指令的宿主提供可移植纯文本基线。仓库维护 Claude Code、Codex、Cursor、Gemini CLI、Hermes Agent、OpenClaw、OpenCode 与 CodeBuddy / WorkBuddy 八个安装器目标映射；未列出的兼容宿主也可以按自身 Skill 目录约定使用同一文本合同。映射或可移植合同不等于已验证 runtime，机器可读证据事实源是 [`compatibility/runtime-support.json`](compatibility/runtime-support.json)。静态 CI、schema、fixtures、评分器和图示可以证明合同已经定义，不能证明真实模型运行、自然语言自动发现或宿主原生体验。
-
-</details>
-
-<details>
-<summary>自动发现与上下文检查点的限制</summary>
-
-自动发现目前不是可靠入口：冻结 v0.1 holdout 的总结果是 **9/16——正例只有 1/8 触发，负例 8/8 保持不触发**。完整证据与限制见 [`benchmarks/trigger-v0.1/`](benchmarks/trigger-v0.1/README.md)。历史 [`v0.1 行为证据`](benchmarks/behavior-v0.1/README.md) 只有三个固定场景、每个配置一次运行，不能证明 v0.2.0 或 v0.3.0 行为。
-
-v0.3.0 正式合同只在 Skill 已经加载、当前没有正式流程，并且对话跨入立项、选方向、重大投入、继续加码或结果复判时，定义一个轻量上下文检查点。真实多轮状态仍为 `not_run`；合同不能证明自然语言自动发现、自动加载或对话中途可靠唤起。当前可靠入口仍是显式 `/think-it-through`。
-
-</details>
-
-## 文档与参与
-
-| 你想了解 | 去这里 |
-| --- | --- |
-| 产品目的、目标用户和非目标 | [`PRODUCT.md`](PRODUCT.md) |
-| 唯一正式行为、安全与验收合同 | [`REQUIREMENTS.md`](REQUIREMENTS.md) |
-| 运行时维护源 | [`skills/think-it-through/SKILL.md`](skills/think-it-through/SKILL.md) |
-| `.skill` 精确文件集合 | [`distribution/package-manifest.json`](distribution/package-manifest.json) |
-| runtime 兼容证据状态 | [`compatibility/runtime-support.json`](compatibility/runtime-support.json) |
-| 反馈安装或 runtime 观察 | [打开反馈表单](https://github.com/zemu2718/think-it-through-skill/issues/new?template=install-or-runtime-feedback.yml) |
-| 参与具体用例或修复 | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
-| 私下报告安全问题 | [`SECURITY.md`](SECURITY.md) |
-| 源码版本历史 | [`CHANGELOG.md`](CHANGELOG.md) |
-
-最有价值的是具体、可测试的贡献：能暴露问题的真实决策用例、应触发或不应触发的近邻样本、可复现的安装观察，以及可访问性、隐私、安全或来源追溯修正。反馈安装或 runtime 问题时，请附 `git rev-parse HEAD`、准确 runtime 版本、操作系统、安装方式、复现步骤、预期结果与实际结果。报告先作为复现和优化线索；只有绑定版本、完成脱敏与审阅并形成 approved evidence 后，才会改变兼容矩阵。
-
-如果你实际用过后觉得有帮助，欢迎 Star，方便以后再次找到。具体用例和问题反馈同样重要。
-
-## 许可证
-
-想清楚使用 [MIT License](LICENSE)。第三方方法的来源、固定 revision、许可证和实质修改记录在 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) 与[第三方审计](docs/third-party-audit.md)中。
+想清楚使用 [MIT License](LICENSE)。第三方来源与改编记录见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) 和[第三方审计](docs/third-party-audit.md)。

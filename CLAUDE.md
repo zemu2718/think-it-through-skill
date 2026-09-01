@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 本仓库发布纯指令型 Agent Skill“想清楚 · Think It Through”。v0.3.0 将其定义为重要行动前后的决策与证据协议：先把“表面任务 → 真实目的 → 决策问题”收敛为 R-align / R-method / A；用户回答后才按需要路由有界 Evidence / Participation Gate；最终 B 交付一个综合判断、一个主现实证据闭环、可复制的决策快照和四项反馈。
 
-文档职责必须保持单一：`README.md` 是 GitHub 默认展示的中文用户入口，`README.en.md` 是英文用户入口；`PRODUCT.md` 说明产品愿景、目标用户与原则；`REQUIREMENTS.md` 是唯一正式行为、安全与验收依据；`docs/product-architecture-v0.3.0.md` 只保留非规范性架构理由、历史取舍和验证路线；`CHANGELOG.md` 记录版本事实。不要在多个文件维护第二套正式合同。
+文档职责必须保持单一：`README.md` 是 GitHub 默认展示的精简中文用户入口，`README.en.md` 是英文用户入口，只负责让普通用户看懂价值、判断是否适用并开始使用；`docs/installation.md` 与 `docs/installation.en.md` 承接详细安装和文件核验；`docs/compatibility-and-evidence.md` 与 `docs/compatibility-and-evidence.en.md` 解释公开兼容状态、冻结证据和提升边界，但不是第二份合同；`PRODUCT.md` 说明产品愿景、目标用户与原则；`REQUIREMENTS.md` 是唯一正式行为、安全与验收依据；`docs/product-architecture-v0.3.0.md` 只保留非规范性架构理由、历史取舍和验证路线；`CHANGELOG.md` 记录版本事实。不要在多个文件维护第二套正式合同。
 
 当前可靠调用方式是 `/think-it-through`。自动发现的冻结 v0.1 holdout 仅为 9/16（正例 1/8、负例 8/8），不要把自然语言自动加载或其他客户端兼容性描述为已经通过。
 
@@ -208,7 +208,7 @@ DecisionRecord 默认：
 2. `REQUIREMENTS.md`，必要时 `PRODUCT.md`；
 3. `scripts/grade_contracts.py` 与 `scripts/test_contract_graders.py`；
 4. current fixtures 与 core / enhancement UX；
-5. 用户可见命令、兼容性、benchmark、安全或证据边界变化时同步中英文 README；
+5. 普通用户价值、适用性和开始使用路径变化时同步双语 README；详细安装变化同步 `docs/installation*.md`；兼容性、benchmark 或证据边界变化同步 `docs/compatibility-and-evidence*.md`；安全边界按读者路径同步 README 摘要、对应指南与正式文档；
 6. `scripts/validate_repo.py` 的版本、schema、文件集合和一致性断言；
 7. 分发集合与本地安装副本。
 
@@ -240,7 +240,7 @@ DecisionRecord 默认：
 - v0.3.0 是当前稳定源码版本与正式产品合同；v0.2.0 是历史稳定版本，不得改写其历史事实；
 - 稳定源码准入由合同、schema、fixtures、grader、公开文档、确定性仓库校验、归档复验、固定格式检查和安装器 L1/L2 smoke 建立，不要求逐客户端真实验证先完成；
 - Git commit、tag、GitHub Release 和可下载 asset 只在对应对象真实存在时声明；稳定源码状态不得冒充这些公开对象；
-- README、PRODUCT、REQUIREMENTS 和当前架构说明可以说明稳定源码状态与已由实际 evidence 建立的兼容层级；运行时包不复制仓库级矩阵或内部评测状态；
+- 双语 README 保持普通用户入口，不复制安装手册、兼容矩阵或内部评测状态；双语兼容与证据说明可以解释稳定发布对象与已由实际 evidence 建立的兼容层级；PRODUCT、REQUIREMENTS 和当前架构说明按各自职责保留产品、正式合同与架构事实；运行时包不复制仓库级矩阵或内部评测状态；
 - 当前可靠入口仍用“Claude Code 显式 `/think-it-through` + 纯文本跨宿主基线 + 条件能力逐会话协商”表达；
 - `evals/` 继续按实际执行情况维护内部机器状态，不得把未运行项改成 `passed`；v0.3.0 stable 与真实多轮状态 `not_run` 可以同时成立；
 - 普通 CI 做合同、schema、L0 格式和 L1/L2 安装器检查，不调用模型 provider，也不自动修改兼容矩阵；

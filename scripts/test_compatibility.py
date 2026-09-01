@@ -177,6 +177,14 @@ class CompatibilityTests(unittest.TestCase):
         _validate_runtime_support_claims(validation, "Supports 2 runtimes", support)
         self.assertTrue(any("矩阵只有 1 个" in error for error in validation.errors))
 
+    def test_runtime_claim_in_compatibility_guide_is_rejected(self) -> None:
+        validation = self._validate_compatibility_doc_mutation(
+            "docs/compatibility-and-evidence.en.md",
+            "## Machine sources",
+            "Supports 50+ runtimes.\n\n## Machine sources",
+        )
+        self.assertTrue(any("矩阵只有 0 个" in error for error in validation.errors), validation.errors)
+
     def _validate_mutated_compatibility(
         self,
         support: dict,
@@ -185,11 +193,7 @@ class CompatibilityTests(unittest.TestCase):
     ) -> Validation:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            source = ROOT / "compatibility"
-            target = root / "compatibility"
-            shutil.copytree(source, target)
-            shutil.copyfile(ROOT / "README.md", root / "README.md")
-            shutil.copyfile(ROOT / "README.en.md", root / "README.en.md")
+            target = self._copy_compatibility_fixture(root)
             (target / "runtime-support.json").write_text(
                 json.dumps(support, ensure_ascii=False, indent=2) + "\n",
                 encoding="utf-8",
@@ -203,12 +207,41 @@ class CompatibilityTests(unittest.TestCase):
             validation = Validation()
             with mock.patch("validate_repo.ROOT", root):
                 validate_compatibility(validation)
-            validation.errors = [
-                error
-                for error in validation.errors
-                if not error.startswith("README")
-            ]
             return validation
+
+    def _validate_compatibility_doc_mutation(
+        self,
+        relative: str,
+        old: str,
+        new: str,
+    ) -> Validation:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._copy_compatibility_fixture(root)
+            path = root / relative
+            text = path.read_text(encoding="utf-8")
+            self.assertIn(old, text)
+            path.write_text(text.replace(old, new, 1), encoding="utf-8")
+            validation = Validation()
+            with mock.patch("validate_repo.ROOT", root):
+                validate_compatibility(validation)
+            return validation
+
+    def _copy_compatibility_fixture(self, root: Path) -> Path:
+        target = root / "compatibility"
+        shutil.copytree(ROOT / "compatibility", target)
+        for relative in (
+            "README.md",
+            "README.en.md",
+            "docs/installation.md",
+            "docs/installation.en.md",
+            "docs/compatibility-and-evidence.md",
+            "docs/compatibility-and-evidence.en.md",
+        ):
+            destination = root / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / relative, destination)
+        return target
 
     def _minimal_evidence(self, kind: str, level: str) -> dict:
         evidence = {

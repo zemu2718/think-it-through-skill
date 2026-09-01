@@ -28,6 +28,8 @@ Use the document that matches your task:
 | Runtime instructions | The relevant part of [`SKILL.md`](skills/think-it-through/SKILL.md) |
 | Architecture rationale or future evidence work | [`docs/product-architecture-v0.3.0.md`](docs/product-architecture-v0.3.0.md) |
 | README, brand wording, or visual assets | [`PRODUCT.md`](PRODUCT.md), then [`.agents/brand-context.md`](.agents/brand-context.md) and [`assets/README.md`](assets/README.md) |
+| Detailed installation instructions or file verification | [`docs/installation.en.md`](docs/installation.en.md) and [`docs/installation.md`](docs/installation.md) |
+| Compatibility status, benchmarks, or evidence boundaries | [`docs/compatibility-and-evidence.en.md`](docs/compatibility-and-evidence.en.md), [`docs/compatibility-and-evidence.md`](docs/compatibility-and-evidence.md), and the machine sources they link |
 
 Then:
 
@@ -44,7 +46,7 @@ Then:
      python scripts/validate_repo.py
    ```
 
-4. Keep English and Chinese README instructions synchronized when changing user-facing commands, compatibility, benchmarks, or security boundaries.
+4. Keep each bilingual public-document pair synchronized by responsibility: README for the concise user journey, `docs/installation*.md` for detailed installation, and `docs/compatibility-and-evidence*.md` for compatibility, benchmarks, and evidence boundaries. Update the README safety summary and the relevant formal document when a security boundary changes.
 5. Treat `assets/manifest.json` as the visual inventory. Keep the canonical README Banner source hash and provenance accurate; edit `social-preview.svg` as its source; then run `scripts/render_assets.py`. Do not hand-edit any manifest-declared derived PNG. Uploading Social Preview to GitHub repository settings is a separate external action.
 6. Describe what changed, why it changes a decision, and how it was verified.
 
@@ -120,6 +122,8 @@ By contributing, you agree that your contribution is licensed under the reposito
 | 运行时指令 | [`SKILL.md`](skills/think-it-through/SKILL.md) 的相关部分 |
 | 架构理由或后续实测路线 | [`docs/product-architecture-v0.3.0.md`](docs/product-architecture-v0.3.0.md) |
 | README、品牌表达或视觉资产 | 先读 [`PRODUCT.md`](PRODUCT.md)，再读 [`.agents/brand-context.md`](.agents/brand-context.md) 与 [`assets/README.md`](assets/README.md) |
+| 详细安装说明或文件核验 | [`docs/installation.md`](docs/installation.md) 与 [`docs/installation.en.md`](docs/installation.en.md) |
+| 兼容状态、benchmark 或证据边界 | [`docs/compatibility-and-evidence.md`](docs/compatibility-and-evidence.md)、[`docs/compatibility-and-evidence.en.md`](docs/compatibility-and-evidence.en.md) 及其链接的机器事实源 |
 
 然后：
 
@@ -136,7 +140,7 @@ By contributing, you agree that your contribution is licensed under the reposito
      python scripts/validate_repo.py
    ```
 
-4. 修改用户命令、兼容性、benchmark 或安全边界时，同步英文和中文 README。
+4. 按职责同步双语公开文档：README 只维护精简用户路径，`docs/installation*.md` 维护详细安装，`docs/compatibility-and-evidence*.md` 维护兼容状态、benchmark 与证据边界；安全边界变化还要同步 README 摘要和对应正式文档。
 5. 把 `assets/manifest.json` 作为视觉资产清单；保持 README Banner canonical source 的哈希与来源准确，以 `social-preview.svg` 作为对应源文件，再运行 `scripts/render_assets.py`。不要手改 manifest 声明的任何派生 PNG。把 Social Preview 上传到 GitHub 仓库设置属于另一个外部行动。
 6. 在 PR 中说明改了什么、为什么会改变决策，以及如何验证。
 

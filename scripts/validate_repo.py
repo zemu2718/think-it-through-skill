@@ -29,8 +29,8 @@ IGNORED_SCAN_PARTS = {".git", ".claude", "dist", "review", "think-it-through-wor
 CURRENT_CONTRACT_VERSION = "0.3.0"
 POSITIONING_ZH = "AI 能把事情做得很快，但不能替你决定什么值得做。"
 POSITIONING_EN = "AI can get things done fast, but it can't decide for you what's worth doing."
-VALUE_STATEMENT_ZH = "重要投入之前，先确认真正要决定什么、哪个未知会改变方向；结果回来之后，再决定继续、调整、暂停还是停止。"
-VALUE_STATEMENT_EN = "Before an important commitment, clarify what you really need to decide and which unknown could change your course. Once the results come in, decide whether to continue, adjust, pause, or stop."
+VALUE_STATEMENT_ZH = "重要投入前，先把真正要做的决定想清楚，再行动。"
+VALUE_STATEMENT_EN = "Before an important commitment, think through the decision you really need to make—then act."
 SOCIAL_PREVIEW_TAGLINE = "AI gets things done fast. You decide what's worth doing."
 LEGACY_BEHAVIOR_PROFILE = "legacy-v0.1"
 EXPECTED_FIXTURE_STAGES = {"pre-entry", "R", "R-align", "A", "B", "Gate-routing", "direct", "emergency", "active-flow", "resume-current-task"}
@@ -660,7 +660,7 @@ def _validate_runtime_support_claims(
         claimed_count = len(runtimes) if claimed.lower() in {"all", "every", "全部", "所有"} else int(claimed.rstrip("+"))
         validation.require(
             claimed_count <= fully_supported_count,
-            f"README 宣称支持或验证 {claimed} 个 runtime，但矩阵只有 {fully_supported_count} 个 runtime 的 L3～L5 全部通过",
+            f"公开文档宣称支持或验证 {claimed} 个 runtime，但矩阵只有 {fully_supported_count} 个 runtime 的 L3～L5 全部通过",
         )
 
 
@@ -802,8 +802,20 @@ def validate_compatibility(validation: Validation) -> None:
                     evidence_runtime = evidence.get("runtime", {})
                     validation.require(evidence_runtime.get("id") == runtime.get("id") and evidence_runtime.get("version") == runtime.get("runtime_version"), f"{runtime.get('id')} {level} runtime/version 与 evidence 不一致")
 
-    readmes = (ROOT / "README.md").read_text(encoding="utf-8") + "\n" + (ROOT / "README.en.md").read_text(encoding="utf-8")
-    _validate_runtime_support_claims(validation, readmes, support)
+    public_claim_paths = (
+        "README.md",
+        "README.en.md",
+        "docs/installation.md",
+        "docs/installation.en.md",
+        "docs/compatibility-and-evidence.md",
+        "docs/compatibility-and-evidence.en.md",
+    )
+    public_claims = "\n".join(
+        (ROOT / relative).read_text(encoding="utf-8")
+        for relative in public_claim_paths
+        if (ROOT / relative).exists()
+    )
+    _validate_runtime_support_claims(validation, public_claims, support)
 
 
 def validate_links(validation: Validation, files: list[Path]) -> None:
@@ -2326,12 +2338,8 @@ def _markdown_h2_section(text: str, heading: str) -> str:
     return text[content_start:] if next_heading < 0 else text[content_start:next_heading]
 
 
-def _quoted_list_items(text: str) -> list[str]:
-    return re.findall(r"^- [“\"](.+?)[”\"]$", text, re.MULTILINE)
-
-
 def _readme_badges(text: str) -> list[tuple[str, str, str]]:
-    pattern = re.compile(r"\[!\[([^]]+)\]\((https://img\.shields\.io/[^)]+)\)\]\(([^)]+)\)")
+    pattern = re.compile(r"\[!\[([^]]+)\]\((https://[^)]+)\)\]\(([^)]+)\)")
     return pattern.findall(text)
 
 
@@ -2343,7 +2351,9 @@ def validate_public_docs(validation: Validation) -> None:
     current_architecture_path = f"docs/product-architecture-v{CURRENT_CONTRACT_VERSION}.md"
     public_paths = (
         "README.md", "README.en.md", "PRODUCT.md", "REQUIREMENTS.md", "SECURITY.md",
-        "CONTRIBUTING.md", ".agents/brand-context.md",
+        "CONTRIBUTING.md", "docs/installation.md", "docs/installation.en.md",
+        "docs/compatibility-and-evidence.md", "docs/compatibility-and-evidence.en.md",
+        ".agents/brand-context.md",
         ".github/ISSUE_TEMPLATE/install-or-runtime-feedback.yml",
         ".github/workflows/validate.yml",
         "docs/product-architecture-v0.2.0.md", current_architecture_path, "CLAUDE.md",
@@ -2364,118 +2374,127 @@ def validate_public_docs(validation: Validation) -> None:
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
 
     feedback_path = "issues/new?template=install-or-runtime-feedback.yml"
-    shared_links = (
-        "PRODUCT.md", "REQUIREMENTS.md", "skills/think-it-through/SKILL.md",
-        "distribution/package-manifest.json", "compatibility/runtime-support.json",
-        "CONTRIBUTING.md", "SECURITY.md", "CHANGELOG.md",
+    installation_zh = public_docs["docs/installation.md"]
+    installation_en = public_docs["docs/installation.en.md"]
+    compatibility_zh = public_docs["docs/compatibility-and-evidence.md"]
+    compatibility_en = public_docs["docs/compatibility-and-evidence.en.md"]
+
+    method_registry_path = ROOT / "skills" / "think-it-through" / "references" / "methods" / "registry.yaml"
+    validation.require(method_registry_path.exists(), "公开 README 方法校验缺少 registry.yaml 事实源")
+    method_registry = yaml.safe_load(method_registry_path.read_text(encoding="utf-8")) if method_registry_path.exists() else {}
+    registered_methods = method_registry.get("methods", []) if isinstance(method_registry, dict) else []
+    registered_methods = [method for method in registered_methods if isinstance(method, dict)]
+    registered_method_ids = {method.get("id") for method in registered_methods if isinstance(method.get("id"), str)}
+    english_method_labels = {
+        "object-calibration": "Object Calibration",
+        "system-bottleneck": "System Bottleneck",
+        "stage-fit": "Stage Fit",
+        "resource-leverage": "Resource Leverage",
+        "boundary-contracts": "Boundary Contracts",
+        "communication-fit": "Communication Fit",
+        "evidence-loop": "Evidence Loop",
+    }
+    validation.require(
+        registered_method_ids == set(english_method_labels),
+        "README 英文专项方法本地化映射必须与 registry.yaml ID 完全一致",
     )
+
+    expected_readme_badges = [
+        (
+            "MIT License",
+            "https://img.shields.io/github/license/zemu2718/think-it-through-skill?style=flat-square",
+            "LICENSE",
+        ),
+        (
+            "Latest Release",
+            "https://img.shields.io/github/v/release/zemu2718/think-it-through-skill?style=flat-square&label=release",
+            "https://github.com/zemu2718/think-it-through-skill/releases/latest",
+        ),
+        (
+            "Validate",
+            "https://github.com/zemu2718/think-it-through-skill/actions/workflows/validate.yml/badge.svg?branch=main",
+            "https://github.com/zemu2718/think-it-through-skill/actions/workflows/validate.yml?query=branch%3Amain",
+        ),
+    ]
+
     readme_contracts = (
         {
             "name": "README.en.md",
             "text": readme_en,
-            "sections": [
-                "What it is", "Why it matters", "Say it in your own words", "When to use it", "Install and use",
-                "What happens in a full check", "Safe by default", "Version, compatibility, and evidence",
-                "Documentation and contributing", "License",
-            ],
+            "sections": ["What you get", "When to use it", "How it works", "Install and use", "Safe by default and more"],
+            "navigation": "[When to use it](#when-to-use-it) · [How it works](#how-it-works) · [Install](#install-and-use) · [Safe by default](#safe-by-default-and-more)",
+            "result_heading": "What you get",
+            "result_phrases": ("One integrated judgment", "move forward", "validate first", "already underway", "One reality test", "One decision snapshot"),
+            "workflow_heading": "How it works",
+            "workflow_phrases": ("what you really need to decide", "facts, inferences, assumptions, and unknowns", "one question", "right place", "conditions and reversal signals", "reassess when results arrive"),
+            "method_heading": "Methods it may use",
+            "base_method": "Every session starts with basic analysis",
+            "core_methods": ("Two-sided Steelman", "Pre-mortem"),
+            "specialist_methods": tuple(english_method_labels.get(method.get("id"), "") for method in registered_methods),
+            "method_boundaries": ("do not need to learn or choose these methods in advance", "only the thinking approaches your current question needs", "asks you to confirm before using them", "explains why and asks for your consent first"),
+            "removed_phrases": ("## See the shift", "## Say it in your own words", "compressed synthetic illustration", "AI bookkeeping product", "large customer wants to buy my inventory tool", "developer tool for a long time"),
             "install_heading": "Install and use",
-            "install_subsections": ("Install for Claude Code", "Invoke it", "What to expect", "Other installation options"),
-            "install_journey": (
-                "gh skill install",
-                "```text\n/think-it-through\n```",
-                "Instead of immediately writing the campaign",
-                "npx -y skills@1.5.23 add",
-            ),
-            "gallery_heading": "Say it in your own words",
-            "gallery_intro": ("/think-it-through", "polished decision question", "product you are building"),
-            "gallery_concepts": (
-                ("chat app", "QQ"),
-                ("AI bookkeeping", "who"),
-                ("project-management", "freelancers", "first version"),
-                ("meeting notes", "action items", "users"),
-                ("invoice-organizing", "using", "pay"),
-                ("large customer", "inventory", "custom", "off course"),
-                ("browser extension", "growth", "features"),
-                ("developer tool", "main product", "stop"),
-            ),
+            "install_prompt": "Install this Skill for me: https://github.com/zemu2718/think-it-through-skill",
+            "install_intro": "Send this message to the Agent you already use",
+            "install_boundary": "according to its capabilities, permissions, and Skill-directory convention",
+            "installation_link": "docs/installation.en.md",
+            "compatibility_link": "docs/compatibility-and-evidence.en.md",
             "safety_phrases": ("no network access", "no private-data access", "one current main agent", "no file or remote persistence", "no external action"),
             "moments": ("Before starting", "Before choosing a path", "Before committing resources", "Before doubling down", "After results arrive"),
-            "boundary": ("decision layer", "not a project-management or task-execution layer"),
-            "version_heading": "Version, compatibility, and evidence",
-            "stable": "**Stable release:**",
-            "release": "backed by an immutable Git tag, a GitHub Release",
-            "checkpoint": "formal contract defines a lightweight contextual checkpoint",
-            "feedback": "installation or runtime feedback",
             "banner_alt": "Layered observation frames align around a clear opening",
+            "removed_category": "A **decision-and-evidence Agent Skill** for consequential commitments.",
+            "installation_scope": "one-message installation request for different hosts",
+            "runtime_boundary": "Installation only means the files reached a target directory; it does not establish real-runtime validation.",
+            "reliable_invocation": "The currently documented reliable invocation is in Claude Code.",
+            "detail_groups": ("**Get started:**", "**Understand the boundaries:**", "**Help improve it:**"),
             "positioning": POSITIONING_EN,
             "value_statement": VALUE_STATEMENT_EN,
         },
         {
             "name": "README.md",
             "text": readme_zh,
-            "sections": [
-                "这是什么", "为什么需要它", "直接说出你现在的想法", "什么时候调用", "安装与使用",
-                "一次完整检查会发生什么", "默认安全与隐私", "版本、兼容性与证据", "文档与参与", "许可证",
-            ],
+            "sections": ["你会得到什么", "什么时候调用", "它怎样帮你想清楚", "安装与使用", "默认安全与更多信息"],
+            "navigation": "[什么时候调用](#什么时候调用) · [如何工作](#它怎样帮你想清楚) · [安装](#安装与使用) · [默认安全](#默认安全与更多信息)",
+            "result_heading": "你会得到什么",
+            "result_phrases": ("一个综合判断", "推进", "先验证", "已经开始的事情", "一个现实检验", "一份决策快照"),
+            "workflow_heading": "它怎样帮你想清楚",
+            "workflow_phrases": ("真正要决定什么", "事实、推断、假设和未知", "一个会改变方案排序、行动方向或投入边界的问题", "正确的地方", "成立条件和反转条件", "结果回来后重新判断"),
+            "method_heading": "会用到哪些方法",
+            "base_method": "每次都会先做基础分析",
+            "core_methods": ("双向钢人", "失败预演"),
+            "specialist_methods": tuple(method.get("name", "") for method in registered_methods),
+            "method_boundaries": ("不需要预先了解或选择这些方法", "当前问题真正需要的思考角度", "使用前让你确认", "先说明原因并征得你的同意"),
+            "removed_phrases": ("## 先看它会改变什么", "## 直接说出你的想法", "压缩后的合成示意", "AI 记账产品", "大客户愿意买我的库存工具", "开发者工具已经做了很久"),
             "install_heading": "安装与使用",
-            "install_subsections": ("安装到 Claude Code", "调用", "调用后会先发生什么", "其他安装方式"),
-            "install_journey": (
-                "gh skill install",
-                "```text\n/think-it-through\n```",
-                "它不会立即替你写投放方案",
-                "npx -y skills@1.5.23 add",
-            ),
-            "gallery_heading": "直接说出你现在的想法",
-            "gallery_intro": ("/think-it-through", "不用先把问题整理", "正在做的产品"),
-            "gallery_concepts": (
-                ("聊天软件", "QQ"),
-                ("AI 记账", "做给谁"),
-                ("项目管理", "自由职业者", "第一版"),
-                ("会议记录", "待办", "用户"),
-                ("发票整理", "有人用了", "付费"),
-                ("大客户", "库存", "定制", "带偏"),
-                ("浏览器插件", "增长", "改功能"),
-                ("开发者工具", "主产品", "停"),
-            ),
+            "install_prompt": "帮我安装这个 Skill：https://github.com/zemu2718/think-it-through-skill",
+            "install_intro": "把下面这句话发给你正在使用的 Agent",
+            "install_boundary": "根据自身能力、权限和 Skill 目录约定尝试安装",
+            "installation_link": "docs/installation.md",
+            "compatibility_link": "docs/compatibility-and-evidence.md",
             "safety_phrases": ("不联网", "不读取私有数据", "只使用当前主 Agent", "不写入文件或远端保存", "不执行外部行动"),
             "moments": ("立项前", "选方向前", "投入资源前", "继续加码前", "结果回来后"),
-            "boundary": ("决策层", "不是项目管理或任务执行层"),
-            "version_heading": "版本、兼容性与证据",
-            "stable": "**稳定发布：**",
-            "release": "由不可变 Git tag、GitHub Release",
-            "checkpoint": "正式合同只在 Skill 已经加载",
-            "feedback": "反馈安装或 runtime 问题",
             "banner_alt": "多层观察框架逐步对齐成一个清晰开口",
+            "removed_category": "一个用于重要投入前后判断的**决策与证据 Agent Skill**。",
+            "installation_scope": "面向不同宿主的一句话安装请求",
+            "runtime_boundary": "安装只表示文件进入目标目录，不等于宿主已经通过真实运行验证。",
+            "reliable_invocation": "目前有可靠调用说明的入口是 Claude Code。",
+            "detail_groups": ("**开始使用：**", "**了解边界：**", "**参与改进：**"),
             "positioning": POSITIONING_ZH,
             "value_statement": VALUE_STATEMENT_ZH,
         },
     )
-    old_sections = {
-        "A 30-second walkthrough", "Quick Start", "How it works", "What you receive", "FAQ",
-        "Install and try it",
-        "30 秒说明性演示", "快速开始", "它如何工作", "你会得到什么", "常见问题",
-        "安装并完成第一次体验",
-    }
-    old_assets = ("assets/hero-", "assets/product-value-", "assets/demo-flow")
-    expected_badges = (
-        ("Validate", "validate.yml?branch=main&style=flat-square&label=Validate", "actions/workflows/validate.yml?query=branch%3Amain"),
-        ("Agent Skill", "type-Agent%20Skill-0F766E?style=flat-square", "skills/think-it-through/SKILL.md"),
-        ("Stable source v0.3.0", "stable%20source-v0.3.0-172033?style=flat-square", "tree/v0.3.0/skills/think-it-through"),
-        ("MIT License", "license-MIT-172033?style=flat-square", "LICENSE"),
+    readme_links = ("PRODUCT.md", "REQUIREMENTS.md", "SECURITY.md", "CONTRIBUTING.md", "LICENSE", "THIRD_PARTY_NOTICES.md")
+    readme_forbidden = (
+        "npx -y skills", "gh skill install", "git clone", "SHA256SUMS", "git rev-parse HEAD",
+        "L0", "L5", "9/16", "approved evidence", "R-align", "R-method", "DecisionRecord",
     )
-    forbidden_badge_terms = re.compile(r"(?:release|latest|download|coverage|stars?|runtime|compatib|certif|L5|auto.?discovery)", re.IGNORECASE)
-    release_tag_url = "https://github.com/zemu2718/think-it-through-skill/releases/tag/v0.3.0"
-    release_asset_url = "https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill"
-    release_sums_url = "https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/SHA256SUMS"
-    release_urls = (release_tag_url, release_asset_url, release_sums_url)
+    old_assets = ("assets/hero-", "assets/product-value-", "assets/demo-flow", "assets/decision-case-")
 
     for contract in readme_contracts:
         name = contract["name"]
         readme = contract["text"]
-        sections = contract["sections"]
         headings = _markdown_h2(readme)
-        validation.require(headings == sections, f"{name} 必须精确包含正式首次访问路径的十个 H2")
-        validation.require(not old_sections.intersection(headings), f"{name} 不得保留旧版入口章节")
+        validation.require(headings == contract["sections"], f"{name} 必须精确包含结果优先的五段普通用户路径")
         first_h2 = readme.find("## ")
         preface = readme[:first_h2] if first_h2 >= 0 else readme
         validation.require(first_h2 > 0, f"{name} 缺少 H2 章节")
@@ -2483,103 +2502,137 @@ def validate_public_docs(validation: Validation) -> None:
             "assets/readme-banner-dark.png" in preface
             and "assets/readme-banner-light.png" in preface
             and '<img src="assets/readme-banner-light.png"' in preface
-            and 'width="1200"' in preface,
-            f"{name} 首屏缺少正确的 light/dark README Banner 或 light fallback",
+            and 'width="960"' in preface,
+            f"{name} 首屏缺少正确的 light/dark README Banner、light fallback 或克制显示宽度",
         )
-        validation.require("assets/brand-mark-" not in preface, f"{name} 首屏不得继续使用 Brand Mark 代替 README Banner")
         picture_position = preface.find("<picture>")
         heading_position = preface.find("# ")
         positioning_position = preface.find(contract["positioning"])
         value_position = preface.find(contract["value_statement"])
-        badge_position = preface.find("[![Validate]")
-        entry_position = preface.find("/think-it-through")
+        navigation_position = preface.find(f"\n{contract['navigation']}\n")
         validation.require(
-            -1 < picture_position < heading_position < positioning_position < value_position < badge_position < entry_position,
-            f"{name} 首屏必须保持语言切换 → Banner → H1 → 主定位 → 价值说明 → 徽章 → 显式入口顺序",
+            -1 < picture_position < heading_position < positioning_position < value_position < navigation_position,
+            f"{name} 首屏必须保持语言切换 → Banner → H1 → 主定位 → 价值说明 → 页内导航顺序",
         )
-        alt_match = re.search(r'<img src="assets/readme-banner-light\.png" alt="([^"]+)" width="1200">', preface)
+        validation.require("`/think-it-through`" not in preface, f"{name} 首屏不得重复显式调用入口")
+        alt_match = re.search(r'<img src="assets/readme-banner-light\.png" alt="([^"]+)" width="960">', preface)
         validation.require(
-            alt_match is not None
-            and bool(alt_match.group(1).strip())
-            and contract["banner_alt"] in alt_match.group(1),
+            alt_match is not None and bool(alt_match.group(1).strip()) and contract["banner_alt"] in alt_match.group(1),
             f"{name} README Banner 必须提供准确的非空本地化 alt",
         )
+        validation.require(contract["removed_category"] not in preface, f"{name} 首屏不得重新加入偏内部的 Agent Skill 品类说明")
         validation.require(contract["positioning"] in preface, f"{name} 首屏缺少 canonical 产品定位")
-        validation.require(contract["value_statement"] in preface, f"{name} 首屏缺少投入前校准与结果后复判的价值说明")
-        gallery = _markdown_h2_section(readme, contract["gallery_heading"])
-        gallery_items = _quoted_list_items(gallery)
-        validation.require(all(phrase in gallery for phrase in contract["gallery_intro"]), f"{name} 原话画廊必须说明显式入口、无需预先整理和可直接描述产品处境")
-        validation.require(len(gallery_items) == 8, f"{name} 原话画廊必须恰好包含八条用户描述")
-        if len(gallery_items) == 8:
-            for index, (item, concepts) in enumerate(zip(gallery_items, contract["gallery_concepts"]), start=1):
-                validation.require(all(concept in item for concept in concepts), f"{name} 原话画廊第 {index} 条缺少对应产品阶段语义")
-        validation.require(not any(token in gallery for token in ("<picture>", "<img", "assets/")), f"{name} 原话画廊必须使用纯文本，不得继续嵌入案例图片")
-        validation.require("assets/decision-case-" not in readme, f"{name} 不得重新引用已移除的 Decision Case")
-        validation.require(not any(asset in readme for asset in old_assets), f"{name} 不得引用旧视觉资产")
-        install_section = _markdown_h2_section(readme, contract["install_heading"])
-        install_subsections = re.findall(r"^### (.+)$", install_section, re.MULTILINE)
-        validation.require(
-            install_subsections == list(contract["install_subsections"]),
-            f"{name} 安装与使用章节必须依次提供主安装、显式调用、预期行为和其他安装方式",
-        )
-        journey_positions = [install_section.find(fragment) for fragment in contract["install_journey"]]
-        validation.require(
-            all(position >= 0 for position in journey_positions)
-            and journey_positions == sorted(journey_positions),
-            f"{name} 安装与使用主路径必须先于其他安装方式完整出现",
-        )
-        install_narrative = re.sub(r"```.*?```", "", install_section, flags=re.DOTALL)
-        install_narrative = re.sub(r"\]\([^)]+\)", "]()", install_narrative)
-        validation.require(
-            f"v{CURRENT_CONTRACT_VERSION}" not in install_narrative,
-            f"{name} 安装与使用叙述不得突出当前版本号；版本只保留在命令、链接和版本章节",
-        )
-        validation.require("git clone --depth 1 --branch v0.3.0" in readme, f"{name} 缺少不可变 v0.3.0 tag 手动安装")
-        validation.require("cd think-it-through-skill\ngit rev-parse HEAD\ntest ! -e" in readme, f"{name} 缺少安装时记录准确源码 revision 的命令")
-        validation.require("```text\n/think-it-through\n```" in readme, f"{name} 缺少可靠显式入口")
-        validation.require("test ! -e" in readme, f"{name} 缺少非覆盖式源码安装")
-        validation.require(all(phrase in readme for phrase in contract["safety_phrases"]), f"{name} 缺少五项默认安全语义")
+        validation.require(contract["value_statement"] in preface, f"{name} 首屏缺少想清楚再行动的价值说明")
+        badges = _readme_badges(preface)
+        validation.require(badges == expected_readme_badges, f"{name} 首屏必须且只能保留 License、Release 与 Validate 三枚可验证徽章")
+        validation.require(not any(phrase in readme for phrase in contract["removed_phrases"]), f"{name} 不得重新加入已删除的案例或示例输入")
+
+        result = _markdown_h2_section(readme, contract["result_heading"])
+        validation.require(all(phrase in result for phrase in contract["result_phrases"]), f"{name} 必须交付判断、现实检验和决策快照三项用户结果")
         validation.require(
             all(f"| **{moment}** |" in readme for moment in contract["moments"]),
             f"{name} 缺少行动前后五个具体调用时机",
         )
-        validation.require(all(phrase in readme for phrase in contract["boundary"]), f"{name} 缺少决策工具与执行工具边界")
-        validation.require(all(link in readme for link in shared_links), f"{name} 缺少任务导向文档链接")
-        version_section = _markdown_h2_section(readme, contract["version_heading"])
-        validation.require(
-            contract["stable"] in version_section and f"v{CURRENT_CONTRACT_VERSION}" in version_section,
-            f"{name} 版本章节缺少当前稳定发布状态",
-        )
-        validation.require(contract["release"] in version_section, f"{name} 版本章节缺少已发布的公开对象状态")
-        validation.require(all(url in readme for url in release_urls), f"{name} 缺少准确的 v0.3.0 Release、asset 或校验和 URL")
-        validation.require("gh skill install" in readme and "think-it-through@v0.3.0" in readme, f"{name} 缺少 GitHub CLI 固定版本安装")
-        validation.require(readme.count("npx -y skills@1.5.23 add") == 2 and "--agent '*'" in readme, f"{name} 缺少固定通用安装器与全部目标入口；固定通用安装器版本必须保持 skills@1.5.23")
-        validation.require(
-            ("all target mappings recognized by `skills@1.5.23`" in readme and "does **not** mean every AI client" in readme)
-            if name == "README.en.md"
-            else ("`skills@1.5.23` 认识的全部目标映射" in readme and "不表示所有 AI 客户端" in readme),
-            f"{name} 缺少 --agent '*' 的真实支持边界",
-        )
-        validation.require("not_run" in readme and "L0" in readme and "L5" in readme, f"{name} 缺少当前机器兼容状态摘要")
-        validation.require("9/16" in readme and "1/8" in readme and "8/8" in readme, f"{name} 缺少完整自动发现限制")
-        validation.require(contract["checkpoint"] in readme, f"{name} 缺少正式上下文检查点与实测边界")
-        validation.require(contract["feedback"] in readme and feedback_path in readme, f"{name} 缺少安装与 runtime 反馈入口")
-        validation.require("approved evidence" in readme, f"{name} 缺少反馈不得自动提升兼容矩阵的边界")
-        validation.require("Star" in readme, f"{name} 缺少克制的 Star 入口")
-        validation.require("scripts/build_distribution.py" not in readme and "unzip -t" not in readme, f"{name} 不应复制维护者构建命令")
-        validation.require("feat/v0.3.0-agent-skills" not in readme, f"{name} 不得引用不存在的候选分支")
-        validation.require("R-align" not in readme and "R-method" not in readme and "DecisionRecord" not in readme, f"{name} 不得复制正式行为合同术语")
-        badges = _readme_badges(preface)
-        validation.require(len(badges) == 4, f"{name} 首屏必须恰好包含四枚功能徽章")
-        if len(badges) == 4:
-            for actual, expected in zip(badges, expected_badges):
-                label, image, target = actual
-                expected_label, image_fragment, target_fragment = expected
-                validation.require(label == expected_label and image_fragment in image and target_fragment in target, f"{name} 徽章职责、URL 或目标不正确：{label}")
-                validation.require("style=flat-square" in image, f"{name} 所有徽章必须使用 flat-square")
-            validation.require(not any(forbidden_badge_terms.search(image + " " + label) for label, image, _ in badges), f"{name} 徽章不得宣称 Release、下载、coverage、stars、runtime、兼容认证、L5 或自动发现")
+
+        workflow = _markdown_h2_section(readme, contract["workflow_heading"])
+        validation.require(all(phrase in workflow for phrase in contract["workflow_phrases"]), f"{name} 缺少从真实决定到现实复判的白话工作原理")
+        validation.require(f"### {contract['method_heading']}" in workflow, f"{name} 缺少按需方法说明")
+        validation.require(contract["base_method"] in workflow, f"{name} 必须说明每次先做基础分析")
+        validation.require(all(method in workflow for method in contract["core_methods"]), f"{name} 缺少双向钢人与失败预演两种核心方法")
+        validation.require(all(method and method in workflow for method in contract["specialist_methods"]), f"{name} 专项方法必须完整来自 registry.yaml")
+        validation.require(all(phrase in workflow for phrase in contract["method_boundaries"]), f"{name} 缺少方法按需推荐、用户确认或能力征求同意的说明")
+
+        install = _markdown_h2_section(readme, contract["install_heading"])
+        validation.require(contract["install_intro"] in install, f"{name} 安装入口必须邀请用户把仓库链接交给当前 Agent")
+        validation.require(contract["install_prompt"] in install, f"{name} 缺少可复制的一句话安装请求")
+        validation.require(contract["install_boundary"] in install, f"{name} 安装入口必须说明安装取决于当前 Agent 的能力、权限和目录约定")
+        validation.require(contract["installation_scope"] in install, f"{name} 缺少跨宿主一句话安装请求边界")
+        validation.require(contract["runtime_boundary"] in install, f"{name} 必须区分文件安装与真实 runtime 验证")
+        validation.require(contract["reliable_invocation"] in install, f"{name} 必须把当前可靠调用说明限定在 Claude Code")
+        validation.require("```text\n/think-it-through\n```" in install, f"{name} 缺少可靠显式入口")
+        validation.require(contract["installation_link"] in install and contract["compatibility_link"] in install, f"{name} 缺少详细安装或兼容说明链接")
+        validation.require(all(phrase in readme for phrase in contract["safety_phrases"]), f"{name} 缺少五项默认安全语义")
+        validation.require(all(group in readme for group in contract["detail_groups"]), f"{name} 缺少开始使用、了解边界和参与改进三组详情入口")
+        validation.require(all(link in readme for link in readme_links), f"{name} 缺少普通用户所需详情链接")
+        validation.require(feedback_path in readme and "Star" in readme, f"{name} 缺少反馈与克制的 Star 入口")
+        validation.require(not any(token in readme for token in readme_forbidden), f"{name} 不得重新塞入安装、兼容、benchmark 或正式合同技术细节")
+        validation.require(not any(asset in readme for asset in old_assets), f"{name} 不得引用已移除或旧版视觉资产")
+
     validation.require("[简体中文](README.md)" in readme_en, "英文 README 缺少中文切换")
     validation.require("[English](README.en.md)" in readme_zh, "中文 README 缺少英文切换")
+
+    installation_contracts = (
+        {
+            "name": "docs/installation.en.md",
+            "text": installation_en,
+            "language_link": "[简体中文](installation.md)",
+            "prompt": "Install this Skill for me: https://github.com/zemu2718/think-it-through-skill",
+            "target_boundary": "all target mappings recognized by `skills@1.5.23`",
+            "client_boundary": "does **not** mean every AI client",
+            "installation_boundary": "installation only places files in a target directory",
+        },
+        {
+            "name": "docs/installation.md",
+            "text": installation_zh,
+            "language_link": "[English](installation.en.md)",
+            "prompt": "帮我安装这个 Skill：https://github.com/zemu2718/think-it-through-skill",
+            "target_boundary": "`skills@1.5.23` 认识的全部目标映射",
+            "client_boundary": "不表示所有 AI 客户端",
+            "installation_boundary": "安装都只说明文件已经进入目标目录",
+        },
+    )
+    for contract in installation_contracts:
+        name = contract["name"]
+        guide = contract["text"]
+        validation.require(contract["language_link"] in guide, f"{name} 缺少双语切换")
+        validation.require("不是第二份" in guide if name.endswith("installation.md") else "not a second" in guide, f"{name} 必须说明自身不是第二份合同")
+        validation.require(contract["prompt"] in guide, f"{name} 缺少推荐的一句话 Agent 安装")
+        validation.require(guide.find(contract["prompt"]) < guide.find("npx -y skills@1.5.23 add"), f"{name} 必须先给普通用户入口，再给技术备用方式")
+        validation.require(guide.count("npx -y skills@1.5.23 add") == 2 and "--agent '*'" in guide, f"{name} 缺少固定通用安装器与全部目标入口")
+        validation.require(contract["target_boundary"] in guide and contract["client_boundary"] in guide, f"{name} 缺少 --agent '*' 的真实支持边界")
+        validation.require("gh skill install" in guide and "think-it-through@v0.3.0" in guide, f"{name} 缺少 GitHub CLI 固定版本安装")
+        validation.require("git clone --depth 1 --branch v0.3.0" in guide, f"{name} 缺少不可变 v0.3.0 tag 手动安装")
+        validation.require("cd think-it-through-skill\ngit rev-parse HEAD\ntest ! -e" in guide, f"{name} 缺少准确 revision 与非覆盖式安装")
+        validation.require("SHA256SUMS" in guide and "```text\n/think-it-through\n```" in guide, f"{name} 缺少归档核验或可靠调用方式")
+        validation.require(contract["installation_boundary"] in guide and "compatibility-and-evidence" in guide, f"{name} 缺少安装不等于 runtime 验证的边界")
+
+    release_tag_url = "https://github.com/zemu2718/think-it-through-skill/releases/tag/v0.3.0"
+    release_asset_url = "https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill"
+    release_sums_url = "https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/SHA256SUMS"
+    release_urls = {release_tag_url, release_asset_url, release_sums_url}
+    compatibility_contracts = (
+        {
+            "name": "docs/compatibility-and-evidence.en.md",
+            "text": compatibility_en,
+            "language_link": "[简体中文](compatibility-and-evidence.md)",
+            "release": "backed by an immutable Git tag, a GitHub Release",
+            "target": "Eight installer target mappings",
+            "checkpoint": "formal contract defines a lightweight contextual checkpoint",
+        },
+        {
+            "name": "docs/compatibility-and-evidence.md",
+            "text": compatibility_zh,
+            "language_link": "[English](compatibility-and-evidence.en.md)",
+            "release": "由不可变 Git tag、GitHub Release",
+            "target": "八个安装器目标映射",
+            "checkpoint": "正式合同只在 Skill 已经加载",
+        },
+    )
+    release_url_re = re.compile(r"https?://[^\s)]+/releases/(?:download|tag)/v0\.3\.0[^\s)]*", re.IGNORECASE)
+    for contract in compatibility_contracts:
+        name = contract["name"]
+        guide = contract["text"]
+        validation.require(contract["language_link"] in guide, f"{name} 缺少双语切换")
+        validation.require("不是第二份" in guide if name.endswith("evidence.md") else "not a second" in guide, f"{name} 必须说明自身不是第二份合同")
+        found_release_urls = {match.rstrip(".,") for match in release_url_re.findall(guide)}
+        validation.require(found_release_urls == release_urls, f"{name} 只能链接准确、已核验的 v0.3.0 Release 对象")
+        validation.require(contract["release"] in guide, f"{name} 缺少已发布的公开对象状态")
+        validation.require("not_run" in guide and "L0" in guide and "L5" in guide, f"{name} 缺少当前机器兼容状态摘要")
+        validation.require(contract["target"] in guide and "runtime" in guide, f"{name} 缺少安装目标与 runtime 验证的区别")
+        validation.require("9/16" in guide and "1/8" in guide and "8/8" in guide, f"{name} 缺少完整自动发现限制")
+        validation.require(contract["checkpoint"] in guide, f"{name} 缺少正式上下文检查点与实测边界")
+        validation.require("approved evidence" in guide and feedback_path in guide, f"{name} 缺少反馈不得自动提升兼容矩阵的边界")
+        validation.require(all(path in guide for path in ("compatibility/profile.json", "compatibility/runtime-support.json", "runtime-support.schema.json", "evidence.schema.json", "benchmarks/trigger-v0.1/", "benchmarks/behavior-v0.1/", "REQUIREMENTS.md")), f"{name} 缺少机器事实源、冻结 benchmark 或正式合同链接")
 
     trigger_summary = _load_json(ROOT / "benchmarks" / "trigger-v0.1" / "summary.json")
     holdout_summary = trigger_summary.get("holdout", {}).get("summary", {})
@@ -2590,15 +2643,9 @@ def validate_public_docs(validation: Validation) -> None:
     negative_passed = sum(item.get("pass") is True for item in holdout_results if item.get("should_trigger") is False)
     validation.require((positive_passed, negative_passed) == (1, 8), "冻结 trigger 正负例摘要发生变化")
 
-    release_url_re = re.compile(r"https?://[^\s)]+/releases/(?:download|tag)/v0\.3\.0[^\s)]*", re.IGNORECASE)
-    for name, readme in (("README.en.md", readme_en), ("README.md", readme_zh)):
-        found_release_urls = {match.rstrip(".,") for match in release_url_re.findall(readme)}
-        validation.require(
-            found_release_urls == set(release_urls),
-            f"{name} 只能链接准确、已核验的 v0.3.0 Release 对象：{sorted(found_release_urls ^ set(release_urls))}",
-        )
     support = _load_json(ROOT / "compatibility" / "runtime-support.json")
-    _validate_runtime_support_claims(validation, readme_en + "\n" + readme_zh, support)
+    public_claim_text = "\n".join((readme_en, readme_zh, installation_en, installation_zh, compatibility_en, compatibility_zh))
+    _validate_runtime_support_claims(validation, public_claim_text, support)
 
     for phrase in (
         "本文档是 v0.3.0 的唯一正式行为、安全与验收依据",
@@ -2639,7 +2686,7 @@ def validate_public_docs(validation: Validation) -> None:
 
     validation.require("思考搭档" in product, "PRODUCT.md 缺少稳定用户体验定位")
     validation.require(POSITIONING_ZH in product, "PRODUCT.md 缺少 canonical 中文产品定位")
-    validation.require(VALUE_STATEMENT_ZH in product, "PRODUCT.md 缺少投入前校准与结果后复判的价值说明")
+    validation.require(VALUE_STATEMENT_ZH in product, "PRODUCT.md 缺少想清楚再行动的价值说明")
     for phrase in (
         "重要行动前后的**决策与证据协议**",
         "首要 ICP",
@@ -2679,8 +2726,10 @@ def validate_public_docs(validation: Validation) -> None:
         "L3～L5 只能由绑定准确 runtime version 的 `real_runtime` 证据提升",
         "具体能力是否发生只由当前会话 capability observation",
         "文档职责必须保持单一",
-        "`README.md` 是 GitHub 默认展示的中文用户入口",
+        "`README.md` 是 GitHub 默认展示的精简中文用户入口",
         "`README.en.md` 是英文用户入口",
+        "`docs/installation.md` 与 `docs/installation.en.md` 承接详细安装和文件核验",
+        "`docs/compatibility-and-evidence.md` 与 `docs/compatibility-and-evidence.en.md` 解释公开兼容状态、冻结证据和提升边界，但不是第二份合同",
         "用户可见文档优先使用读者语言",
         "普通正文先说完整含义",
         "canonical key 与用户可见字段分离",
@@ -2737,8 +2786,16 @@ def validate_public_docs(validation: Validation) -> None:
         "v0.3.0 is the current stable source and formal product contract",
         "published as an immutable Git tag, GitHub Release, downloadable `think-it-through.skill`, and `SHA256SUMS`",
         "real multi-turn behavior and natural-language discovery remain `not_run`",
+        "use only three compact, verifiable status badges",
+        "Do not use badges to claim runtime compatibility",
+        "methods that appear only when useful",
+        "canonical 2:1 Banner at a restrained width",
+        "one cross-host repository-URL installation request",
+        "Installation is explicitly separated from real-runtime validation",
+        "grouped detail links",
+        "identify the decision-and-evidence Agent Skill, its position, and user outcomes",
     ):
-        validation.require(phrase in brand_context, f"品牌摘要缺少产品定位、价值说明、稳定源码或证据边界：{phrase}")
+        validation.require(phrase in brand_context, f"品牌摘要缺少产品定位、README 用户路径、稳定源码或证据边界：{phrase}")
 
     for phrase in (
         feedback_path,
@@ -2767,6 +2824,15 @@ def validate_public_docs(validation: Validation) -> None:
     validation.require("ci-candidate" not in validate_workflow and "candidate archive" not in validate_workflow.lower(), "validate workflow 不得把稳定分发归档称为 candidate")
 
     validation.require("## [Unreleased]" in changelog, "CHANGELOG.md 必须保留 Unreleased 节")
+    validation.require(
+        "用户结果 → 调用时机 → 工作原理与最小必要方法 → 安装使用 → 默认安全" in changelog
+        and "只在安装区保留 `/think-it-through`" in changelog
+        and "MIT License、最新 Release 与 `main` 分支 Validate 三枚可验证状态徽章" in changelog
+        and "删除首屏偏内部的 Agent Skill 品类说明" in changelog
+        and "区分跨宿主安装请求、Claude Code 可靠调用与真实 runtime 验证" in changelog
+        and "按开始使用、了解边界和参与改进分组" in changelog,
+        "CHANGELOG.md 缺少结果优先 README 路径、首屏精简、安装边界或详情分组变更",
+    )
     validation.require(f"## [{CURRENT_CONTRACT_VERSION}] - 2026-08-31" in changelog, "CHANGELOG.md 缺少 v0.3.0 稳定源码版本记录")
     validation.require("## [0.2.0] - 2026-08-29" in changelog, "CHANGELOG.md 缺少 v0.2.0 源码版本记录")
     validation.require("Git tag、GitHub Release 和可下载 asset" in changelog, "CHANGELOG.md 必须区分源码版本与公开 Release 对象")
@@ -2860,6 +2926,10 @@ def validate_required_open_source_files(validation: Validation) -> None:
         "SECURITY.md",
         "docs/product-architecture-v0.2.0.md",
         "docs/product-architecture-v0.3.0.md",
+        "docs/installation.md",
+        "docs/installation.en.md",
+        "docs/compatibility-and-evidence.md",
+        "docs/compatibility-and-evidence.en.md",
         "docs/third-party-audit.md",
         "distribution/package-manifest.json",
         "compatibility/profile.json",

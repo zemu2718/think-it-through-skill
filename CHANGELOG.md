@@ -16,12 +16,14 @@
 
 - 将 Brand Mark 调整为头像与紧凑场景资产，并把 Decision Thread / Decision Hinge 保留为 Social Preview 的二级解释语法。
 - 统一 Brand Mark 与 Social Preview 的暖中性色、深墨、克制深青和极少暖色视觉语言，同时保持可选 Gate、未知边界与结果复判语义。
-- 用双语原始产品与经营描述替换 README 中的单一合成 SaaS 案例，并移除四个 Decision Case SVG 及对应 manifest、文档和校验合同；不改变产品行为、安全、授权、runtime、兼容性或 evidence 合同。
+- 移除 README 中的单一合成 SaaS 案例、三条示例输入和四个 Decision Case SVG 及对应 manifest、文档与旧校验合同；不改变产品行为、安全、授权、runtime、兼容性或 evidence 合同。
 - 扩展资产生成与 freshness 检查，使 README Banner 与 Social Preview 的派生 PNG 均由同一脚本生成、完整解码并按像素校验；本地生成不代表 GitHub 已配置 Social Preview。
 - 更新双语 README 首图、品牌派生摘要、视觉资产说明与贡献维护流程；不改变产品行为、安全、授权、兼容性或 evidence 合同。
-- 统一双语首屏、产品定位、品牌摘要与 Social Preview 为“AI 可以快速执行，但用户仍决定什么值得做”的表达，并补全重要投入前校准、结果回来后复判的价值说明；不改变产品行为、安全、授权、runtime、兼容性或 evidence 合同。
+- 统一双语首屏、产品定位、品牌摘要与 Social Preview 为“AI 可以快速执行，但用户仍决定什么值得做”的表达，并将首屏价值说明收敛为“重要投入前，先把真正要做的决定想清楚，再行动”；行动后的复判能力继续在后续用户路径中说明，不改变产品行为、安全、授权、runtime、兼容性或 evidence 合同。
 - 发布不可变 `v0.3.0` Git tag 与 GitHub Release，提供经 manifest 复验的 `think-it-through.skill` 和 `SHA256SUMS`，并增加 GitHub CLI、固定 `skills@1.5.23` 与手动 tag 安装入口；安装结果不提升 L3～L5。
 - 将 GitHub 根 README 设为中文默认入口，并将英文入口迁移至 `README.en.md`；不改变产品行为、资产、分发或兼容性合同。
+- 将双语 README 的首要安装入口改为把仓库链接交给用户当前使用的 Agent；能否自动安装仍取决于宿主能力、权限和目录约定，不构成 runtime 兼容声明。
+- 将双语 README 重排为“用户结果 → 调用时机 → 工作原理与最小必要方法 → 安装使用 → 默认安全”的普通用户路径，移除首屏显式入口并只在安装区保留 `/think-it-through`；首屏仅增加 MIT License、最新 Release 与 `main` 分支 Validate 三枚可验证状态徽章，不以徽章声明 runtime 兼容；进一步删除首屏偏内部的 Agent Skill 品类说明，克制显示 Banner，区分跨宿主安装请求、Claude Code 可靠调用与真实 runtime 验证，并将详情入口按开始使用、了解边界和参与改进分组；详细安装、版本核验、兼容层级与证据治理继续由对应双语指南承接，不改变产品行为、安全、授权、runtime、兼容矩阵、冻结证据、视觉资产或分发合同。
 
 ## [0.3.0] - 2026-08-31
 

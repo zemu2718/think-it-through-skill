@@ -14,8 +14,8 @@ This file is a concise derivative of `REQUIREMENTS.md` and `PRODUCT.md`, not a s
 
 - **Chinese Positioning**: AI 能把事情做得很快，但不能替你决定什么值得做。
 - **English Positioning**: AI can get things done fast, but it can't decide for you what's worth doing.
-- **Chinese Value Statement**: 重要投入之前，先确认真正要决定什么、哪个未知会改变方向；结果回来之后，再决定继续、调整、暂停还是停止。
-- **English Value Statement**: Before an important commitment, clarify what you really need to decide and which unknown could change your course. Once the results come in, decide whether to continue, adjust, pause, or stop.
+- **Chinese Value Statement**: 重要投入前，先把真正要做的决定想清楚，再行动。
+- **English Value Statement**: Before an important commitment, think through the decision you really need to make—then act.
 
 ## Audience
 
@@ -49,13 +49,14 @@ This file is a concise derivative of `REQUIREMENTS.md` and `PRODUCT.md`, not a s
 - **Dashed optional Gate**: Evidence or participation only when needed and authorized; always visually secondary.
 - **Returning loop**: Real-world results reopen the decision.
 - **Accessibility**: Meaning must also be carried by shape, line style, weight, position, and labels; color is never the only signal.
-- **Asset roles**: README Banner is the opening brand experience; Brand Mark provides compact recognition; Social Preview carries brand plus positioning into sharing contexts. Localized README text shows the raw product and business thoughts users can bring as-is. No asset should duplicate the full formal protocol.
+- **Asset roles**: README Banner is the opening brand experience; Brand Mark provides compact recognition; Social Preview carries brand plus positioning into sharing contexts. README copy explains user outcomes, fit, the plain-language workflow, and the restrained method map without duplicating the full formal protocol.
 - **Visual standard**: Premium through restraint—deep ink, warm neutral space, graphite, disciplined dark teal, rare amber, clear hierarchy, and only meaning-bearing geometry. Natural 3D material shading and one contact shadow are acceptable in the canonical Banner; decorative gradients, glow, glass effects, stacked shadows, generic AI workflows, robots, neural networks, pseudo interfaces, and node clouds are not.
-- **Badge boundary**: The README may show only functional, verifiable status badges for the validation workflow, Agent Skill type, current stable source, and MIT license. The stable-source badge may link to the matching immutable tag, but badges never imply runtime certification, discovery success, or real-model behavior.
+- **README disclosure boundary**: Keep the README outcome-first and use only three compact, verifiable status badges: MIT License, the latest published Release, and the `main` branch validation workflow. Do not use badges to claim runtime compatibility, standards conformance, adoption, downloads, coverage, or model behavior. The opening names the product category plainly and displays the canonical 2:1 Banner at a restrained width without changing the source or derived files. The README should move from user outcomes and fit to the plain-language workflow, methods that appear only when useful, one cross-host repository-URL installation request, the reliable Claude Code invocation near installation, grouped detail links, and plain-language safety defaults. Installation is explicitly separated from real-runtime validation. Detailed commands, release verification, compatibility levels, frozen scores, and evidence governance belong in the linked guides.
 
 ## Evidence and Claim Boundaries
 
-- Current reliable entry is explicit `/think-it-through` in Claude Code.
+- The simplest installation request is to give the repository URL to the Agent the user already uses; whether that Agent can complete installation depends on its capabilities, permissions, and Skill-directory convention, and does not establish runtime compatibility.
+- Current reliable invocation is explicit `/think-it-through` in Claude Code.
 - The loaded-Skill contextual checkpoint is part of the v0.3.0 formal contract; real multi-turn behavior and natural-language discovery remain `not_run`.
 - Frozen v0.1 discovery evidence remains 9/16 overall, with 1/8 positives and 8/8 negatives.
 - Static contracts, schemas, fixtures, graders, diagrams, local installation, and installer mappings do not prove runtime loading, model behavior, native UI, or compatibility.
@@ -67,9 +68,9 @@ This file is a concise derivative of `REQUIREMENTS.md` and `PRODUCT.md`, not a s
 The README journey is:
 
 ```text
-5 seconds: identify the product, position, trustworthy status, and reliable entry
-→ 20–30 seconds: recognize that AI can execute quickly while the user must still decide what is worth doing
-→ 45–60 seconds: judge fit through several raw product and business thoughts the user could bring as-is
-→ 2 minutes: install it and invoke it explicitly
-→ then: disclose safety, compatibility, and evidence boundaries progressively
+5 seconds: identify the decision-and-evidence Agent Skill, its position, and user outcomes
+→ 20–30 seconds: judge when it is useful and when the full flow is unnecessary
+→ 45–60 seconds: understand the plain-language workflow and why methods appear only when useful
+→ 2 minutes: make the cross-host repository-URL installation request, then use the documented reliable invocation in Claude Code
+→ then: review plain-language safety defaults and grouped links; open detailed installation, compatibility, or evidence guidance only when needed
 ```
