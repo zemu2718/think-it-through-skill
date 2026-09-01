@@ -20,21 +20,21 @@ class PublicDocsTests(unittest.TestCase):
 
     def test_required_facts_fail_independently(self) -> None:
         mutations = (
-            ("README.md", "```text\n/think-it-through\n```", "```text\n/wrong-entry\n```", "可靠显式入口"),
-            ("README.md", "AI bookkeeping", "AI ledger", "原话画廊第 2 条"),
-            ("README.md", "polished decision question", "polished prompt", "原话画廊必须说明"),
-            ("README.zh-CN.md", "第一版", "初始版本", "原话画廊第 3 条"),
-            ("README.md", "git clone --depth 1 --branch v0.3.0", "git clone", "不可变 v0.3.0 tag"),
-            ("README.md", "cd think-it-through-skill\ngit rev-parse HEAD\ntest ! -e", "cd think-it-through-skill\ngit status --short\ntest ! -e", "准确源码 revision"),
-            ("README.md", "v0.3.0 is the current stable source", "v0.3.0 is the source candidate", "稳定源码状态"),
-            ("README.md", "gh skill install", "gh extension install", "GitHub CLI 固定版本安装"),
-            ("README.md", "all target mappings recognized by `skills@1.5.23`", "all AI clients", "--agent '*'"),
-            ("README.md", "installation or runtime feedback", "general feedback", "反馈入口"),
-            ("README.md", "no network access", "network access depends on context", "五项默认安全语义"),
-            ("README.md", "Before starting", "At some point", "五个具体调用时机"),
-            ("README.md", "not a project-management or task-execution layer", "also executes projects", "决策工具与执行工具边界"),
-            ("README.zh-CN.md", "立项前", "开始以后", "五个具体调用时机"),
-            ("README.zh-CN.md", "| **结果回来后** |", "| **完成以后** |", "五个具体调用时机"),
+            ("README.en.md", "```text\n/think-it-through\n```", "```text\n/wrong-entry\n```", "可靠显式入口"),
+            ("README.en.md", "AI bookkeeping", "AI ledger", "原话画廊第 2 条"),
+            ("README.en.md", "polished decision question", "polished prompt", "原话画廊必须说明"),
+            ("README.md", "第一版", "初始版本", "原话画廊第 3 条"),
+            ("README.en.md", "git clone --depth 1 --branch v0.3.0", "git clone", "不可变 v0.3.0 tag"),
+            ("README.en.md", "cd think-it-through-skill\ngit rev-parse HEAD\ntest ! -e", "cd think-it-through-skill\ngit status --short\ntest ! -e", "准确源码 revision"),
+            ("README.en.md", "**Stable release:**", "**Source candidate:**", "当前稳定发布状态"),
+            ("README.en.md", "gh skill install", "gh extension install", "GitHub CLI 固定版本安装"),
+            ("README.en.md", "all target mappings recognized by `skills@1.5.23`", "all AI clients", "--agent '*'"),
+            ("README.en.md", "installation or runtime feedback", "general feedback", "反馈入口"),
+            ("README.en.md", "no network access", "network access depends on context", "五项默认安全语义"),
+            ("README.en.md", "Before starting", "At some point", "五个具体调用时机"),
+            ("README.en.md", "not a project-management or task-execution layer", "also executes projects", "决策工具与执行工具边界"),
+            ("README.md", "立项前", "开始以后", "五个具体调用时机"),
+            ("README.md", "| **结果回来后** |", "| **完成以后** |", "五个具体调用时机"),
         )
         for relative, old, new, expected in mutations:
             with self.subTest(relative=relative, old=old):
@@ -44,25 +44,25 @@ class PublicDocsTests(unittest.TestCase):
     def test_positioning_value_statement_and_preface_order_fail(self) -> None:
         mutations = (
             (
-                "README.md",
+                "README.en.md",
                 "AI can get things done fast, but it can't decide for you what's worth doing.",
                 "AI can finish work quickly.",
                 "canonical 产品定位",
             ),
             (
-                "README.md",
+                "README.en.md",
                 "Before an important commitment, clarify what you really need to decide and which unknown could change your course. Once the results come in, decide whether to continue, adjust, pause, or stop.",
                 "Before a commitment, think carefully.",
                 "价值说明",
             ),
             (
-                "README.zh-CN.md",
+                "README.md",
                 "AI 能把事情做得很快，但不能替你决定什么值得做。",
                 "AI 能快速执行。",
                 "canonical 产品定位",
             ),
             (
-                "README.zh-CN.md",
+                "README.md",
                 "重要投入之前，先确认真正要决定什么、哪个未知会改变方向；结果回来之后，再决定继续、调整、暂停还是停止。",
                 "重要投入前后都要仔细考虑。",
                 "价值说明",
@@ -105,20 +105,80 @@ class PublicDocsTests(unittest.TestCase):
             "Before an important commitment, clarify what you really need to decide and which unknown could change your course. Once the results come in, decide whether to continue, adjust, pause, or stop.\n\n"
             "**AI can get things done fast, but it can't decide for you what's worth doing.**"
         )
-        errors = self.validate_doc_mutation("README.md", old, new).errors
+        errors = self.validate_doc_mutation("README.en.md", old, new).errors
         self.assertTrue(any("主定位 → 价值说明" in error for error in errors), errors)
 
     def test_h2_missing_reordered_and_legacy_heading_fail(self) -> None:
-        errors = self.validate_doc_mutation("README.md", "## Why it matters", "### Why it matters").errors
+        errors = self.validate_doc_mutation("README.en.md", "## Why it matters", "### Why it matters").errors
         self.assertTrue(any("十个 H2" in error for error in errors), errors)
         errors = self.validate_doc_mutation(
-            "README.md",
-            "## Say it in your own words",
-            "## Install and try it\n\n## Say it in your own words",
+            "README.en.md",
+            "## Install and use",
+            "## Install and try it",
         ).errors
-        self.assertTrue(any("十个 H2" in error for error in errors), errors)
-        errors = self.validate_doc_mutation("README.md", "## What it is", "## Quick Start").errors
         self.assertTrue(any("旧版入口章节" in error or "十个 H2" in error for error in errors), errors)
+        errors = self.validate_doc_mutation(
+            "README.md",
+            "## 安装与使用",
+            "## 安装并完成第一次体验",
+        ).errors
+        self.assertTrue(any("旧版入口章节" in error or "十个 H2" in error for error in errors), errors)
+        errors = self.validate_doc_mutation("README.en.md", "## What it is", "## Quick Start").errors
+        self.assertTrue(any("旧版入口章节" in error or "十个 H2" in error for error in errors), errors)
+
+    def test_install_and_use_journey_fail(self) -> None:
+        mutations = (
+            (
+                "README.en.md",
+                "### Invoke it",
+                "### Other installation options",
+                "依次提供主安装、显式调用、预期行为和其他安装方式",
+            ),
+            (
+                "README.md",
+                "### 调用后会先发生什么",
+                "### 使用后说明",
+                "依次提供主安装、显式调用、预期行为和其他安装方式",
+            ),
+        )
+        for relative, old, new, expected in mutations:
+            with self.subTest(relative=relative, old=old):
+                errors = self.validate_doc_mutation(relative, old, new).errors
+                self.assertTrue(any(expected in error for error in errors), errors)
+
+        old = "### Invoke it\n\nThe reliable entry is explicit invocation in Claude Code:"
+        new = "### Invoke it\n\nnpx -y skills@1.5.23 add placeholder\n\nThe reliable entry is explicit invocation in Claude Code:"
+        errors = self.validate_doc_mutation("README.en.md", old, new).errors
+        self.assertTrue(any("主路径必须先于其他安装方式" in error for error in errors), errors)
+
+        old = "With [GitHub CLI 2.98.0 or later](https://cli.github.com/), install it for Claude Code at user scope:"
+        new = "With [GitHub CLI 2.98.0 or later](https://cli.github.com/), install the pinned v0.3.0 release for Claude Code at user scope:"
+        errors = self.validate_doc_mutation("README.en.md", old, new).errors
+        self.assertTrue(any("不得突出当前版本号" in error for error in errors), errors)
+
+    def test_language_switch_and_default_readme_contract_fail(self) -> None:
+        mutations = (
+            ("README.md", "[English](README.en.md)", "[English](README.md)", "中文 README 缺少英文切换"),
+            ("README.en.md", "[简体中文](README.md)", "[简体中文](README.en.md)", "英文 README 缺少中文切换"),
+            (
+                "CLAUDE.md",
+                "`README.md` 是 GitHub 默认展示的中文用户入口",
+                "`README.md` 是英文用户入口",
+                "CLAUDE.md 缺少 v0.3.0 维护规则",
+            ),
+        )
+        for relative, old, new, expected in mutations:
+            with self.subTest(relative=relative, old=old):
+                errors = self.validate_doc_mutation(relative, old, new).errors
+                self.assertTrue(any(expected in error for error in errors), errors)
+
+    def test_legacy_chinese_readme_path_fails(self) -> None:
+        with self.repository_copy() as root:
+            shutil.copyfile(root / "README.md", root / "README.zh-CN.md")
+            validation = Validation()
+            with mock.patch("validate_repo.ROOT", root):
+                validate_public_docs(validation)
+            self.assertTrue(any("不得保留 README.zh-CN.md" in error for error in validation.errors), validation.errors)
 
     def test_readme_banner_and_text_gallery_fail(self) -> None:
         errors = self.validate_doc_mutation(
@@ -126,7 +186,7 @@ class PublicDocsTests(unittest.TestCase):
         ).errors
         self.assertTrue(any("README Banner" in error or "Brand Mark" in error for error in errors), errors)
         errors = self.validate_doc_mutation(
-            "README.md",
+            "README.en.md",
             "- “I want to build a chat app like QQ. What do you think?”",
             '<img src="assets/decision-case-light.svg" alt="case">',
         ).errors
@@ -137,12 +197,12 @@ class PublicDocsTests(unittest.TestCase):
             ("README.md", '<img src="assets/readme-banner-light.png"', '<img src="assets/readme-banner-dark.png"', "light fallback"),
             ("README.md", 'width="1200"', 'width="104"', "README Banner"),
             (
-                "README.zh-CN.md",
+                "README.md",
                 'alt="多层观察框架逐步对齐成一个清晰开口，并保留一个让判断可以再次修正的小轴点。"',
                 'alt=""',
                 "本地化 alt",
             ),
-            ("README.md", "# Think It Through · 想清楚", "## What it is", "首屏"),
+            ("README.en.md", "# Think It Through · 想清楚", "## What it is", "首屏"),
         )
         for relative, old, new, expected in mutations:
             with self.subTest(relative=relative, expected=expected):
@@ -168,10 +228,10 @@ class PublicDocsTests(unittest.TestCase):
 
     def test_forbidden_marketing_badges_fail(self) -> None:
         insertion = "[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen?style=flat-square)](https://example.com)\n"
-        errors = self.validate_doc_mutation("README.md", "**Reliable entry today:**", insertion + "\n**Reliable entry today:**").errors
+        errors = self.validate_doc_mutation("README.en.md", "**Reliable entry today:**", insertion + "\n**Reliable entry today:**").errors
         self.assertTrue(any("恰好包含四枚" in error or "徽章不得宣称" in error for error in errors), errors)
         insertion = "[![L5 certified](https://img.shields.io/badge/L5-certified-blue?style=flat-square)](https://example.com)\n"
-        errors = self.validate_doc_mutation("README.md", "**Reliable entry today:**", insertion + "\n**Reliable entry today:**").errors
+        errors = self.validate_doc_mutation("README.en.md", "**Reliable entry today:**", insertion + "\n**Reliable entry today:**").errors
         self.assertTrue(any("恰好包含四枚" in error or "徽章不得宣称" in error for error in errors), errors)
 
     def test_inaccurate_release_url_and_runtime_claim_fail(self) -> None:
@@ -200,7 +260,7 @@ class PublicDocsTests(unittest.TestCase):
                 errors = self.validate_doc_mutation("README.md", old, new).errors
                 self.assertTrue(any("准确" in error or "核验" in error for error in errors), errors)
         errors = self.validate_doc_mutation(
-            "README.md",
+            "README.en.md",
             "Eight installer target mappings",
             "Supports 50+ runtimes; eight installer target mappings",
         ).errors
@@ -209,7 +269,7 @@ class PublicDocsTests(unittest.TestCase):
     def test_normative_contract_terms_fail(self) -> None:
         for term in ("R-align", "R-method", "DecisionRecord"):
             with self.subTest(term=term):
-                errors = self.validate_doc_mutation("README.md", "## License", f"{term}\n\n## License").errors
+                errors = self.validate_doc_mutation("README.en.md", "## License", f"{term}\n\n## License").errors
                 self.assertTrue(any("正式行为合同术语" in error for error in errors), errors)
 
     def validate_doc_mutation(self, relative: str, old: str, new: str) -> Validation:
@@ -228,7 +288,7 @@ class PublicDocsTests(unittest.TestCase):
         root = Path(temporary.name)
         for relative in (
             "README.md",
-            "README.zh-CN.md",
+            "README.en.md",
             "PRODUCT.md",
             "REQUIREMENTS.md",
             "SECURITY.md",

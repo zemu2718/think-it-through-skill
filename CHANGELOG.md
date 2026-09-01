@@ -21,6 +21,7 @@
 - 更新双语 README 首图、品牌派生摘要、视觉资产说明与贡献维护流程；不改变产品行为、安全、授权、兼容性或 evidence 合同。
 - 统一双语首屏、产品定位、品牌摘要与 Social Preview 为“AI 可以快速执行，但用户仍决定什么值得做”的表达，并补全重要投入前校准、结果回来后复判的价值说明；不改变产品行为、安全、授权、runtime、兼容性或 evidence 合同。
 - 发布不可变 `v0.3.0` Git tag 与 GitHub Release，提供经 manifest 复验的 `think-it-through.skill` 和 `SHA256SUMS`，并增加 GitHub CLI、固定 `skills@1.5.23` 与手动 tag 安装入口；安装结果不提升 L3～L5。
+- 将 GitHub 根 README 设为中文默认入口，并将英文入口迁移至 `README.en.md`；不改变产品行为、资产、分发或兼容性合同。
 
 ## [0.3.0] - 2026-08-31
 

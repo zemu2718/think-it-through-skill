@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 本仓库发布纯指令型 Agent Skill“想清楚 · Think It Through”。v0.3.0 将其定义为重要行动前后的决策与证据协议：先把“表面任务 → 真实目的 → 决策问题”收敛为 R-align / R-method / A；用户回答后才按需要路由有界 Evidence / Participation Gate；最终 B 交付一个综合判断、一个主现实证据闭环、可复制的决策快照和四项反馈。
 
-文档职责必须保持单一：`README.md` / `README.zh-CN.md` 是对应语言的用户入口；`PRODUCT.md` 说明产品愿景、目标用户与原则；`REQUIREMENTS.md` 是唯一正式行为、安全与验收依据；`docs/product-architecture-v0.3.0.md` 只保留非规范性架构理由、历史取舍和验证路线；`CHANGELOG.md` 记录版本事实。不要在多个文件维护第二套正式合同。
+文档职责必须保持单一：`README.md` 是 GitHub 默认展示的中文用户入口，`README.en.md` 是英文用户入口；`PRODUCT.md` 说明产品愿景、目标用户与原则；`REQUIREMENTS.md` 是唯一正式行为、安全与验收依据；`docs/product-architecture-v0.3.0.md` 只保留非规范性架构理由、历史取舍和验证路线；`CHANGELOG.md` 记录版本事实。不要在多个文件维护第二套正式合同。
 
 当前可靠调用方式是 `/think-it-through`。自动发现的冻结 v0.1 holdout 仅为 9/16（正例 1/8、负例 8/8），不要把自然语言自动加载或其他客户端兼容性描述为已经通过。
 

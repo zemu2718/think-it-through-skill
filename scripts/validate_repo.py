@@ -802,7 +802,7 @@ def validate_compatibility(validation: Validation) -> None:
                     evidence_runtime = evidence.get("runtime", {})
                     validation.require(evidence_runtime.get("id") == runtime.get("id") and evidence_runtime.get("version") == runtime.get("runtime_version"), f"{runtime.get('id')} {level} runtime/version 与 evidence 不一致")
 
-    readmes = (ROOT / "README.md").read_text(encoding="utf-8") + "\n" + (ROOT / "README.zh-CN.md").read_text(encoding="utf-8")
+    readmes = (ROOT / "README.md").read_text(encoding="utf-8") + "\n" + (ROOT / "README.en.md").read_text(encoding="utf-8")
     _validate_runtime_support_claims(validation, readmes, support)
 
 
@@ -2336,17 +2336,21 @@ def _readme_badges(text: str) -> list[tuple[str, str, str]]:
 
 
 def validate_public_docs(validation: Validation) -> None:
+    validation.require(
+        not (ROOT / "README.zh-CN.md").exists(),
+        "根目录不得保留 README.zh-CN.md；中文默认入口只维护在 README.md",
+    )
     current_architecture_path = f"docs/product-architecture-v{CURRENT_CONTRACT_VERSION}.md"
     public_paths = (
-        "README.md", "README.zh-CN.md", "PRODUCT.md", "REQUIREMENTS.md", "SECURITY.md",
+        "README.md", "README.en.md", "PRODUCT.md", "REQUIREMENTS.md", "SECURITY.md",
         "CONTRIBUTING.md", ".agents/brand-context.md",
         ".github/ISSUE_TEMPLATE/install-or-runtime-feedback.yml",
         ".github/workflows/validate.yml",
         "docs/product-architecture-v0.2.0.md", current_architecture_path, "CLAUDE.md",
     )
     public_docs = {relative: (ROOT / relative).read_text(encoding="utf-8") for relative in public_paths}
-    readme_en = public_docs["README.md"]
-    readme_zh = public_docs["README.zh-CN.md"]
+    readme_zh = public_docs["README.md"]
+    readme_en = public_docs["README.en.md"]
     requirements = public_docs["REQUIREMENTS.md"]
     product = public_docs["PRODUCT.md"]
     claude_md = public_docs["CLAUDE.md"]
@@ -2367,13 +2371,21 @@ def validate_public_docs(validation: Validation) -> None:
     )
     readme_contracts = (
         {
-            "name": "README.md",
+            "name": "README.en.md",
             "text": readme_en,
             "sections": [
-                "What it is", "Why it matters", "Say it in your own words", "When to use it", "Install and try it",
+                "What it is", "Why it matters", "Say it in your own words", "When to use it", "Install and use",
                 "What happens in a full check", "Safe by default", "Version, compatibility, and evidence",
                 "Documentation and contributing", "License",
             ],
+            "install_heading": "Install and use",
+            "install_subsections": ("Install for Claude Code", "Invoke it", "What to expect", "Other installation options"),
+            "install_journey": (
+                "gh skill install",
+                "```text\n/think-it-through\n```",
+                "Instead of immediately writing the campaign",
+                "npx -y skills@1.5.23 add",
+            ),
             "gallery_heading": "Say it in your own words",
             "gallery_intro": ("/think-it-through", "polished decision question", "product you are building"),
             "gallery_concepts": (
@@ -2389,8 +2401,9 @@ def validate_public_docs(validation: Validation) -> None:
             "safety_phrases": ("no network access", "no private-data access", "one current main agent", "no file or remote persistence", "no external action"),
             "moments": ("Before starting", "Before choosing a path", "Before committing resources", "Before doubling down", "After results arrive"),
             "boundary": ("decision layer", "not a project-management or task-execution layer"),
-            "stable": "v0.3.0 is the current stable source",
-            "release": "published as an immutable Git tag, GitHub Release",
+            "version_heading": "Version, compatibility, and evidence",
+            "stable": "**Stable release:**",
+            "release": "backed by an immutable Git tag, a GitHub Release",
             "checkpoint": "formal contract defines a lightweight contextual checkpoint",
             "feedback": "installation or runtime feedback",
             "banner_alt": "Layered observation frames align around a clear opening",
@@ -2398,12 +2411,20 @@ def validate_public_docs(validation: Validation) -> None:
             "value_statement": VALUE_STATEMENT_EN,
         },
         {
-            "name": "README.zh-CN.md",
+            "name": "README.md",
             "text": readme_zh,
             "sections": [
-                "这是什么", "为什么需要它", "直接说出你现在的想法", "什么时候调用", "安装并完成第一次体验",
+                "这是什么", "为什么需要它", "直接说出你现在的想法", "什么时候调用", "安装与使用",
                 "一次完整检查会发生什么", "默认安全与隐私", "版本、兼容性与证据", "文档与参与", "许可证",
             ],
+            "install_heading": "安装与使用",
+            "install_subsections": ("安装到 Claude Code", "调用", "调用后会先发生什么", "其他安装方式"),
+            "install_journey": (
+                "gh skill install",
+                "```text\n/think-it-through\n```",
+                "它不会立即替你写投放方案",
+                "npx -y skills@1.5.23 add",
+            ),
             "gallery_heading": "直接说出你现在的想法",
             "gallery_intro": ("/think-it-through", "不用先把问题整理", "正在做的产品"),
             "gallery_concepts": (
@@ -2419,8 +2440,9 @@ def validate_public_docs(validation: Validation) -> None:
             "safety_phrases": ("不联网", "不读取私有数据", "只使用当前主 Agent", "不写入文件或远端保存", "不执行外部行动"),
             "moments": ("立项前", "选方向前", "投入资源前", "继续加码前", "结果回来后"),
             "boundary": ("决策层", "不是项目管理或任务执行层"),
-            "stable": "v0.3.0 是当前稳定源码",
-            "release": "已发布为不可变 Git tag、GitHub Release",
+            "version_heading": "版本、兼容性与证据",
+            "stable": "**稳定发布：**",
+            "release": "由不可变 Git tag、GitHub Release",
             "checkpoint": "正式合同只在 Skill 已经加载",
             "feedback": "反馈安装或 runtime 问题",
             "banner_alt": "多层观察框架逐步对齐成一个清晰开口",
@@ -2430,7 +2452,9 @@ def validate_public_docs(validation: Validation) -> None:
     )
     old_sections = {
         "A 30-second walkthrough", "Quick Start", "How it works", "What you receive", "FAQ",
+        "Install and try it",
         "30 秒说明性演示", "快速开始", "它如何工作", "你会得到什么", "常见问题",
+        "安装并完成第一次体验",
     }
     old_assets = ("assets/hero-", "assets/product-value-", "assets/demo-flow")
     expected_badges = (
@@ -2492,6 +2516,24 @@ def validate_public_docs(validation: Validation) -> None:
         validation.require(not any(token in gallery for token in ("<picture>", "<img", "assets/")), f"{name} 原话画廊必须使用纯文本，不得继续嵌入案例图片")
         validation.require("assets/decision-case-" not in readme, f"{name} 不得重新引用已移除的 Decision Case")
         validation.require(not any(asset in readme for asset in old_assets), f"{name} 不得引用旧视觉资产")
+        install_section = _markdown_h2_section(readme, contract["install_heading"])
+        install_subsections = re.findall(r"^### (.+)$", install_section, re.MULTILINE)
+        validation.require(
+            install_subsections == list(contract["install_subsections"]),
+            f"{name} 安装与使用章节必须依次提供主安装、显式调用、预期行为和其他安装方式",
+        )
+        journey_positions = [install_section.find(fragment) for fragment in contract["install_journey"]]
+        validation.require(
+            all(position >= 0 for position in journey_positions)
+            and journey_positions == sorted(journey_positions),
+            f"{name} 安装与使用主路径必须先于其他安装方式完整出现",
+        )
+        install_narrative = re.sub(r"```.*?```", "", install_section, flags=re.DOTALL)
+        install_narrative = re.sub(r"\]\([^)]+\)", "]()", install_narrative)
+        validation.require(
+            f"v{CURRENT_CONTRACT_VERSION}" not in install_narrative,
+            f"{name} 安装与使用叙述不得突出当前版本号；版本只保留在命令、链接和版本章节",
+        )
         validation.require("git clone --depth 1 --branch v0.3.0" in readme, f"{name} 缺少不可变 v0.3.0 tag 手动安装")
         validation.require("cd think-it-through-skill\ngit rev-parse HEAD\ntest ! -e" in readme, f"{name} 缺少安装时记录准确源码 revision 的命令")
         validation.require("```text\n/think-it-through\n```" in readme, f"{name} 缺少可靠显式入口")
@@ -2503,14 +2545,18 @@ def validate_public_docs(validation: Validation) -> None:
         )
         validation.require(all(phrase in readme for phrase in contract["boundary"]), f"{name} 缺少决策工具与执行工具边界")
         validation.require(all(link in readme for link in shared_links), f"{name} 缺少任务导向文档链接")
-        validation.require(contract["stable"] in readme, f"{name} 缺少 v0.3.0 稳定源码状态")
-        validation.require(contract["release"] in readme, f"{name} 缺少已发布的 v0.3.0 公开对象状态")
+        version_section = _markdown_h2_section(readme, contract["version_heading"])
+        validation.require(
+            contract["stable"] in version_section and f"v{CURRENT_CONTRACT_VERSION}" in version_section,
+            f"{name} 版本章节缺少当前稳定发布状态",
+        )
+        validation.require(contract["release"] in version_section, f"{name} 版本章节缺少已发布的公开对象状态")
         validation.require(all(url in readme for url in release_urls), f"{name} 缺少准确的 v0.3.0 Release、asset 或校验和 URL")
         validation.require("gh skill install" in readme and "think-it-through@v0.3.0" in readme, f"{name} 缺少 GitHub CLI 固定版本安装")
         validation.require(readme.count("npx -y skills@1.5.23 add") == 2 and "--agent '*'" in readme, f"{name} 缺少固定通用安装器与全部目标入口；固定通用安装器版本必须保持 skills@1.5.23")
         validation.require(
             ("all target mappings recognized by `skills@1.5.23`" in readme and "does **not** mean every AI client" in readme)
-            if name == "README.md"
+            if name == "README.en.md"
             else ("`skills@1.5.23` 认识的全部目标映射" in readme and "不表示所有 AI 客户端" in readme),
             f"{name} 缺少 --agent '*' 的真实支持边界",
         )
@@ -2532,8 +2578,8 @@ def validate_public_docs(validation: Validation) -> None:
                 validation.require(label == expected_label and image_fragment in image and target_fragment in target, f"{name} 徽章职责、URL 或目标不正确：{label}")
                 validation.require("style=flat-square" in image, f"{name} 所有徽章必须使用 flat-square")
             validation.require(not any(forbidden_badge_terms.search(image + " " + label) for label, image, _ in badges), f"{name} 徽章不得宣称 Release、下载、coverage、stars、runtime、兼容认证、L5 或自动发现")
-    validation.require("[简体中文](README.zh-CN.md)" in readme_en, "英文 README 缺少中文切换")
-    validation.require("[English](README.md)" in readme_zh, "中文 README 缺少英文切换")
+    validation.require("[简体中文](README.md)" in readme_en, "英文 README 缺少中文切换")
+    validation.require("[English](README.en.md)" in readme_zh, "中文 README 缺少英文切换")
 
     trigger_summary = _load_json(ROOT / "benchmarks" / "trigger-v0.1" / "summary.json")
     holdout_summary = trigger_summary.get("holdout", {}).get("summary", {})
@@ -2545,7 +2591,7 @@ def validate_public_docs(validation: Validation) -> None:
     validation.require((positive_passed, negative_passed) == (1, 8), "冻结 trigger 正负例摘要发生变化")
 
     release_url_re = re.compile(r"https?://[^\s)]+/releases/(?:download|tag)/v0\.3\.0[^\s)]*", re.IGNORECASE)
-    for name, readme in (("README.md", readme_en), ("README.zh-CN.md", readme_zh)):
+    for name, readme in (("README.en.md", readme_en), ("README.md", readme_zh)):
         found_release_urls = {match.rstrip(".,") for match in release_url_re.findall(readme)}
         validation.require(
             found_release_urls == set(release_urls),
@@ -2633,6 +2679,8 @@ def validate_public_docs(validation: Validation) -> None:
         "L3～L5 只能由绑定准确 runtime version 的 `real_runtime` 证据提升",
         "具体能力是否发生只由当前会话 capability observation",
         "文档职责必须保持单一",
+        "`README.md` 是 GitHub 默认展示的中文用户入口",
+        "`README.en.md` 是英文用户入口",
         "用户可见文档优先使用读者语言",
         "普通正文先说完整含义",
         "canonical key 与用户可见字段分离",
@@ -2806,7 +2854,7 @@ def validate_package_source(validation: Validation) -> None:
 def validate_required_open_source_files(validation: Validation) -> None:
     required = {
         "README.md",
-        "README.zh-CN.md",
+        "README.en.md",
         "CHANGELOG.md",
         "CONTRIBUTING.md",
         "SECURITY.md",

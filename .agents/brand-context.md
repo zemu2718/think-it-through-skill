@@ -5,7 +5,7 @@ This file is a concise derivative of `REQUIREMENTS.md` and `PRODUCT.md`, not a s
 ## Brand
 
 - **Name**: 想清楚 · Think It Through
-- **Category**: Open Agent Skill for consequential decisions and evidence
+- **Category**: Decision-and-evidence Agent Skill for consequential commitments
 - **Description**: Turns an important request into the decision underneath it, one answer that could change it, and a next step reality can test.
 - **Stage**: v0.3.0 is the current stable source and formal product contract, published as an immutable Git tag, GitHub Release, downloadable `think-it-through.skill`, and `SHA256SUMS`; maintained development continues on `main`
 - **Website**: https://github.com/zemu2718/think-it-through-skill
@@ -27,7 +27,7 @@ This file is a concise derivative of `REQUIREMENTS.md` and `PRODUCT.md`, not a s
 
 - **Differentiation**: A decision-and-evidence protocol, not a generic brainstorming framework, project manager, mandatory research workflow, or multi-Agent debate. It defaults to zero external calls and one main Agent, escalates only when decision value and authorization are present, and ends with one judgment, one primary real-world evidence loop, and a reassessable snapshot.
 - **Alternatives**: Immediate AI execution, generic prompt/framework libraries, project-management tools, research or multi-Agent orchestration products
-- **Market Position**: Focused open-source decision layer for resource-constrained users making consequential commitments
+- **Market Position**: Focused decision layer for resource-constrained users making consequential commitments, distributed as an MIT-licensed Agent Skill
 
 ## Brand Personality
 
@@ -70,6 +70,6 @@ The README journey is:
 5 seconds: identify the product, position, trustworthy status, and reliable entry
 → 20–30 seconds: recognize that AI can execute quickly while the user must still decide what is worth doing
 → 45–60 seconds: judge fit through several raw product and business thoughts the user could bring as-is
-→ 2 minutes: install the pinned stable release and try explicit invocation
+→ 2 minutes: install it and invoke it explicitly
 → then: disclose safety, compatibility, and evidence boundaries progressively
 ```

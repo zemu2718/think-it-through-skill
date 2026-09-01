@@ -1,77 +1,74 @@
 <div align="center">
 
-[简体中文](README.zh-CN.md)
+[English](README.en.md)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme-banner-dark.png">
   <source media="(prefers-color-scheme: light)" srcset="assets/readme-banner-light.png">
-  <img src="assets/readme-banner-light.png" alt="Layered observation frames align around a clear opening, with a small pivot that keeps the judgment open to revision." width="1200">
+  <img src="assets/readme-banner-light.png" alt="多层观察框架逐步对齐成一个清晰开口，并保留一个让判断可以再次修正的小轴点。" width="1200">
 </picture>
 
-# Think It Through · 想清楚
+# 想清楚 · Think It Through
 
-**AI can get things done fast, but it can't decide for you what's worth doing.**
+**AI 能把事情做得很快，但不能替你决定什么值得做。**
 
-Before an important commitment, clarify what you really need to decide and which unknown could change your course. Once the results come in, decide whether to continue, adjust, pause, or stop.
+重要投入之前，先确认真正要决定什么、哪个未知会改变方向；结果回来之后，再决定继续、调整、暂停还是停止。
 
 [![Validate](https://img.shields.io/github/actions/workflow/status/zemu2718/think-it-through-skill/validate.yml?branch=main&style=flat-square&label=Validate)](https://github.com/zemu2718/think-it-through-skill/actions/workflows/validate.yml?query=branch%3Amain)
 [![Agent Skill](https://img.shields.io/badge/type-Agent%20Skill-0F766E?style=flat-square)](skills/think-it-through/SKILL.md)
 [![Stable source v0.3.0](https://img.shields.io/badge/stable%20source-v0.3.0-172033?style=flat-square)](https://github.com/zemu2718/think-it-through-skill/tree/v0.3.0/skills/think-it-through)
 [![MIT License](https://img.shields.io/badge/license-MIT-172033?style=flat-square)](LICENSE)
 
-**Reliable entry today:** invoke `/think-it-through` explicitly in Claude Code.
+**当前可靠入口：** 在 Claude Code 中显式调用 `/think-it-through`。
 
 </div>
 
-## What it is
+## 这是什么
 
-Think It Through is an open Agent Skill for consequential decisions before—or after—important action. It turns a surface request into the decision underneath it, finds the one answer most likely to change that decision, and ends with a next step reality can test.
+“想清楚”帮助你看清表面请求背后真正要做的决定，找出最可能改变方向的一个未知，再选出一个现实可以检验的下一步。
 
-It is a decision layer, not a project-management or task-execution layer. It helps you decide whether to act, which direction to choose, how much to commit, or whether new results mean continue, adjust, pause, or stop.
+它是决策层，不是项目管理或任务执行层。你可以在重要投入前调用它，也可以在现实结果回来后，用它判断要不要做、选哪条路、投入到什么边界，以及继续、调整、暂停还是停止。
 
-## Why it matters
+## 为什么需要它
 
-AI can now produce plans, code, campaigns, research, and polished deliverables before the underlying choice is clear. That makes a wrong direction faster, more convincing, and more expensive—not less wrong.
+AI 已经可以很快产出方案、代码、投放文案、调研和漂亮的交付物，即使真正的选择还没有说清。于是，错误方向也会更快、更有说服力、更昂贵地推进。
 
-Think It Through creates a clear opening before commitment: hold the request, desired result, constraints, and unknowns in view until the real decision comes into focus—then let reality answer what reasoning alone cannot.
+“想清楚”会在承诺资源前留出一个看清决定的开口：把眼前动作、真正想得到或保护的结果、约束和未知同时放在视野里，直到真正的选择浮现，再把仅靠推理无法回答的问题交给现实。
 
-## Say it in your own words
+## 直接说出你现在的想法
 
-When using `/think-it-through`, you do not need to turn the situation into a polished decision question first. Describe the idea, the product you are building, and where you are now—for example:
+使用 `/think-it-through` 时，不用先把问题整理成标准的决策题。直接说出你的想法、正在做的产品和眼前处境，例如：
 
-- “I want to build a chat app like QQ. What do you think?”
-- “I have an idea for an AI bookkeeping product, but I still do not know who it should really be for.”
-- “I am building a project-management tool for freelancers. The feature list keeps growing, and I do not know how far the first version should go.”
-- “I built a prototype that turns meeting notes into action items, but I do not know which users to approach first.”
-- “People are using my invoice-organizing tool, but no one has been willing to pay for it.”
-- “A large customer wants to buy my inventory tool, but only if I add a lot of custom work. I am worried it will pull the product off course.”
-- “My browser extension still has regular users, but growth is slowing. I keep changing features and cannot tell whether I am improving the right thing.”
-- “I have been working on this developer tool for a long time. It is crowding out my main product, but I still cannot bring myself to stop.”
+- “我想做一个像 QQ 一样的聊天软件，你觉得怎么样？”
+- “我有个 AI 记账产品的想法，但还没想清楚它到底该做给谁。”
+- “我在做一个给自由职业者用的项目管理工具，想加的功能越来越多，第一版不知道该做到什么程度。”
+- “我做了一个能把会议记录变成待办的原型，但不知道应该先找哪类用户。”
+- “我的发票整理工具已经有人用了，但一直没人愿意付费。”
+- “一个大客户愿意买我的库存工具，但要求做很多定制，我怕产品会被带偏。”
+- “我的浏览器插件还有固定用户，可增长越来越慢，我一直改功能也不知道改得对不对。”
+- “这个开发者工具已经做了很久，还在挤占主产品的时间，我舍不得停。”
 
-## When to use it
+## 什么时候调用
 
-**A simple rule:** invoke `/think-it-through` before an important commitment—or after real results arrive, before you automatically continue.
+**记住一个简单规则：** 重要投入前调用；现实结果回来后，别惯性继续，先调用。
 
-| Decision moment | Bring this kind of issue |
+| 决策节点 | 可以直接带来的议题 |
 | --- | --- |
-| **Before starting** | Is this project worth doing, and what should be validated before full development? |
-| **Before choosing a path** | Which option better serves the real objective, and what unknown could change the ranking? |
-| **Before committing resources** | Should we develop, hire, buy, launch, promote, partner, or make a harder-to-reverse promise? |
-| **Before doubling down** | Does the evidence justify more time, budget, scope, or reputation risk? |
-| **After results arrive** | Given what happened, should we continue, adjust, pause, or stop? |
+| **立项前** | 这个项目值不值得做，全面开发前最该先验证什么？ |
+| **选方向前** | 哪条路更服务真正目的，哪个未知会改变方案排序？ |
+| **投入资源前** | 是否应该开发、招聘、采购、发布、推广、合作或作出更难撤回的承诺？ |
+| **继续加码前** | 现有证据是否值得再投入时间、预算、范围或声誉成本？ |
+| **结果回来后** | 根据实际发生的事，应该继续、调整、暂停还是停止？ |
 
-No framework or polished brief is required. Paste the choice, the action you are considering, and any constraint you already know. A vague “something feels off” is enough to begin.
+不用先学方法，也不用整理正式文档。直接贴出正在考虑的选择、准备采取的动作和已知约束即可；哪怕只是觉得“哪里不对”，也可以从这句话开始。
 
-Skip the full flow for factual lookup, clear low-risk execution after a decision is made, pure creation, or technical review and research with no unresolved user choice. In emergencies, take immediate protective action first. It does not replace licensed medical, legal, investment, or other professional judgment.
+单纯查事实、决定已明确的低风险执行、纯创作，以及没有待决用户选择的代码审查或调研，不需要进入完整流程。紧急事件先采取保护动作；医疗、法律、投资等专业事项不能用它替代持证专业判断。
 
-## Install and try it
+## 安装与使用
 
-> [!IMPORTANT]
-> **v0.3.0 is the current stable source and formal product contract, published as an immutable Git tag, GitHub Release, and downloadable `.skill` asset.** Installation confirms only that files reached a target directory; real loading, behavior, and native capabilities remain separate runtime/version claims.
+### 安装到 Claude Code
 
-### Install with GitHub CLI
-
-With [GitHub CLI 2.98.0 or later](https://cli.github.com/), install the pinned release for a supported coding agent. This example uses Claude Code and user scope:
+安装 [GitHub CLI 2.98.0 或更高版本](https://cli.github.com/)后，使用下面的命令安装到 Claude Code 的用户目录：
 
 ```bash
 gh skill install \
@@ -81,18 +78,39 @@ gh skill install \
   --scope user
 ```
 
-Change `--agent` to a target recognized by your installed GitHub CLI. Keeping `@v0.3.0` makes the installed source reproducible instead of following a moving branch.
+如果当前 Claude Code 会话启动时还没有顶层 Skill 目录，请在安装后重启 Claude Code。
 
-### Install the release asset across installer targets
+### 调用
 
-The published `.skill` is a ZIP-compatible archive containing only the manifest-declared runtime files. The pinned `skills` CLI can discover it interactively:
+当前可靠入口是在 Claude Code 中显式调用：
+
+```text
+/think-it-through
+```
+
+然后直接说出正在考虑的选择、准备采取的动作和已经知道的约束。也可以粘贴这个合成示例：
+
+```text
+我做了一个面向小商家的排班 SaaS，但还没有陌生客户付费。
+在继续开发三个月并写投放方案前，帮我判断现在最该验证什么。
+```
+
+### 调用后会先发生什么
+
+它不会立即替你写投放方案，而会先帮你说清这次真正要做的决定，以及哪个未知最可能改变方向。
+
+安装或调用本身不会授权联网、读取私有数据、增加 Agent、写入文件或远端保存，也不会授权执行外部行动。这些能力仍是条件能力，只有取得各自具体授权后才会使用。
+
+### 其他安装方式
+
+**Release asset。** 发布的 `.skill` 是 ZIP 兼容归档，只包含 manifest 声明的运行时文件。固定版本的 `skills` CLI 可以先交互选择安装目标：
 
 ```bash
 npx -y skills@1.5.23 add \
   https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill
 ```
 
-To install a copied, user-level package for every target known to that installer version:
+如果要把复制式、用户级安装写入该安装器版本认识的全部目标：
 
 ```bash
 npx -y skills@1.5.23 add \
@@ -103,13 +121,11 @@ npx -y skills@1.5.23 add \
   --yes
 ```
 
-`--agent '*'` means all target mappings recognized by `skills@1.5.23`; it does **not** mean every AI client exists in that list or has passed real-runtime validation. Omit the flag for interactive target selection, or replace `'*'` with the exact target you want.
+`--agent '*'` 只表示 `skills@1.5.23` 认识的全部目标映射；不表示所有 AI 客户端都在其中，也不表示这些客户端已经通过真实 runtime 验证。需要交互选择时省略该参数；只装一个目标时，把 `'*'` 换成准确 target。
 
-You can verify the downloaded archive before installation with the published [`SHA256SUMS`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/SHA256SUMS).
+安装前可以使用 Release 同时发布的 [`SHA256SUMS`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/SHA256SUMS) 核对下载归档。
 
-### Manual fallback from the immutable tag
-
-If neither installer supports your host, copy the Skill directory according to that host's Agent Skills convention. For Claude Code:
+**手动兜底。** 如果两个安装器都不支持你的宿主，请按该宿主的 Agent Skills 目录约定复制 Skill。Claude Code 的命令如下：
 
 ```bash
 git clone --depth 1 --branch v0.3.0 https://github.com/zemu2718/think-it-through-skill.git
@@ -120,100 +136,84 @@ mkdir -p ~/.claude/skills
 cp -R skills/think-it-through ~/.claude/skills/
 ```
 
-The non-overwrite check stops if another copy already exists. Inspect that copy instead of merging versions; rename or remove it yourself before reinstalling.
+非覆盖检查会在旧副本已存在时停止。不要混合两个版本；请先检查，再自行重命名或删除旧副本后重新安装。
 
-If the top-level Skill directory did not exist when your current Claude Code session started, restart Claude Code. Then invoke it explicitly:
+无论使用哪种方式，安装都只说明文件已经进入目标目录，不能证明某个 runtime/version 已经加载、遵循 Skill 或支持原生能力。
 
-```text
-/think-it-through
-```
+## 一次完整检查会发生什么
 
-Paste this synthetic prompt—or replace it with your own real choice:
+1. **把动作和目的分开。** 说清眼前任务究竟要带来或保护什么结果。
+2. **只确认有增量的思考角度。** 基础分析始终存在；额外方法只有在提供独特价值且经你确认时才加入。
+3. **只回答一个决定性问题。** 聚焦最可能改变方向、排序或投入边界的一个答案。
+4. **只有真正需要时才升级。** 证据或独立参与是在你回答后的条件支路，范围有界、另行授权，不是固定流水线。
+5. **得到一个综合结果。** 交付一个条件化判断、一个主现实证据闭环和一份可复制的决策快照，并把事实、推断、假设、未知和反转信号分开保留。
+6. **让现实回来复判。** 新结果可以修正判断，而不是被迫证明原判断正确。
 
-```text
-I built a scheduling SaaS for small shops, but no unfamiliar customer has paid yet.
-Before I spend three more months building and write a launch campaign,
-help me decide what to validate first.
-```
+方法、调研、额外 Agent 和真人输入都服务于这一个结果，不会变成彼此分离的报告堆或多数票。
 
-**First success signal:** instead of immediately writing the campaign, the Skill first helps clarify the decision you are actually making. It should not search, read private data, add agents, save files, or act externally merely because you installed or invoked it.
+## 默认安全与隐私
 
-All three installation paths distribute the same v0.3.0 runtime source. Copying files proves only that files were copied; it does not certify loading or behavior in a particular runtime/version.
+没有另行取得具体授权时，Skill 默认：
 
-## What happens in a full check
+- **不联网**；
+- **不读取私有数据**；
+- **只使用当前主 Agent**；
+- **不写入文件或远端保存**；
+- **不执行外部行动**，包括发送、发布、购买、删除或联系他人。
 
-1. **Separate action from purpose.** Clarify what the requested task is meant to achieve or protect.
-2. **Confirm only useful angles.** Basic analysis is always present; an extra method appears only when it adds distinct value and you confirm it.
-3. **Answer one deciding question.** Focus on the single answer most likely to change direction, ranking, or commitment.
-4. **Escalate only when it matters.** Evidence or independent participation stays conditional, bounded, and separately authorized after your answer—not a mandatory pipeline.
-5. **Receive one integrated result.** Get a conditional judgment, one primary real-world evidence loop, and a copyable decision snapshot with facts, inferences, assumptions, unknowns, and reversal signals kept distinct.
-6. **Bring reality back.** New results can revise the judgment instead of being forced to validate it.
+能力调用、参与委派、私有数据访问和外部行动是四类彼此独立的授权。确认方法、选择上下文检查点、设置 Agent 上限或提供反馈，都不会自动授权其中任何一类。被拒绝、失败或没有执行的动作不会写成已经完成。
 
-Methods, research, extra agents, and human input serve this result; they are not separate report piles or votes.
+正式行为、安全与验收边界以 [`REQUIREMENTS.md`](REQUIREMENTS.md) 和 [`SECURITY.md`](SECURITY.md) 为准。
 
-## Safe by default
+## 版本、兼容性与证据
 
-Without a separate, specific authorization, the Skill defaults to:
-
-- **no network access**;
-- **no private-data access**;
-- **one current main agent**;
-- **no file or remote persistence**;
-- **no external action** such as sending, publishing, purchasing, deleting, or contacting someone.
-
-Capability calls, participation delegation, private-data access, and external action are four independent authorization classes. Confirming a method, choosing a contextual checkpoint, setting an agent limit, or giving feedback does not authorize any of them. A refused, failed, or unexecuted action must not be presented as completed.
-
-See the normative [behavior and safety contract](REQUIREMENTS.md) **[Chinese]** and the [Security Policy](SECURITY.md).
-
-## Version, compatibility, and evidence
-
-**Stable release:** [`v0.3.0`](https://github.com/zemu2718/think-it-through-skill/releases/tag/v0.3.0), backed by an immutable Git tag, a GitHub Release, the downloadable [`think-it-through.skill`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill), and [`SHA256SUMS`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/SHA256SUMS). Maintained development continues on [`main`](https://github.com/zemu2718/think-it-through-skill/tree/main/skills/think-it-through). Release status describes a reviewed product contract and deterministic acceptance path; it does not certify every client or promote unrun compatibility levels.
+**稳定发布：** [`v0.3.0`](https://github.com/zemu2718/think-it-through-skill/releases/tag/v0.3.0)，由不可变 Git tag、GitHub Release、可下载的 [`think-it-through.skill`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill) 与 [`SHA256SUMS`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/SHA256SUMS) 共同建立；后续开发继续位于持续维护的 [`main`](https://github.com/zemu2718/think-it-through-skill/tree/main/skills/think-it-through)。发布状态表示产品合同和确定性准入链已经确立，不代表所有客户端均已认证，也不会把未运行的兼容层级自动改为通过。
 
 <details>
-<summary>Compatibility levels and current public status</summary>
+<summary>兼容层级与当前公开状态</summary>
 
-“Open format,” “installer can copy files,” “runtime loads the Skill,” “the model follows it,” and “native features work” are different claims.
+“符合开放格式”“安装器能发现”“完成精确安装”“runtime 真实加载”“模型真实遵循”和“原生能力可用”是不同事实。
 
-| Level | What it means | Current public status |
+| 层级 | 含义 | 当前公开状态 |
 | --- | --- | --- |
-| L0 | Format validation | `not_run` in the public runtime matrix |
-| L1 | Installer discovery | `not_run` |
-| L2 | Exact installation | `not_run` |
-| L3 | Real runtime loading | `not_run` |
-| L4 | Real text behavior | `not_run` |
-| L5 | Real native capabilities | `not_run` |
+| L0 | 格式校验 | 公开 runtime 矩阵为 `not_run` |
+| L1 | 安装器发现 | `not_run` |
+| L2 | 精确安装 | `not_run` |
+| L3 | 真实 runtime 加载 | `not_run` |
+| L4 | 真实纯文本行为 | `not_run` |
+| L5 | 真实原生能力 | `not_run` |
 
-v0.3.0 provides a portable text baseline for hosts that load an Agent Skills directory and follow text instructions. Eight installer target mappings are maintained for Claude Code, Codex, Cursor, Gemini CLI, Hermes Agent, OpenClaw, OpenCode, and CodeBuddy / WorkBuddy. Unlisted compatible hosts can use the same text contract through their own Skill-directory convention. A mapping or portable contract is not a verified runtime: the machine-readable evidence source is [`compatibility/runtime-support.json`](compatibility/runtime-support.json). Static CI, schemas, fixtures, graders, and diagrams can establish contracts; they cannot prove a real model run, natural-language discovery, or native host experience.
+v0.3.0 为能够加载 Agent Skills 目录并遵循文本指令的宿主提供可移植纯文本基线。仓库维护 Claude Code、Codex、Cursor、Gemini CLI、Hermes Agent、OpenClaw、OpenCode 与 CodeBuddy / WorkBuddy 八个安装器目标映射；未列出的兼容宿主也可以按自身 Skill 目录约定使用同一文本合同。映射或可移植合同不等于已验证 runtime，机器可读证据事实源是 [`compatibility/runtime-support.json`](compatibility/runtime-support.json)。静态 CI、schema、fixtures、评分器和图示可以证明合同已经定义，不能证明真实模型运行、自然语言自动发现或宿主原生体验。
 
 </details>
 
 <details>
-<summary>Discovery and contextual checkpoint limits</summary>
+<summary>自动发现与上下文检查点的限制</summary>
 
-Automatic discovery is not the reliable entry point: the frozen v0.1 holdout scored **9/16 overall—1/8 positives triggered, while 8/8 negatives stayed out**. See the exact [trigger evidence and limitations](benchmarks/trigger-v0.1/README.md). Historical [v0.1 behavior evidence](benchmarks/behavior-v0.1/README.md) covers only three fixed scenarios with one run per configuration; it does not establish v0.2.0 or v0.3.0 behavior.
+自动发现目前不是可靠入口：冻结 v0.1 holdout 的总结果是 **9/16——正例只有 1/8 触发，负例 8/8 保持不触发**。完整证据与限制见 [`benchmarks/trigger-v0.1/`](benchmarks/trigger-v0.1/README.md)。历史 [`v0.1 行为证据`](benchmarks/behavior-v0.1/README.md) 只有三个固定场景、每个配置一次运行，不能证明 v0.2.0 或 v0.3.0 行为。
 
-The v0.3.0 formal contract defines a lightweight contextual checkpoint only when the Skill is already loaded, no formal flow is active, and a conversation crosses into project initiation, direction selection, major investment, continued escalation, or result reassessment. Real multi-turn status remains `not_run`; the contract does not prove natural-language discovery, automatic loading, or reliable mid-conversation triggering. Explicit `/think-it-through` remains the reliable entry.
+v0.3.0 正式合同只在 Skill 已经加载、当前没有正式流程，并且对话跨入立项、选方向、重大投入、继续加码或结果复判时，定义一个轻量上下文检查点。真实多轮状态仍为 `not_run`；合同不能证明自然语言自动发现、自动加载或对话中途可靠唤起。当前可靠入口仍是显式 `/think-it-through`。
 
 </details>
 
-## Documentation and contributing
+## 文档与参与
 
-| You want to… | Read… |
+| 你想了解 | 去这里 |
 | --- | --- |
-| Understand the product, audience, and non-goals | [`PRODUCT.md`](PRODUCT.md) **[Chinese; this README provides the English product summary]** |
-| Review the normative behavior, safety, and acceptance contract | [`REQUIREMENTS.md`](REQUIREMENTS.md) **[Chinese]** |
-| Inspect the runtime source | [`skills/think-it-through/SKILL.md`](skills/think-it-through/SKILL.md) **[primarily Chinese]** |
-| Verify the exact `.skill` file set | [`distribution/package-manifest.json`](distribution/package-manifest.json) |
-| Check runtime evidence status | [`compatibility/runtime-support.json`](compatibility/runtime-support.json) |
-| Report an installation or runtime observation | [Open the feedback form](https://github.com/zemu2718/think-it-through-skill/issues/new?template=install-or-runtime-feedback.yml) |
-| Contribute a concrete case or fix | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
-| Report a vulnerability privately | [`SECURITY.md`](SECURITY.md) |
-| Review source-version history | [`CHANGELOG.md`](CHANGELOG.md) **[Chinese]** |
+| 产品目的、目标用户和非目标 | [`PRODUCT.md`](PRODUCT.md) |
+| 唯一正式行为、安全与验收合同 | [`REQUIREMENTS.md`](REQUIREMENTS.md) |
+| 运行时维护源 | [`skills/think-it-through/SKILL.md`](skills/think-it-through/SKILL.md) |
+| `.skill` 精确文件集合 | [`distribution/package-manifest.json`](distribution/package-manifest.json) |
+| runtime 兼容证据状态 | [`compatibility/runtime-support.json`](compatibility/runtime-support.json) |
+| 反馈安装或 runtime 观察 | [打开反馈表单](https://github.com/zemu2718/think-it-through-skill/issues/new?template=install-or-runtime-feedback.yml) |
+| 参与具体用例或修复 | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
+| 私下报告安全问题 | [`SECURITY.md`](SECURITY.md) |
+| 源码版本历史 | [`CHANGELOG.md`](CHANGELOG.md) |
 
-The most useful contributions are concrete and testable: real decision cases, positive or close-negative trigger examples, reproducible installation observations, and accessibility, privacy, safety, or provenance corrections. For installation or runtime feedback, include the `git rev-parse HEAD` value, exact runtime version, OS, install method, reproduction steps, expected result, and actual result. A report is a lead for reproduction and improvement; it changes the compatibility matrix only after version binding, redaction, review, and approved evidence.
+最有价值的是具体、可测试的贡献：能暴露问题的真实决策用例、应触发或不应触发的近邻样本、可复现的安装观察，以及可访问性、隐私、安全或来源追溯修正。反馈安装或 runtime 问题时，请附 `git rev-parse HEAD`、准确 runtime 版本、操作系统、安装方式、复现步骤、预期结果与实际结果。报告先作为复现和优化线索；只有绑定版本、完成脱敏与审阅并形成 approved evidence 后，才会改变兼容矩阵。
 
-If Think It Through has been useful, a Star makes the project easier to find again. Concrete issues and decision cases are equally valuable.
+如果你实际用过后觉得有帮助，欢迎 Star，方便以后再次找到。具体用例和问题反馈同样重要。
 
-## License
+## 许可证
 
-Think It Through is released under the [MIT License](LICENSE). Adapted method sources, fixed revisions, licenses, and material changes are recorded in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) and the [third-party audit](docs/third-party-audit.md).
+想清楚使用 [MIT License](LICENSE)。第三方方法的来源、固定 revision、许可证和实质修改记录在 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) 与[第三方审计](docs/third-party-audit.md)中。

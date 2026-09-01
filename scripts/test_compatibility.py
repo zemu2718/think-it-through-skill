@@ -189,7 +189,7 @@ class CompatibilityTests(unittest.TestCase):
             target = root / "compatibility"
             shutil.copytree(source, target)
             shutil.copyfile(ROOT / "README.md", root / "README.md")
-            shutil.copyfile(ROOT / "README.zh-CN.md", root / "README.zh-CN.md")
+            shutil.copyfile(ROOT / "README.en.md", root / "README.en.md")
             (target / "runtime-support.json").write_text(
                 json.dumps(support, ensure_ascii=False, indent=2) + "\n",
                 encoding="utf-8",

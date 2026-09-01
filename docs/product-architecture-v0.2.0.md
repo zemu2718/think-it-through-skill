@@ -1383,7 +1383,7 @@ skills/think-it-through/
 
 - [`PRODUCT.md`](../PRODUCT.md)
 - [`REQUIREMENTS.md`](../REQUIREMENTS.md)
-- [`README.zh-CN.md`](../README.zh-CN.md)
+- [`README.md`](../README.md)
 - [`SKILL.md`](../skills/think-it-through/SKILL.md)
 - [`interaction-ux.md`](../skills/think-it-through/references/interaction-ux.md)
 - [`method-selection.md`](../skills/think-it-through/references/method-selection.md)
