@@ -2656,6 +2656,7 @@ def validate_public_docs(validation: Validation) -> None:
             "text": readme_en,
             "sections": ["What you get", "When to use it", "How it works", "Install and use", "Safe by default"],
             "navigation": "[When to use it](#when-to-use-it) · [How it works](#how-it-works) · [Install](#install-and-use) · [Safe by default](#safe-by-default)",
+            "language_switch": "🌐 [简体中文](README.md)",
             "result_heading": "What you get",
             "result_phrases": ("A clear direction", "before you start", "move forward", "validate first", "once underway", "continue, adjust, pause, or stop", "A small real-world test", "what to try first", "whether the result supports the current direction", "A rationale you can revisit", "why this direction made sense", "what remains unknown", "what should make you change course"),
             "workflow_heading": "How it works",
@@ -2692,6 +2693,7 @@ def validate_public_docs(validation: Validation) -> None:
             "text": readme_zh,
             "sections": ["你会得到什么", "什么时候调用", "它怎样帮你想清楚", "安装与使用", "默认安全"],
             "navigation": "[什么时候调用](#什么时候调用) · [如何工作](#它怎样帮你想清楚) · [安装](#安装与使用) · [默认安全](#默认安全)",
+            "language_switch": "🌐 [English](README.en.md)",
             "result_heading": "你会得到什么",
             "result_phrases": ("一个明确方向", "还没开始", "推进", "先验证", "已经开始", "继续、调整、暂停还是停止", "一次能检验判断的小尝试", "重点观察什么", "根据实际结果判断当前方向是否还成立", "一份可回看的判断依据", "为什么这样判断", "还有哪些未知", "什么情况会让你改变方向"),
             "workflow_heading": "它怎样帮你想清楚",
@@ -2743,7 +2745,7 @@ def validate_public_docs(validation: Validation) -> None:
             "assets/readme-invocation-card-dark.png" in preface
             and "assets/readme-invocation-card-light.png" in preface
             and '<img src="assets/readme-invocation-card-light.png"' in preface
-            and 'width="320"' in preface,
+            and 'width="140"' in preface,
             f"{name} 首屏缺少正确的 light/dark README Invocation Card、light fallback 或紧凑显示宽度",
         )
         picture_position = preface.find("<picture>")
@@ -2752,9 +2754,10 @@ def validate_public_docs(validation: Validation) -> None:
         positioning_position = preface.find(contract["positioning"])
         value_position = preface.find(contract["value_statement"])
         navigation_position = preface.find(f"\n{contract['navigation']}\n")
+        language_switch_position = preface.find(contract["language_switch"])
         validation.require(
-            -1 < picture_position < picture_end < heading_position < positioning_position < value_position < navigation_position,
-            f"{name} 首屏必须保持语言切换 → Invocation Card → H1 → 主定位 → 价值说明 → 页内导航顺序",
+            -1 < picture_position < picture_end < heading_position < positioning_position < value_position < navigation_position < language_switch_position,
+            f"{name} 首屏必须保持 Invocation Card → H1 → 主定位 → 价值说明 → 页内导航顺序 → 语言切换",
         )
         picture = preface[picture_position:picture_end + len("</picture>")] if picture_position >= 0 and picture_end >= 0 else ""
         preface_without_picture = preface[:picture_position] + preface[picture_end + len("</picture>"):] if picture else preface
@@ -2762,7 +2765,7 @@ def validate_public_docs(validation: Validation) -> None:
             re.search(r"(?<![\w-])/think-it-through(?![\w-])", preface_without_picture) is None,
             f"{name} 首屏仅允许 Invocation Card 表达调用入口，不得在卡片之外重复添加文本调用",
         )
-        alt_match = re.search(r'<img src="assets/readme-invocation-card-light\.png" alt="([^"]+)" width="320">', picture)
+        alt_match = re.search(r'<img src="assets/readme-invocation-card-light\.png" alt="([^"]+)" width="140">', picture)
         validation.require(
             alt_match is not None
             and bool(alt_match.group(1).strip())

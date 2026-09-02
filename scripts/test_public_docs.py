@@ -272,7 +272,7 @@ class PublicDocsTests(unittest.TestCase):
             ("README.md", "[English](README.en.md)", "[English](README.md)", "中文 README 缺少英文切换"),
             ("README.en.md", "[简体中文](README.md)", "[简体中文](README.en.md)", "英文 README 缺少中文切换"),
             ("README.md", "assets/readme-invocation-card-dark.png", "assets/social-preview.png", "README Invocation Card"),
-            ("README.en.md", 'width="320"', 'width="1200"', "紧凑显示宽度"),
+            ("README.en.md", 'width="140"', 'width="1200"', "紧凑显示宽度"),
             (
                 "README.md",
                 'alt="想清楚调用卡片：思考之光围绕清晰开口排列，下方显示 Claude Code 命令 /think-it-through。"',

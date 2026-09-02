@@ -1,11 +1,9 @@
 <div align="center">
 
-[简体中文](README.md)
-
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme-invocation-card-dark.png">
   <source media="(prefers-color-scheme: light)" srcset="assets/readme-invocation-card-light.png">
-  <img src="assets/readme-invocation-card-light.png" alt="Think It Through invocation card: the Thinking Light surrounds a clear opening above the Claude Code command /think-it-through." width="320">
+  <img src="assets/readme-invocation-card-light.png" alt="Think It Through invocation card: the Thinking Light surrounds a clear opening above the Claude Code command /think-it-through." width="140">
 </picture>
 
 # Think It Through · 想清楚
@@ -17,6 +15,8 @@ Before you start or commit more, think it through—then decide.
 [![MIT License](https://img.shields.io/github/license/zemu2718/think-it-through-skill?style=flat-square)](LICENSE) [![Latest Release](https://img.shields.io/github/v/release/zemu2718/think-it-through-skill?style=flat-square&label=release)](https://github.com/zemu2718/think-it-through-skill/releases/latest) [![Validate](https://github.com/zemu2718/think-it-through-skill/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/zemu2718/think-it-through-skill/actions/workflows/validate.yml?query=branch%3Amain)
 
 [When to use it](#when-to-use-it) · [How it works](#how-it-works) · [Install](#install-and-use) · [Safe by default](#safe-by-default)
+
+🌐 [简体中文](README.md)
 
 </div>
 

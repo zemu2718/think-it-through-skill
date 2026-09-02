@@ -1,11 +1,9 @@
 <div align="center">
 
-[English](README.en.md)
-
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme-invocation-card-dark.png">
   <source media="(prefers-color-scheme: light)" srcset="assets/readme-invocation-card-light.png">
-  <img src="assets/readme-invocation-card-light.png" alt="想清楚调用卡片：思考之光围绕清晰开口排列，下方显示 Claude Code 命令 /think-it-through。" width="320">
+  <img src="assets/readme-invocation-card-light.png" alt="想清楚调用卡片：思考之光围绕清晰开口排列，下方显示 Claude Code 命令 /think-it-through。" width="140">
 </picture>
 
 # 想清楚 · Think It Through
@@ -17,6 +15,8 @@
 [![MIT License](https://img.shields.io/github/license/zemu2718/think-it-through-skill?style=flat-square)](LICENSE) [![Latest Release](https://img.shields.io/github/v/release/zemu2718/think-it-through-skill?style=flat-square&label=release)](https://github.com/zemu2718/think-it-through-skill/releases/latest) [![Validate](https://github.com/zemu2718/think-it-through-skill/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/zemu2718/think-it-through-skill/actions/workflows/validate.yml?query=branch%3Amain)
 
 [什么时候调用](#什么时候调用) · [如何工作](#它怎样帮你想清楚) · [安装](#安装与使用) · [默认安全](#默认安全)
+
+🌐 [English](README.en.md)
 
 </div>
 
