@@ -24,6 +24,12 @@ coverage.xml
 skills/think-it-through-workspace/
 review/
 
+# 第三方 Skill 安装器的项目级产物
+/.agents/skills/
+/.codebuddy/skills/
+/.hermes/skills/
+/skills-lock.json
+
 # 本地临时输出（仅限仓库根目录）
 /output/
 /tmp/
