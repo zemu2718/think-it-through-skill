@@ -10,7 +10,22 @@
 
 ### Changed
 
-- 将双语 README 首图由宽幅 Banner 换为用户选定的双主题 `/think-it-through` 调用卡片；两张 600×600 RGBA 图片以独立固定哈希作为 canonical raster variants 纳入资产清单，安装区继续保留带 Claude Code 范围说明的可复制命令，并删除不再使用的旧宽幅 Banner 源图、派生图、生成分支及无实际消费方的 Brand Mark 变体。
+- 将当前源码合同升级为 v0.4.1 发布候选：产品、功能、自研方向和技术形态继续只作为候选解法；问题是否存在、问题是否足够强、方案是否适配和替代生态分别判断，证据不足时不扩大投入。v0.4.0 继续作为最新真实公开发布，v0.4.1 的 tag、Release 与 asset 仅在实际创建后声明。
+- 闭合 `A → Gate-routing → 条件 Gate → Gate-routing → B` 回路与显式停止优先级：只有用户回答关键问题后才评估外部证据或额外参与；同一未知不重复升级；拒绝某项能力时保留未知继续判断，明确终止整个流程时立即停止。
+- 收紧授权边界：执行授权不再接受长期偏好代替本轮同意；真人参与和实际发送、邀请或联系分别需要参与委派与外部行动授权，方法确认、Agent 上限和反馈都不构成能力授权。
+- 以四个 canonical core schema 作为评分器的结构入口，并补齐 Evidence 与 Participation 各终态、异常输入、provider、scope、授权、回执、Agent 数量和综合材料的一致性检查；异常记录现在返回明确失败，不再使评分 CLI 崩溃。
+- 收紧项目可行性证据链和承诺上限：高投入方向必须引用与现实试用一致的来源和回执；用户转述、未执行试用、无法访问、来源不足或只有无来源的 Agent 材料，最多支持小范围、可撤回验证。
+- 让简单决定使用紧凑自然表达，复杂材料才展开冲突与取舍；B 反馈按目的变化、新事实、判断分歧和实验调整分别回到合适位置，不再把所有调整都重跑完整流程。
+- runtime smoke 现在从同一次 B 用户可见输出中确定性重建 DecisionRecord 与可见决策快照，使用当前评分器验收并保存为候选证据 artifact；不再借用静态 fixture 冒充实际输出，也不把未执行的 provider smoke 写成通过。
+- 将双语 README 首图由宽幅 Banner 换为用户选定的双主题 `/think-it-through` 调用卡片；以深色 600×600 RGBA 卡片作为唯一固定哈希的 canonical 3D raster source，确定性派生同几何的浅色卡片，并让 Social Preview 以左文右灯布局复用同一 Thinking Light 主体。安装区继续保留带 Claude Code 范围说明的可复制命令，同时删除不再使用的旧宽幅 Banner 源图、派生图、生成分支及无实际消费方的 Brand Mark 变体。
+- 将双语 README Invocation Card 的显示宽度调整为 200px，精简“明确方向”和工作原理第 3、4 步，并按自然英文重写对应表达；同时明确默认安全只描述 Skill 使用过程，不改变产品行为、正式安全与授权、视觉资产内容、runtime 或兼容性合同。
+
+### Validation
+
+- Python 3.12 完整单元测试 220 项通过；确定性仓库校验 3350 项通过；README Invocation Card 与 Social Preview 的完整解码、尺寸、预算和像素 freshness 检查通过。
+- `.skill` 候选归档按 manifest 构建 30 个运行时文件；两个独立空目录构建的 SHA-256 一致，归档成员、固定时间戳、权限、源码与解包字节复验通过。
+- 固定 Agent Skills revision 格式检查通过；固定 `skills@1.5.23` 在 Node 22.20.0 下完成 archive discovery 与 8 个 installer target 精确复制 smoke。这些结果只建立源码准入、格式和机械安装路径，不提升真实 runtime 兼容状态。
+- 未运行 Claude Code / Codex provider smoke；公开兼容矩阵继续如实保持 `not_run`。
 
 ## [0.4.0] - 2026-09-02
 

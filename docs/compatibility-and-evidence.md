@@ -6,7 +6,7 @@
 
 ## 当前发布
 
-最新真实公开发布为 [`v0.4.0`](https://github.com/zemu2718/think-it-through-skill/releases/tag/v0.4.0)，由不可变 Git tag、GitHub Release、可下载的 [`think-it-through.skill`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.4.0/think-it-through.skill) 与 [`SHA256SUMS`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.4.0/SHA256SUMS) 共同建立；持续维护的 [`main`](https://github.com/zemu2718/think-it-through-skill/tree/main/skills/think-it-through) 上的当前稳定源码与正式产品合同同为 v0.4.0。v0.3.0 继续作为历史发布保留。
+当前源码与正式产品合同为 v0.4.1 发布候选，尚未创建同名公开对象。最新真实公开发布仍为 [`v0.4.0`](https://github.com/zemu2718/think-it-through-skill/releases/tag/v0.4.0)，由不可变 Git tag、GitHub Release、可下载的 [`think-it-through.skill`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.4.0/think-it-through.skill) 与 [`SHA256SUMS`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.4.0/SHA256SUMS) 共同建立；v0.3.0 继续作为历史发布保留。
 
 发布状态表示产品合同和确定性准入链已经确立，不代表所有客户端均已认证，也不会把未运行的兼容层级自动改为通过。
 
@@ -27,15 +27,15 @@
 
 ## 安装目标不等于 runtime 验证
 
-v0.4.0 当前源码为能够加载 Agent Skills 目录并遵循文本指令的宿主定义可移植纯文本基线。仓库维护 Claude Code、Codex、Cursor、Gemini CLI、Hermes Agent、OpenClaw、OpenCode 与 CodeBuddy / WorkBuddy 八个安装器目标映射；未列出的兼容宿主也可以按自身 Skill 目录约定使用同一文本合同。
+v0.4.1 当前源码为能够加载 Agent Skills 目录并遵循文本指令的宿主定义可移植纯文本基线。仓库维护 Claude Code、Codex、Cursor、Gemini CLI、Hermes Agent、OpenClaw、OpenCode 与 CodeBuddy / WorkBuddy 八个安装器目标映射；未列出的兼容宿主也可以按自身 Skill 目录约定使用同一文本合同。
 
 映射、成功复制文件或可移植合同都不等于已验证 runtime。静态 CI、schema、fixtures、评分器和图示可以证明合同已经定义，不能证明真实模型运行、自然语言自动发现或宿主原生体验。
 
 ## 自动发现与上下文检查点
 
-自动发现目前不是可靠入口：冻结 v0.1 holdout 的总结果是 **9/16——正例只有 1/8 触发，负例 8/8 保持不触发**。完整证据与限制见 [`benchmarks/trigger-v0.1/`](../benchmarks/trigger-v0.1/README.md)。历史 [`v0.1 行为证据`](../benchmarks/behavior-v0.1/README.md)只有三个固定场景、每个配置一次运行，不能证明 v0.2.0、v0.3.0 或 v0.4.0 行为。
+自动发现目前不是可靠入口：冻结 v0.1 holdout 的总结果是 **9/16——正例只有 1/8 触发，负例 8/8 保持不触发**。完整证据与限制见 [`benchmarks/trigger-v0.1/`](../benchmarks/trigger-v0.1/README.md)。历史 [`v0.1 行为证据`](../benchmarks/behavior-v0.1/README.md)只有三个固定场景、每个配置一次运行，不能证明 v0.2.0、v0.3.0、v0.4.0 或 v0.4.1 行为。
 
-v0.4.0 正式合同只在 Skill 已经加载、当前没有正式流程，并且对话跨入立项、选方向、重大投入、继续加码或结果复判时，定义一个轻量上下文检查点。真实多轮状态仍为 `not_run`；合同不能证明自然语言自动发现、自动加载或对话中途可靠唤起。当前可靠入口仍是 Claude Code 中显式 `/think-it-through`。
+v0.4.1 正式合同只在 Skill 已经加载、当前没有正式流程，并且对话跨入立项、选方向、重大投入、继续加码或结果复判时，定义一个轻量上下文检查点。真实多轮状态仍为 `not_run`；合同不能证明自然语言自动发现、自动加载或对话中途可靠唤起。当前可靠入口仍是 Claude Code 中显式 `/think-it-through`。
 
 ## 反馈如何成为证据
 

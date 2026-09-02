@@ -27,14 +27,14 @@ SKILL_MD = SKILL_DIR / "SKILL.md"
 
 TEXT_SUFFIXES = {".md", ".json", ".yaml", ".yml", ".py", ".svg", ".txt"}
 IGNORED_SCAN_PARTS = {".git", ".claude", "dist", "review", "think-it-through-workspace", "__pycache__"}
-CURRENT_CONTRACT_VERSION = "0.4.0"
+CURRENT_CONTRACT_VERSION = "0.4.1"
 LATEST_PUBLISHED_VERSION = "0.4.0"
 PREVIOUS_PUBLISHED_VERSION = "0.3.0"
+CURRENT_ARCHITECTURE_VERSION = "0.4.0"
 POSITIONING_ZH = "AI 能把事情做得很快，但什么值得做，仍由你决定。"
 POSITIONING_EN = "AI can get things done fast, but what's worth doing is still yours to decide."
 VALUE_STATEMENT_ZH = "开始或继续投入前，想清楚再决定。"
 VALUE_STATEMENT_EN = "Before you start or commit more, think it through—then decide."
-SOCIAL_PREVIEW_TAGLINE = "AI gets things done fast. You decide what's worth doing."
 LEGACY_BEHAVIOR_PROFILE = "legacy-v0.1"
 EXPECTED_FIXTURE_STAGES = {"pre-entry", "R", "R-align", "A", "B", "Gate-routing", "direct", "emergency", "active-flow", "resume-current-task"}
 INTERACTIVE_FIXTURE_STAGES = {"pre-entry", "R", "A", "B"}
@@ -292,14 +292,64 @@ def validate_skill(validation: Validation) -> None:
         "不构成原生兼容认证",
         "安装器 target 或文件已复制都不构成原生兼容认证",
         "实际执行只由 trace 与 receipt 建立",
+        "不新增、删除、简化、缩小、暂停或停止等减法路径",
+        "只有至少一个剩余未知仍预计改变正式判断状态、material 路径排序、承诺上限，或决定主现实证据闭环当前能否执行及其结果能否区分会导致不同判断的路径",
+        "模型自评、方法输出或 Agent 一致性不是外部证据",
+        "采用、搁置与未决材料为何共同导出当前判断",
     ):
-        validation.require(phrase in body, f"SKILL.md 缺少 v0.3.0 合同：{phrase}")
+        validation.require(
+            phrase in body,
+            f"SKILL.md 缺少 v{CURRENT_CONTRACT_VERSION} 合同：{phrase}",
+        )
     for forbidden in (
         "本轮确认：基础分析",
         "本轮使用：基础分析",
         "可选择：按推荐继续 / 调整方法 / 只做基础分析 / 补充背景",
     ):
         validation.require(forbidden not in body, f"SKILL.md 仍包含旧版固定合同：{forbidden}")
+
+    runtime_invariants = {
+        "references/core-analysis.md": (
+            "### 分析充分性与停止",
+            "### 真正综合",
+            "模型自信、自我批判、自我评分、方法输出和 Agent 一致性",
+            "不建立平行的“减法方案”类型",
+        ),
+        "references/project-viability.md": (
+            "不得新增 `subtractive_solution`",
+            "模型自信、自我评分、方法输出、未核验 Agent 结论或 Agent 一致性",
+            "跨方法、搜索和参与的全局停止",
+        ),
+        "policies/evidence-routing.md": (
+            "不新增 `subtractive_solution`",
+            "回执只证明某项操作、状态、范围和返回材料确实发生",
+            "停止后如实保留来源空白、冲突和未完成项",
+        ),
+        "policies/participation-routing.md": (
+            "标明采用的材料、因重复/来源/假设/失败而搁置的材料，以及仍未决的冲突和缺口",
+            "不得把每个 Agent 的观点依次罗列后追加“综合来看”",
+            "若继续增加 Agent 已不再预计改变正式判断状态、material 路径排序、承诺上限，或主现实证据闭环当前能否执行及其结果区分力",
+        ),
+        "references/external-validation.md": (
+            "操作是否发生",
+            "返回了哪些材料",
+            "不自动把返回材料中的主张升级为外部事实",
+        ),
+        "core/protocol.md": (
+            "跨方法、搜索和参与的新增分析",
+            "receipt 只证明操作与返回材料发生",
+            "观点罗列、票数、角色权威、模型自评或 Agent 一致性不能代替综合",
+        ),
+    }
+    for relative, phrases in runtime_invariants.items():
+        path = SKILL_DIR / relative
+        validation.require(path.exists(), f"缺少运行时维护源：{relative}")
+        if path.exists():
+            text = path.read_text(encoding="utf-8")
+            validation.require(
+                all(phrase in text for phrase in phrases),
+                f"{relative} 缺少分析停止、减法映射、真正综合或外部证据边界",
+            )
 
     interaction_path = SKILL_DIR / "references" / "interaction-ux.md"
     validation.require(interaction_path.exists(), "缺少 references/interaction-ux.md")
@@ -506,10 +556,10 @@ def validate_core_schemas(validation: Validation) -> None:
         "consent 顶层必要字段不匹配",
     )
     validation.require(
-        "saved_preference" in json.dumps(consent.get("allOf", []), ensure_ascii=False)
-        and "private_data_access" not in json.dumps(consent.get("allOf", []), ensure_ascii=False)
-        and "external_action" not in json.dumps(consent.get("allOf", []), ensure_ascii=False),
-        "saved_preference 只能适用于能力或参与授权",
+        _schema_enum(consent, "properties", "valid_for", "enum")
+        == {"this_action", "this_turn", "this_session"}
+        and "saved_preference" not in json.dumps(consent, ensure_ascii=False),
+        "执行 consent 只能用于本次动作、本轮或本会话，saved_preference 不得作为授权",
     )
 
     receipts = schemas.get("receipts", {})
@@ -994,6 +1044,8 @@ def _receipt_example_valid(receipt: object, expected_kind: str) -> bool:
 def validate_specialized_fixtures(validation: Validation, fixture_dir: Path) -> None:
     try:
         from grade_contracts import (
+            PROJECT_CANDIDATE_CATEGORIES,
+            PROJECT_COMMITMENT_DIRECTIONS,
             CheckpointContext,
             InteractionEvidence,
             grade_decision_record,
@@ -1077,8 +1129,14 @@ def validate_specialized_fixtures(validation: Validation, fixture_dir: Path) -> 
     required_evidence_ids = {
         "decision-sensitive-public-fact-enters-gate",
         "user-value-does-not-enter-gate",
-        "failed-research-degrades-to-b",
+        "failed-research-returns-to-gate-routing",
+        "missing-cost-disclosure-cannot-enter-gate",
+        "empty-cost-disclosure-cannot-enter-gate",
+        "cost-disclosed-after-consent-cannot-enter-gate",
         "public-search-does-not-authorize-private-or-external",
+        "model-self-assessment-remains-internal-material",
+        "agent-consensus-is-not-external-evidence",
+        "receipt-proves-operation-not-claim-truth",
     }
     validation.require(required_evidence_ids <= set(evidence_by_id), f"fixture 15 缺少场景：{sorted(required_evidence_ids - set(evidence_by_id))}")
     evidence_positive = evidence_by_id.get("decision-sensitive-public-fact-enters-gate", {})
@@ -1089,6 +1147,31 @@ def validate_specialized_fixtures(validation: Validation, fixture_dir: Path) -> 
         validation.require(_receipt_example_valid(receipt, "research"), "fixture 15 正例 receipt 不符合研究回执合同")
         checks = grade_evidence_gate(evidence_positive.get("record", {}), consent, receipt)
         validation.require(all(check.passed for check in checks), "fixture 15 正例必须通过 Evidence Gate grader")
+        cost_disclosure_check = "Evidence Gate 在授权前披露具体成本与延迟"
+        for mutation_id in (
+            "missing-cost-disclosure-cannot-enter-gate",
+            "empty-cost-disclosure-cannot-enter-gate",
+            "cost-disclosed-after-consent-cannot-enter-gate",
+        ):
+            mutation_case = evidence_by_id.get(mutation_id, {})
+            record = copy.deepcopy(evidence_positive.get("record", {}))
+            mutation = mutation_case.get("mutation", {}) if isinstance(mutation_case, dict) else {}
+            if isinstance(mutation, dict) and _is_nonempty_string(mutation.get("remove")):
+                record.pop(mutation["remove"], None)
+            set_values = mutation.get("set") if isinstance(mutation, dict) else None
+            if isinstance(set_values, dict):
+                record.update(set_values)
+            mutation_checks = grade_evidence_gate(record, consent, receipt)
+            validation.require(
+                mutation_case.get("must_fail_check") == cost_disclosure_check
+                and any(
+                    not check.passed
+                    and check.severe
+                    and check.text == cost_disclosure_check
+                    for check in mutation_checks
+                ),
+                f"fixture 15 成本披露负例 {mutation_id} 必须由 Evidence grader 机械拒绝",
+            )
     value_case = evidence_by_id.get("user-value-does-not-enter-gate", {})
     validation.require(
         isinstance(value_case, dict)
@@ -1097,17 +1180,33 @@ def validate_specialized_fixtures(validation: Validation, fixture_dir: Path) -> 
         and value_case.get("record", {}).get("capability_called") is False,
         "fixture 15 必须证明用户价值不进入 Evidence Gate",
     )
-    failed_case = evidence_by_id.get("failed-research-degrades-to-b", {})
+    failed_case = evidence_by_id.get("failed-research-returns-to-gate-routing", {})
     required_outcome = failed_case.get("required_outcome", {}) if isinstance(failed_case, dict) else {}
     validation.require(
-        failed_case.get("expected_stage") == "B"
+        failed_case.get("expected_stage") == "Gate-routing"
         and failed_case.get("operation_status") == "failed"
         and required_outcome.get("preserve_unknown") is True
-        and required_outcome.get("continue_to_b") is True
+        and required_outcome.get("return_to_gate_routing") is True
+        and required_outcome.get("continue_to_b_if_no_distinct_gate_remains") is True
+        and required_outcome.get("allow_distinct_participation_gate_if_still_material") is True
+        and required_outcome.get("repeat_same_evidence_gate") is False
         and required_outcome.get("fabricate_result") is False
         and _is_nonempty_string(required_outcome.get("fallback")),
-        "fixture 15 必须覆盖研究失败后保留未知并降级到 B",
+        "fixture 15 必须覆盖研究失败后先回 Gate-routing，再继续另一类 Gate 或降级到 B",
     )
+    for case_id in (
+        "model-self-assessment-remains-internal-material",
+        "agent-consensus-is-not-external-evidence",
+        "receipt-proves-operation-not-claim-truth",
+    ):
+        boundary_case = evidence_by_id.get(case_id, {})
+        validation.require(
+            isinstance(boundary_case, dict)
+            and boundary_case.get("external_evidence") is False
+            and boundary_case.get("can_raise_commitment_ceiling") is False
+            and _is_nonempty_string(boundary_case.get("allowed_role")),
+            f"fixture 15 场景 {case_id} 必须证明内部材料不自动成为外部证据或提高承诺上限",
+        )
 
     participation_data = load("16-participation-and-human.json")
     participation_cases = participation_data.get("cases", [])
@@ -1117,7 +1216,13 @@ def validate_specialized_fixtures(validation: Validation, fixture_dir: Path) -> 
         "total-limit-one-keeps-single-agent",
         "extra-agent-cannot-delegate-recursively",
         "human-value-cannot-be-replaced-by-agents",
+        "human-authorized-send-with-dual-consent",
+        "human-authorized-send-missing-external-consent",
         "agent-consent-does-not-authorize-search-data-or-action",
+        "generic-nonempty-synthesis-is-not-synthesis",
+        "opinion-list-plus-conclusion-is-not-synthesis",
+        "partial-gap-cannot-be-hidden",
+        "agent-consensus-cannot-increase-confidence",
     }
     validation.require(required_participation_ids <= set(participation_by_id), f"fixture 16 缺少场景：{sorted(required_participation_ids - set(participation_by_id))}")
     participation_positive = participation_by_id.get("two-independent-tasks-within-total-limit", {})
@@ -1146,7 +1251,140 @@ def validate_specialized_fixtures(validation: Validation, fixture_dir: Path) -> 
     human_case = participation_by_id.get("human-value-cannot-be-replaced-by-agents", {})
     if isinstance(human_case, dict):
         human_checks = grade_human_review(human_case.get("human_review", {}))
-        validation.require(all(check.passed for check in human_checks), "fixture 16 真人参与正例必须通过 Human grader")
+        validation.require(
+            human_case.get("delivery_mode") == "draft_only"
+            and all(check.passed for check in human_checks),
+            "fixture 16 真人 draft_only 正例必须通过 Human grader",
+        )
+
+    authorized_human_case = participation_by_id.get("human-authorized-send-with-dual-consent", {})
+    if isinstance(authorized_human_case, dict):
+        human_checks = grade_human_review(
+            authorized_human_case.get("human_review", {}),
+            authorized_human_case.get("participation_consent"),
+            authorized_human_case.get("external_action_consent"),
+            authorized_human_case.get("receipt"),
+        )
+        validation.require(
+            authorized_human_case.get("delivery_mode") == "authorized_send"
+            and all(check.passed for check in human_checks),
+            "fixture 16 真人 authorized_send 必须具有双 consent 与双引用回执",
+        )
+        human_mutations = {
+            "wrong-human": lambda participation, _external, _receipt: participation["scope"].update(resources=["财务负责人"]),
+            "wrong-channel": lambda _participation, external, _receipt: external["scope"].update(resources=["预算负责人", "即时消息"]),
+            "shared-task-only": lambda _participation, _external, receipt: receipt["operations"][0].update(scope=["是否愿意承担本轮预算"]),
+        }
+        for mutation_id, mutate in human_mutations.items():
+            participation = copy.deepcopy(authorized_human_case.get("participation_consent"))
+            external = copy.deepcopy(authorized_human_case.get("external_action_consent"))
+            receipt = copy.deepcopy(authorized_human_case.get("receipt"))
+            mutate(participation, external, receipt)
+            checks = grade_human_review(
+                authorized_human_case.get("human_review", {}),
+                participation,
+                external,
+                receipt,
+            )
+            validation.require(
+                any(
+                    not check.passed
+                    and check.text == "真人实际发送同时具有 participation 与 external-action 授权及双引用回执"
+                    for check in checks
+                ),
+                f"fixture 16 真人 authorized_send 负例 {mutation_id} 必须由 Human grader 拒绝",
+            )
+    else:
+        validation.require(False, "fixture 16 缺少真人 authorized_send 正例")
+
+    missing_human_consent_case = participation_by_id.get("human-authorized-send-missing-external-consent", {})
+    if isinstance(authorized_human_case, dict) and isinstance(missing_human_consent_case, dict):
+        missing_consent_checks = grade_human_review(
+            authorized_human_case.get("human_review", {}),
+            authorized_human_case.get("participation_consent"),
+            None,
+            authorized_human_case.get("receipt"),
+        )
+        validation.require(
+            missing_human_consent_case.get("missing") == "external_action_consent"
+            and any(
+                not check.passed
+                and check.text == "真人实际发送同时具有 participation 与 external-action 授权及双引用回执"
+                for check in missing_consent_checks
+            ),
+            "fixture 16 必须由 Human grader 拒绝缺任一 execution consent 的实际发送",
+        )
+
+    partial_gap_case = participation_by_id.get("partial-gap-cannot-be-hidden", {})
+    if isinstance(participation_positive, dict) and isinstance(partial_gap_case, dict):
+        record = copy.deepcopy(participation_positive.get("record", {}))
+        receipt = copy.deepcopy(participation_positive.get("receipt"))
+        assigned_questions = partial_gap_case.get("agent_payload_assigned_questions", [])
+        if (
+            isinstance(assigned_questions, list)
+            and isinstance(record.get("agent_payloads"), list)
+            and record["agent_payloads"]
+            and isinstance(receipt, dict)
+            and isinstance(receipt.get("operations"), list)
+            and receipt["operations"]
+        ):
+            payload_template = record["agent_payloads"][0]
+            record["agent_payloads"] = [
+                {**payload_template, "assigned_question": question}
+                for question in assigned_questions
+            ]
+            receipt["operations"][0]["conflicts_and_gaps"] = partial_gap_case.get("conflicts_and_gaps")
+            checks = grade_participation_gate(
+                record,
+                participation_positive.get("consent"),
+                receipt,
+            )
+            validation.require(
+                any(
+                    not check.passed
+                    and check.text in {
+                        "Participation Gate payload 只对应实际完成且唯一的任务",
+                        "Participation Gate 协作回执的授权、provider、终态、任务、数量和降级真实一致",
+                    }
+                    for check in checks
+                ),
+                "fixture 16 必须由机械 grader 拒绝失败任务伪 payload 和被隐藏的 partial gap",
+            )
+        else:
+            validation.require(False, "fixture 16 partial gap 场景无法基于正例构造机械负例")
+
+    generic_synthesis = participation_by_id.get("generic-nonempty-synthesis-is-not-synthesis", {})
+    opinion_collage = participation_by_id.get("opinion-list-plus-conclusion-is-not-synthesis", {})
+    consensus_case = participation_by_id.get("agent-consensus-cannot-increase-confidence", {})
+    synthesis_check = "Participation Gate 声明 synthesis_not_vote 且结构化综合绑定实际完成任务与判断闭环"
+    for synthesis_case in (generic_synthesis, opinion_collage):
+        if isinstance(participation_positive, dict) and isinstance(synthesis_case, dict):
+            record = copy.deepcopy(participation_positive.get("record", {}))
+            record["synthesis"] = copy.deepcopy(synthesis_case.get("synthesis"))
+            checks = grade_participation_gate(
+                record,
+                participation_positive.get("consent"),
+                participation_positive.get("receipt"),
+            )
+            validation.require(
+                synthesis_case.get("mutation_target") == "record.synthesis"
+                and synthesis_case.get("must_fail_check") == synthesis_check
+                and any(
+                    not check.passed
+                    and check.severe
+                    and check.text == synthesis_check
+                    for check in checks
+                ),
+                f"fixture 16 假综合场景 {synthesis_case.get('id')} 必须由 Participation grader 机械拒绝",
+            )
+        else:
+            validation.require(False, "fixture 16 假综合场景无法基于正例构造机械负例")
+    validation.require(
+        isinstance(consensus_case, dict)
+        and consensus_case.get("external_evidence") is False
+        and consensus_case.get("can_raise_commitment_ceiling") is False,
+        "fixture 16 必须证明 Agent 一致性不能成为外部证据或提高承诺",
+    )
 
     adapter_data = load("17-portable-adapters-and-decision-record.json")
     record = adapter_data.get("decision_record", {})
@@ -1154,10 +1392,12 @@ def validate_specialized_fixtures(validation: Validation, fixture_dir: Path) -> 
     validation.require(all(check.passed for check in record_checks), "fixture 17 DecisionRecord 正例必须通过当前 grader")
     visible_snapshot = adapter_data.get("visible_snapshot", {})
     required_snapshot_paths = {
+        "contract_version",
         "topic",
         "true_objectives",
         "decision",
         "confirmed_methods",
+        "judgment.state",
         "judgment.recommendation",
         "judgment.rationale",
         "judgment.validity_conditions",
@@ -1171,6 +1411,9 @@ def validate_specialized_fixtures(validation: Validation, fixture_dir: Path) -> 
         "main_experiment.action",
         "main_experiment.observation",
         "main_experiment.reassessment",
+        "main_experiment.user_supplied_boundaries",
+        "main_experiment.suggested_boundaries",
+        "reassessment_triggers",
         "participation_and_capabilities",
         "persistence",
     }
@@ -1189,8 +1432,12 @@ def validate_specialized_fixtures(validation: Validation, fixture_dir: Path) -> 
         for part in path.split(".") if isinstance(path, str) else []:
             current = current.get(part) if isinstance(current, dict) else None
         validation.require(
-            isinstance(item, dict) and item.get("value") == current,
-            f"fixture 17 可见快照字段 {label} 未无损映射 {path}",
+            isinstance(item, dict)
+            and set(item) == {"path", "value", "rendered"}
+            and item.get("value") == current
+            and isinstance(item.get("rendered"), str)
+            and bool(item["rendered"].strip()),
+            f"fixture 17 可见快照字段 {label} 未完整、无损映射 {path}",
         )
     adapters = adapter_data.get("adapter_cases", [])
     adapter_by_id = {case.get("id"): case for case in adapters if isinstance(case, dict)} if isinstance(adapters, list) else {}
@@ -1345,6 +1592,53 @@ def validate_specialized_fixtures(validation: Validation, fixture_dir: Path) -> 
     else:
         validation.require(False, "fixture 20 缺少 positive 对象")
 
+    subtractive_cases = viability_data.get("subtractive_path_cases", [])
+    expected_subtractive_ids = {
+        "do-not-add-new-platform",
+        "remove-redundant-approval-step",
+        "keep-only-thin-connection",
+        "retain-only-critical-local-gap",
+        "shrink-formal-build-to-validation",
+        "stop-existing-build",
+    }
+    subtractive_ids = {
+        case.get("id")
+        for case in subtractive_cases
+        if isinstance(case, dict)
+    } if isinstance(subtractive_cases, list) else set()
+    validation.require(
+        subtractive_ids == expected_subtractive_ids
+        and len(subtractive_cases) == len(expected_subtractive_ids),
+        "fixture 20 必须精确覆盖不新增、删除/简化、薄连接、局部补充、缩小投入和停止路径",
+    )
+    expected_subtractive_pairs = {
+        "do-not-add-new-platform": ("status_quo", "hold"),
+        "remove-redundant-approval-step": ("manual_or_process", "adopt"),
+        "keep-only-thin-connection": ("plugin_script_or_thin_integration", "thin_integration"),
+        "retain-only-critical-local-gap": ("local_supplement", "combine"),
+        "shrink-formal-build-to-validation": ("local_supplement", "limited_validation"),
+        "stop-existing-build": ("independent_build", "stop"),
+    }
+    actual_subtractive_pairs = {
+        case.get("id"): (
+            case.get("mapped_candidate_category"),
+            case.get("mapped_direction"),
+        )
+        for case in subtractive_cases
+        if isinstance(case, dict)
+    } if isinstance(subtractive_cases, list) else {}
+    validation.require(
+        isinstance(subtractive_cases, list)
+        and "subtractive_solution" not in PROJECT_CANDIDATE_CATEGORIES
+        and actual_subtractive_pairs == expected_subtractive_pairs
+        and all(
+            isinstance(case, dict)
+            and case.get("must_not_create_new_category") is True
+            for case in subtractive_cases
+        ),
+        "fixture 20 减法路径必须区分方案机制与投入动作并复用现有类别，不得新增 subtractive_solution",
+    )
+
     mutations = viability_data.get("mutations", [])
     validation.require(isinstance(mutations, list) and bool(mutations), "fixture 20 必须包含单变量负例")
     expected_mutation_ids = {
@@ -1361,7 +1655,15 @@ def validate_specialized_fixtures(validation: Validation, fixture_dir: Path) -> 
         "search-failed-without-fallback-but-claimed-complete",
         "adversarial-payload-extra-key",
         "adversarial-failed-without-trace-but-build",
+        "layer-supported-with-unknown-evidence",
+        "layer-supported-with-opposing-evidence",
+        "trial-evidence-direction-reversed",
+        "commitment-unrelated-source-backed",
+        "adversarial-missing-agent-counts",
+        "adversarial-wrong-completed-task",
+        "adversarial-hidden-failed-task",
         "chosen-rank-over-ceiling",
+        "source-less-material-cannot-support-build",
         "dangling-no-go-reference",
         "dangling-reassessment-reference",
     }
@@ -1396,7 +1698,15 @@ def validate_specialized_fixtures(validation: Validation, fixture_dir: Path) -> 
             "search-failed-without-fallback-but-claimed-complete": lambda: receipt["operations"][0].update(status="failed"),
             "adversarial-payload-extra-key": lambda: record["adversarial_review"]["payload"].update(main_judgment="自研"),
             "adversarial-failed-without-trace-but-build": lambda: record["adversarial_review"].update(status="failed", payload=None, reason="失败"),
+            "layer-supported-with-unknown-evidence": lambda: record["evidence_items"][0].update(state="unknown"),
+            "layer-supported-with-opposing-evidence": lambda: record["evidence_items"][0].update(state="opposes"),
+            "trial-evidence-direction-reversed": lambda: record["evidence_items"][4].update(state="supports"),
+            "commitment-unrelated-source-backed": lambda: record["commitment"].update(evidence_item_ids=["e-fit"]),
+            "adversarial-missing-agent-counts": lambda: receipt["operations"][3].pop("agent_counts"),
+            "adversarial-wrong-completed-task": lambda: receipt["operations"][3].update(completed_tasks=["其他任务"]),
+            "adversarial-hidden-failed-task": lambda: receipt["operations"][3].update(failed_tasks=["独立挑战正式自研必要性"]),
             "chosen-rank-over-ceiling": lambda: record["validation_layers"]["alternative_ecosystem"].update(status="unknown"),
+            "source-less-material-cannot-support-build": lambda: record["commitment"].update(evidence_item_ids=["e-trial", "e-adversarial"]),
             "dangling-no-go-reference": lambda: record["no_go_conditions"][0].update(evidence_item_ids=["missing"]),
             "dangling-reassessment-reference": lambda: record["reassessment_triggers"][0].update(evidence_item_ids=["missing"]),
         }
@@ -1506,6 +1816,16 @@ def validate_evals(validation: Validation) -> None:
                 continue
             stage = turn.get("expected_stage")
             validation.require(stage in EXPECTED_FIXTURE_STAGES, f"fixture {path.name} 含非法阶段：{stage}")
+            if stage == "Gate-routing":
+                validation.require(
+                    turn.get("expected_interaction") is None,
+                    f"fixture {path.name} 第 {index} 个 Gate-routing 项不得提前携带 B 反馈交互",
+                )
+                validation.require(
+                    turn.get("next_stage") in {"Evidence Gate", "Participation Gate", "B"},
+                    f"fixture {path.name} 第 {index} 个 Gate-routing 项必须给出一个确定 next_stage",
+                )
+                continue
             if stage not in INTERACTIVE_FIXTURE_STAGES or path.name in {
                 "07-method-routing.json",
                 "12-native-control-and-fallback.json",
@@ -1689,9 +2009,102 @@ def validate_evals(validation: Validation) -> None:
                 validation.require(tool_call_observed is False and selection_mode == "none", f"fixture {path.name} 开放 R/A 不得调用选择控件")
                 validation.require(turn.get("answer_shape") == "open", f"fixture {path.name} free-answer 必须声明 answer_shape=open")
 
+    method_adjustment_fixture = trigger_dir / "fixtures" / "08-interactive-method-adjustment.json"
+    if method_adjustment_fixture.exists():
+        method_adjustment_data = json.loads(
+            method_adjustment_fixture.read_text(encoding="utf-8")
+        )
+        fallback_cases = method_adjustment_data.get("fallback_cases", [])
+        fallback_by_status = {
+            case.get("host_control_status"): case
+            for case in fallback_cases
+            if isinstance(case, dict)
+        } if isinstance(fallback_cases, list) else {}
+        validation.require(
+            set(fallback_by_status) == {"unavailable", "failed", "rejected"}
+            and len(fallback_cases) == 3,
+            "fixture 08 必须分别覆盖 unavailable、failed 与 rejected 方法控件降级",
+        )
+        for status, case in fallback_by_status.items():
+            validation.require(
+                case.get("surface") == "text-fallback"
+                and case.get("selection_mode") == "multi"
+                and case.get("supplement_mode") == "none"
+                and case.get("tool_call_observed")
+                is (status in {"failed", "rejected"})
+                and case.get("must_preserve_selection_semantics") is True
+                and case.get("must_preserve_structured_method_meaning") is True
+                and case.get("must_not_retry_same_call") is True,
+                f"fixture 08 的 {status} 降级必须保留真实调用 trace、选择语义且不原样重试",
+            )
+            try:
+                from grade_contracts import InteractionEvidence
+
+                InteractionEvidence.from_dict(case)
+            except (ImportError, ValueError) as error:
+                validation.require(
+                    False,
+                    f"fixture 08 的 {status} 降级交互证据不可执行：{error}",
+                )
+
+    authorization_fixture = trigger_dir / "fixtures" / "06-authorization-and-degradation.json"
+    if authorization_fixture.exists():
+        authorization_data = json.loads(authorization_fixture.read_text(encoding="utf-8"))
+        authorization_turns = authorization_data.get("turns", [])
+        authorization_by_id = {
+            turn.get("id"): turn
+            for turn in authorization_turns
+            if isinstance(turn, dict) and turn.get("id")
+        } if isinstance(authorization_turns, list) else {}
+        gate_to_evidence = authorization_by_id.get("gate-routing-to-evidence", {})
+        gate_to_b = authorization_by_id.get("gate-routing-to-b", {})
+        expected_gate = gate_to_evidence.get("expected_gate", {})
+        validation.require(
+            gate_to_evidence.get("expected_stage") == "Gate-routing"
+            and gate_to_evidence.get("next_stage") == "Evidence Gate"
+            and gate_to_evidence.get("expected_interaction") is None
+            and isinstance(expected_gate, dict)
+            and expected_gate.get("consent_type") == "capability_call"
+            and expected_gate.get("wait_for_user") is True
+            and all(
+                isinstance(expected_gate.get(field), str)
+                and bool(expected_gate[field].strip())
+                for field in (
+                    "decision",
+                    "evidence_question",
+                    "stop_condition",
+                    "provider",
+                    "cost_and_delay",
+                    "fallback",
+                )
+            ),
+            "fixture 06 必须把 Gate-routing→Evidence Gate 定义为具体授权入口，且不得提前显示 B 反馈",
+        )
+        validation.require(
+            gate_to_b.get("expected_stage") == "Gate-routing"
+            and gate_to_b.get("next_stage") == "B"
+            and gate_to_b.get("expected_interaction") is None
+            and {
+                "conditional_judgment",
+                "one_main_reality_experiment",
+                "lossless_decision_snapshot",
+                "feedback_only_after-complete-b",
+            }
+            <= set(gate_to_b.get("b_requirements", [])),
+            "fixture 06 必须把 Gate-routing→B 定义为先完成判断、闭环和快照，再进入反馈",
+        )
+
     native_fixture = trigger_dir / "fixtures" / "12-native-control-and-fallback.json"
+    snapshot_fixture = trigger_dir / "fixtures" / "17-portable-adapters-and-decision-record.json"
     if native_fixture.exists():
         native_data = json.loads(native_fixture.read_text(encoding="utf-8"))
+        snapshot_data = (
+            json.loads(snapshot_fixture.read_text(encoding="utf-8"))
+            if snapshot_fixture.exists()
+            else {}
+        )
+        canonical_record = snapshot_data.get("decision_record")
+        canonical_snapshot = snapshot_data.get("visible_snapshot")
         native_cases = native_data.get("cases", []) if isinstance(native_data, dict) else []
         native_case_ids = {
             case.get("id")
@@ -1750,6 +2163,12 @@ def validate_evals(validation: Validation) -> None:
                 and all(isinstance(line, str) for line in assistant_shape),
                 f"fixture 12 B case {case_id} 缺少可执行 assistant_shape",
             )
+            case_record = case.get("decision_record")
+            case_snapshot = case.get("visible_snapshot")
+            validation.require(
+                case_record == canonical_record and case_snapshot == canonical_snapshot,
+                f"fixture 12 B case {case_id} 必须绑定 canonical DecisionRecord 与无损可见快照",
+            )
             status = observed.get("host_control_status") if isinstance(observed, dict) else None
             surface = observed.get("surface") if isinstance(observed, dict) else None
             tool_call = observed.get("tool_call_observed") if isinstance(observed, dict) else None
@@ -1790,27 +2209,55 @@ def validate_evals(validation: Validation) -> None:
     if feedback_fixture.exists():
         feedback_data = json.loads(feedback_fixture.read_text(encoding="utf-8"))
         feedback_routes = feedback_data.get("feedback_routes", []) if isinstance(feedback_data, dict) else []
-        expected_routes = {
-            ("accept", "none"): ("end", True, False),
-            ("set-aside", "none"): ("end", True, False),
-            ("adjust-next-step", "none"): ("R-method", True, False),
-            ("disagree", "none"): ("R-method", False, False),
-            ("accept", "new-fact"): ("R-method", False, True),
-            ("accept", "purpose-change"): ("R-align", False, True),
-        }
-        actual_routes = {
-            (route.get("direction_id"), route.get("supplement_type")): (
-                route.get("expected_stage"),
-                route.get("preserve_judgment"),
-                route.get("text_overrode_selection"),
+        try:
+            from grade_contracts import resolve_b_feedback_route
+        except ImportError as error:
+            validation.require(False, f"无法加载 B 反馈 canonical resolver：{error}")
+        else:
+            route_keys = [
+                (route.get("direction_id"), route.get("supplement_type"))
+                for route in feedback_routes
+                if isinstance(route, dict)
+            ]
+            required_route_keys = {
+                ("accept", "none"),
+                ("set-aside", "none"),
+                ("adjust-next-step", "none"),
+                ("disagree", "none"),
+                ("accept", "new-fact"),
+                ("accept", "purpose-change"),
+            }
+            validation.require(
+                required_route_keys <= set(route_keys)
+                and len(route_keys) == len(set(route_keys)),
+                "fixture 11 缺少 B 反馈结束、等待补充、不同意或文字优先转移，或存在重复路由",
             )
-            for route in feedback_routes
-            if isinstance(route, dict)
-        }
-        validation.require(
-            expected_routes.items() <= actual_routes.items(),
-            "fixture 11 缺少 B 反馈结束、调整、不同意或文字优先转移",
-        )
+            for route in feedback_routes:
+                if not isinstance(route, dict):
+                    validation.require(False, "fixture 11 的 feedback_routes 必须全部是对象")
+                    continue
+                try:
+                    resolved = resolve_b_feedback_route(
+                        route.get("direction_id"),
+                        route.get("supplement_type"),
+                    )
+                except ValueError as error:
+                    validation.require(False, f"fixture 11 含非法 B 反馈路由：{error}")
+                    continue
+                validation.require(
+                    (
+                        route.get("expected_stage"),
+                        route.get("preserve_judgment"),
+                        route.get("text_overrode_selection"),
+                    )
+                    == (
+                        resolved.next_stage,
+                        resolved.preserve_judgment,
+                        resolved.text_overrode_selection,
+                    ),
+                    "fixture 11 的 B 反馈路由必须与 canonical resolver 一致："
+                    f"{route.get('direction_id')}+{route.get('supplement_type')}",
+                )
         validation.require(
             all(
                 isinstance(route, dict) and route.get("authorization_effect") == "none"
@@ -1907,10 +2354,42 @@ def validate_evals(validation: Validation) -> None:
         ux_evals = ux_data.get("evals", [])
         validation.require(isinstance(ux_evals, list) and len(ux_evals) >= 5, "ux-evals.json 至少需要 5 个体验场景")
         if isinstance(ux_evals, list):
+            ux_ids = {
+                item.get("id")
+                for item in ux_evals
+                if isinstance(item, dict)
+            }
+            required_new_ux_ids = {
+                "ux-subtractive-alternative",
+                "ux-analysis-sufficiency-stop",
+                "ux-self-assessment-evidence-boundary",
+                "ux-gate-chaining",
+                "ux-capability-decline-versus-flow-stop",
+                "ux-a-waits-for-answer",
+                "ux-zero-method",
+                "ux-compact-b",
+                "ux-hold-pause-stop-action",
+                "ux-subtractive-not-material",
+                "ux-human-authorized-send",
+            }
+            validation.require(
+                required_new_ux_ids <= ux_ids,
+                f"ux-evals.json 缺少 current UX 边界场景：{sorted(required_new_ux_ids - ux_ids)}",
+            )
+            validation.require(
+                len(ux_ids) == len(ux_evals)
+                and all(isinstance(item, dict) and _is_nonempty_string(item.get("id")) for item in ux_evals),
+                "ux-evals.json 的 eval ID 必须非空且唯一",
+            )
             for item in ux_evals:
                 if not isinstance(item, dict):
                     validation.require(False, "UX eval 项必须是对象")
                     continue
+                validation.require(
+                    _is_nonempty_string(item.get("prompt"))
+                    and _is_nonempty_string(item.get("expected_experience")),
+                    f"UX eval {item.get('id')} 必须提供非空 prompt 与 expected_experience",
+                )
                 validation.require(
                     item.get("status") == "not_run",
                     f"UX eval {item.get('id')} 未执行时必须显式标记 status=not_run",
@@ -1953,6 +2432,29 @@ def validate_evals(validation: Validation) -> None:
                 required_interaction in ux_interactions,
                 f"ux-evals.json 缺少交互形态：{required_interaction}",
             )
+        ux_by_id = {
+            str(item.get("id")): item
+            for item in ux_evals
+            if isinstance(item, dict) and _is_nonempty_string(item.get("id"))
+        } if isinstance(ux_evals, list) else {}
+        expected_case_phrases = {
+            "ux-gate-chaining": ("Gate-routing", "同一 Gate 不围绕同一未知重复"),
+            "ux-capability-decline-versus-flow-stop": ("只拒绝某项能力", "不输出完整 B"),
+            "ux-a-waits-for-answer": ("继续等待 A", "不使用分析停止规则跳过 A"),
+            "ux-zero-method": ("不显示空菜单", "直接进入 A"),
+            "ux-compact-b": ("紧凑 B", "不输出‘无冲突’‘无搁置’"),
+            "ux-hold-pause-stop-action": ("不新增投入", "非空自然动作"),
+            "ux-subtractive-not-material": ("不把它作为 material 候选", "不等于每轮必须推荐减法"),
+            "ux-human-authorized-send": ("两份 consent", "缺任一授权时不发送"),
+            "ux-b-text-overrides-selection": ("回到 A", "不自动重选方法"),
+        }
+        for eval_id, phrases in expected_case_phrases.items():
+            item = ux_by_id.get(eval_id, {})
+            experience = str(item.get("expected_experience", "")) if isinstance(item, dict) else ""
+            validation.require(
+                all(phrase in experience for phrase in phrases),
+                f"ux-evals.json 场景 {eval_id} 缺少定向语义：{phrases}",
+            )
         ux_experience = "\n".join(
             str(item.get("expected_experience", ""))
             for item in ux_evals
@@ -1987,6 +2489,11 @@ def validate_evals(validation: Validation) -> None:
             "同一组真实任务与成功标准",
             "最多允许低成本、可撤回的有限验证",
             "目标用户、核心场景、定位、关键依赖或替代生态",
+            "不新增、删除或简化流程、只保留必要增量、缩小投入以及暂停/停止",
+            "不创造新的减法模式或候选类型",
+            "停止为完整感继续扩张",
+            "receipt 只证明操作和返回材料发生",
+            "不提高承诺上限",
         ):
             validation.require(
                 phrase in ux_experience,
@@ -2018,7 +2525,7 @@ def validate_evals(validation: Validation) -> None:
             "开放答案直接自由回答",
             "正式问题独立位于最后",
             "要弄清什么、先做什么、看哪些现实信号和何时重新决定",
-            "B 用四项单选表达一个主要反馈方向",
+            "四项单选只表达一个主要反馈方向",
             "未观察到独立附注时不假装存在备注框",
             "文本降级明确使用普通编号",
             "选择与文字冲突时准确采用文字",
@@ -2026,6 +2533,10 @@ def validate_evals(validation: Validation) -> None:
             "独立附注呈现：未实测 / not_run",
             "真实用户体验：未实测 / not_run",
             "`真实目的对齐`、`终端可读性`、`可纠错性`、`问题可回答性`、`用户自主权` 均不得低于 2",
+            "不新增、删除、简化、缩小或停止",
+            "不为措辞、背景或报告完整感堆方法、问题、搜索、Agent 或材料",
+            "receipt 不冒充外部事实或现实试用",
+            "采用/搁置/未决",
         ):
             validation.require(phrase in rubric, f"UX rubric 缺少核心体验或证据规则：{phrase}")
 
@@ -2062,6 +2573,10 @@ def validate_evals(validation: Validation) -> None:
             "只能自研",
             "完整后端、数据库、领域模型或正式产品架构",
             "目标用户、核心场景、定位、关键依赖或替代生态实质变化",
+            "material 路径主动覆盖不新增、删除或简化、只保留必要增量、缩小投入及暂停/停止",
+            "模型自信、自我批判、自我评分、方法输出、Agent 一致性或 receipt",
+            "逐方法、逐角色或逐 Agent 罗列观点后追加一句结论",
+            "判断、material 路径排序、承诺上限、闭环能否执行及结果区分力已不再会变化",
         ):
             validation.require(
                 phrase in enhancement,
@@ -2096,10 +2611,6 @@ def _svg_viewbox(root: ET.Element) -> tuple[str | None, str | None, str | None]:
 
 def _svg_element_by_id(root: ET.Element, element_id: str) -> ET.Element | None:
     return next((element for element in root.iter() if element.get("id") == element_id), None)
-
-
-def _svg_subtree_has_attribute(element: ET.Element | None, attribute: str) -> bool:
-    return element is not None and any(attribute in child.attrib for child in element.iter())
 
 
 def _svg_subtree_has_path(element: ET.Element | None) -> bool:
@@ -2141,12 +2652,9 @@ def validate_assets(validation: Validation, files: list[Path]) -> None:
     expected_specs = {
         "social-preview": {
             "role": "social-preview",
-            "variants": {("bilingual", "dark")},
+            "variants": {("en", "dark")},
             "canvas": {"width": 1280, "height": 640},
-            "required_ids": {
-                "wordmark", "tagline", "thinking-light", "clarity-aperture", "decision-thread",
-                "optional-gate", "reassessment-loop",
-            },
+            "required_ids": {"social-frame", "wordmark", "positioning", "invocation", "thinking-light-slot"},
             "max_source_bytes": 49152,
             "max_output_bytes": 409600,
         },
@@ -2166,20 +2674,34 @@ def validate_assets(validation: Validation, files: list[Path]) -> None:
 
     invocation_card = _manifest_asset(entries, "readme-invocation-card")
     validation.require(invocation_card is not None, "资产 manifest 缺少唯一 README Invocation Card")
-    invocation_decoded: dict[str, tuple[tuple[int, int], str, str]] = {}
-    expected_invocation_hashes = {
-        "light": "7c2bb4df41236ccb60396952a18d28e4a071ab970f479be24d8790afcc809bfa",
-        "dark": "33760ccbbf4011f663f1e998ac41f006f31a8888a22945c6e395976c7bda7ff4",
-    }
     if invocation_card is not None:
         validation.require(invocation_card.get("role") == "readme-opening-invocation-card", "README Invocation Card role 不正确")
         validation.require(invocation_card.get("canvas") == {"width": 600, "height": 600}, "README Invocation Card 画布合同不正确")
         validation.require(invocation_card.get("pixel_mode") == "RGBA", "README Invocation Card pixel mode 合同不正确")
-        validation.require(invocation_card.get("max_bytes") == 160000, "README Invocation Card max_bytes 预算不正确")
-        validation.require("generator" not in invocation_card, "README Invocation Card 是 canonical raster，不得声明 generator")
+        validation.require(invocation_card.get("max_source_bytes") == 160000, "README Invocation Card source 字节预算不正确")
+        validation.require(invocation_card.get("max_output_bytes") == 160000, "README Invocation Card output 字节预算不正确")
+        validation.require(
+            invocation_card.get("composition") == {
+                "subject_crop": [168, 78, 434, 448],
+                "subject_anchor": [168, 78],
+                "scale": 1,
+                "resampling": "none",
+            },
+            "README Invocation Card 必须固定复用 dark 主体的比例与位置",
+        )
+        validation.require(
+            invocation_card.get("generator") == {
+                "script": "scripts/render_assets.py",
+                "renderer": "Pillow",
+                "renderer_version": "11.3.0",
+                "pixel_mode": "RGBA",
+            },
+            "README Invocation Card generator 合同不正确",
+        )
         variants = invocation_card.get("variants")
-        validation.require(isinstance(variants, list) and len(variants) == 2, "README Invocation Card 必须提供 light/dark 两个 canonical 变体")
+        validation.require(isinstance(variants, list) and len(variants) == 2, "README Invocation Card 必须提供 dark source 和 light output")
         invocation_keys: set[tuple[object, object]] = set()
+        card_alpha_masks: dict[str, bytes] = {}
         if isinstance(variants, list):
             for variant in variants:
                 if not isinstance(variant, dict):
@@ -2188,44 +2710,52 @@ def validate_assets(validation: Validation, files: list[Path]) -> None:
                 key = (variant.get("locale"), variant.get("theme"))
                 invocation_keys.add(key)
                 theme = variant.get("theme")
-                source = _asset_path(validation, variant.get("source"), "README Invocation Card source")
-                validation.require("output" not in variant, "README Invocation Card canonical 变体不得声明 output")
-                if source is None:
+                key_name = "source" if theme == "dark" else "output"
+                path = _asset_path(validation, variant.get(key_name), f"README Invocation Card {theme} {key_name}")
+                validation.require(
+                    (theme == "dark" and "output" not in variant) or (theme == "light" and "source" not in variant),
+                    "README Invocation Card 必须只有 dark canonical source 与 light generated output",
+                )
+                if path is None:
                     continue
-                validation.require(source not in declared_paths, f"资产路径不得重复声明：{variant.get('source')}")
-                declared_paths.add(source)
-                validation.require(source.name == f"readme-invocation-card-{theme}.png", f"README Invocation Card {theme} source 路径不正确")
-                validation.require(source.exists(), f"缺少 README Invocation Card canonical source：{variant.get('source')}")
-                if not isinstance(theme, str) or theme not in expected_invocation_hashes or not source.exists():
+                validation.require(path not in declared_paths, f"资产路径不得重复声明：{variant.get(key_name)}")
+                declared_paths.add(path)
+                validation.require(path.name == f"readme-invocation-card-{theme}.png", f"README Invocation Card {theme} 路径不正确")
+                validation.require(path.exists(), f"缺少 README Invocation Card {theme}：{variant.get(key_name)}")
+                if theme == "light":
+                    output_paths.append(path)
+                if not path.exists():
                     continue
-                data = source.read_bytes()
-                validation.require(len(data) <= 160000, f"README Invocation Card {theme} 超出字节预算")
-                expected_hash = expected_invocation_hashes[theme]
-                validation.require(variant.get("source_sha256") == expected_hash, f"README Invocation Card {theme} SHA-256 合同不正确")
-                validation.require(hashlib.sha256(data).hexdigest() == expected_hash, f"README Invocation Card {theme} SHA-256 不匹配")
+                data = path.read_bytes()
+                limit = invocation_card.get("max_source_bytes" if theme == "dark" else "max_output_bytes")
+                validation.require(isinstance(limit, int) and len(data) <= limit, f"README Invocation Card {theme} 超出字节预算")
+                if theme == "dark":
+                    expected_hash = "33760ccbbf4011f663f1e998ac41f006f31a8888a22945c6e395976c7bda7ff4"
+                    validation.require(variant.get("source_sha256") == expected_hash, "README Invocation Card dark SHA-256 合同不正确")
+                    validation.require(hashlib.sha256(data).hexdigest() == expected_hash, "README Invocation Card dark SHA-256 不匹配")
                 try:
-                    decoded = decoded_image(data)
-                    invocation_decoded[theme] = decoded
-                    size, mode, _ = decoded
+                    size, mode, _ = decoded_image(data)
                     validation.require(size == (600, 600), f"README Invocation Card {theme} 必须是 600×600")
                     validation.require(mode == "RGBA", f"README Invocation Card {theme} pixel mode 必须是 RGBA")
-                    with Image.open(source) as image:
+                    with Image.open(path) as image:
                         image.load()
-                        alpha_extrema = image.getchannel("A").getextrema()
-                    validation.require(alpha_extrema == (0, 255), f"README Invocation Card {theme} 必须同时包含透明和不透明像素")
+                        alpha = image.getchannel("A")
+                        validation.require(alpha.getextrema() == (0, 255), f"README Invocation Card {theme} 必须同时包含透明和不透明像素")
+                        card_alpha_masks[str(theme)] = alpha.tobytes()
                 except Exception as error:
                     validation.require(False, f"README Invocation Card {theme} 无法完整解码：{error}")
             validation.require(invocation_keys == {("neutral", "light"), ("neutral", "dark")}, "README Invocation Card 语言/主题变体不正确")
+        if set(card_alpha_masks) == {"light", "dark"}:
+            validation.require(card_alpha_masks["light"] == card_alpha_masks["dark"], "README Invocation Card light/dark 外框 alpha 几何必须完全一致")
         provenance = invocation_card.get("provenance")
         validation.require(
             isinstance(provenance, dict)
-            and provenance.get("selection") == "user-selected light and dark canonical raster originals"
+            and provenance.get("selection") == "user-selected dark canonical raster source"
             and provenance.get("source_material") == "the repository's canonical Thinking Light 3D subject"
+            and "dark variant fixes" in str(provenance.get("geometry_basis"))
             and "no copied composition or brand elements" in str(provenance.get("reference_scope")),
             "README Invocation Card 缺少准确 provenance",
         )
-    if set(invocation_decoded) == {"light", "dark"}:
-        validation.require(invocation_decoded["light"][2] != invocation_decoded["dark"][2], "README Invocation Card light/dark 不得是相同像素")
 
     for entry in entries:
         if isinstance(entry, dict) and entry.get("id") == "readme-invocation-card":
@@ -2332,13 +2862,30 @@ def validate_assets(validation: Validation, files: list[Path]) -> None:
                 validation.require(source.stat().st_size <= byte_limit, f"资产 {relative} 超出 {byte_limit} 字节预算")
         variant_paths[asset_id] = sources
 
-    generator = next((entry.get("generator") for entry in entries if isinstance(entry, dict) and entry.get("id") == "social-preview"), None)
+    social_preview = _manifest_asset(entries, "social-preview")
+    generator = social_preview.get("generator") if isinstance(social_preview, dict) else None
     validation.require(
         generator == {
-            "script": "scripts/render_assets.py", "renderer": "resvg-py", "renderer_version": "0.5.0",
-            "decoder": "Pillow", "decoder_version": "11.3.0", "skip_system_fonts": True, "pixel_mode": "RGBA",
+            "script": "scripts/render_assets.py",
+            "renderer": "resvg-py",
+            "renderer_version": "0.5.0",
+            "compositor": "Pillow",
+            "compositor_version": "11.3.0",
+            "skip_system_fonts": True,
+            "pixel_mode": "RGBA",
         },
         "Social Preview generator 合同不正确",
+    )
+    validation.require(
+        isinstance(social_preview, dict)
+        and social_preview.get("composition") == {
+            "canonical_asset": "readme-invocation-card",
+            "canonical_theme": "dark",
+            "subject_anchor": [914, 100],
+            "scale": 1,
+            "resampling": "none",
+        },
+        "Social Preview 必须以固定位置和 1:1 比例复用 dark canonical Thinking Light",
     )
 
     managed_assets = {
@@ -2357,20 +2904,30 @@ def validate_assets(validation: Validation, files: list[Path]) -> None:
     if len(social_paths) == 1 and social_paths[0] in svg_roots:
         social_root = svg_roots[social_paths[0]]
         social_tags = {element.tag.rsplit("}", 1)[-1] for element in social_root.iter()}
-        validation.require("text" not in social_tags, "Social Preview 不得包含 text 或依赖系统字体")
+        social_ids = _svg_ids(social_root)
+        validation.require("text" not in social_tags, "Social Preview SVG 不得包含 text 或依赖系统字体")
         validation.require("linearGradient" not in social_tags and "radialGradient" not in social_tags and "filter" not in social_tags, "Social Preview 不得使用 gradient 或 filter")
-        tagline = _svg_element_by_id(social_root, "tagline")
+        positioning = _svg_element_by_id(social_root, "positioning")
+        invocation = _svg_element_by_id(social_root, "invocation")
         desc = _svg_element_by_id(social_root, "desc")
-        validation.require(_svg_subtree_has_path(_svg_element_by_id(social_root, "wordmark")), "Social Preview wordmark 必须包含实际 path")
-        validation.require(_svg_subtree_has_path(tagline), "Social Preview tagline 必须包含实际 path")
-        validation.require(tagline is not None and tagline.get("aria-label") == SOCIAL_PREVIEW_TAGLINE, "Social Preview tagline 必须提供准确的定位 aria-label")
+        wordmark = _svg_element_by_id(social_root, "wordmark")
+        validation.require(_svg_subtree_has_path(wordmark), "Social Preview wordmark 必须包含实际 path")
+        validation.require(wordmark is not None and wordmark.get("aria-label") == "Think It Through", "Social Preview wordmark 必须准确表达完整名称")
+        validation.require(_svg_subtree_has_path(positioning), "Social Preview positioning 必须包含实际布局 path")
+        validation.require(_svg_subtree_has_path(invocation), "Social Preview invocation 必须包含实际布局 path")
+        validation.require(positioning is not None and positioning.get("aria-label") == POSITIONING_EN, "Social Preview positioning 必须提供准确的定位 aria-label")
+        validation.require(invocation is not None and invocation.get("aria-label") == "Claude Code command /think-it-through", "Social Preview invocation 必须提供准确的调用 aria-label")
         validation.require(desc is not None and POSITIONING_EN in "".join(desc.itertext()), "Social Preview desc 必须包含完整 canonical 英文定位")
-        validation.require(_svg_subtree_has_attribute(_svg_element_by_id(social_root, "optional-gate"), "stroke-dasharray"), "Social Preview 的可选 Gate 必须实际使用虚线")
+        validation.require(
+            {"decision-thread", "optional-gate", "reassessment-loop", "tagline"}.isdisjoint(social_ids),
+            "Social Preview 不得恢复旧线框流程图或像素 tagline",
+        )
 
     expected_outputs = {
+        (ROOT / "assets" / "readme-invocation-card-light.png").resolve(): ((600, 600), "RGBA"),
         (ROOT / "assets" / "social-preview.png").resolve(): ((1280, 640), "RGBA"),
     }
-    validation.require(set(output_paths) == set(expected_outputs), "派生 PNG 输出必须精确包含一个 Social Preview")
+    validation.require(set(output_paths) == set(expected_outputs), "派生 PNG 输出必须精确包含 light Invocation Card 与 Social Preview")
     for output, (expected_size, expected_mode) in expected_outputs.items():
         validation.require(output.exists(), f"缺少派生 PNG：{output.name}")
         if not output.exists():
@@ -2578,7 +3135,7 @@ def validate_public_docs(validation: Validation) -> None:
         not (ROOT / "README.zh-CN.md").exists(),
         "根目录不得保留 README.zh-CN.md；中文默认入口只维护在 README.md",
     )
-    current_architecture_path = f"docs/product-architecture-v{CURRENT_CONTRACT_VERSION}.md"
+    current_architecture_path = f"docs/product-architecture-v{CURRENT_ARCHITECTURE_VERSION}.md"
     previous_architecture_path = f"docs/product-architecture-v{PREVIOUS_PUBLISHED_VERSION}.md"
     public_paths = (
         "README.md", "README.en.md", "PRODUCT.md", "REQUIREMENTS.md", "SECURITY.md",
@@ -2658,14 +3215,18 @@ def validate_public_docs(validation: Validation) -> None:
             "navigation": "[When to use it](#when-to-use-it) · [How it works](#how-it-works) · [Install](#install-and-use) · [Safe by default](#safe-by-default)",
             "language_switch": "🌐 [简体中文](README.md)",
             "result_heading": "What you get",
-            "result_phrases": ("A clear direction", "before you start", "move forward", "validate first", "once underway", "continue, adjust, pause, or stop", "A small real-world test", "what to try first", "whether the result supports the current direction", "A rationale you can revisit", "why this direction made sense", "what remains unknown", "what should make you change course"),
+            "result_semantics": ("A clear direction", "existing solution", "critical gap", "validate first", "build", "adjust, pause, or stop", "A small real-world test", "A rationale you can revisit", "what remains unknown"),
             "workflow_heading": "How it works",
-            "workflow_phrases": ("choice in front of you", "candidate solution—not as proof that the underlying problem is settled", "Separate facts, guesses, assumptions, and unknowns", "one question", "Confirm key answers in the right way", "people making them", "customer demand by real behavior", "qualified professional on specialized matters", "strongest realistic paths", "when the current judgment applies", "one small, low-cost test", "Reassess when the result comes back", "strongest realistic alternative has not been reasonably checked or tried", "limit the next step to validation rather than a full build"),
+            "workflow_semantics": ("real need", "facts, guesses, assumptions, and unknowns", "one question most likely to change", "commitments with the people making them", "what customers actually do", "qualified professional", "existing products", "built-in capabilities", "tool combinations", "process changes", "one small, low-cost test", "no viable existing option", "does not prove you need to build from scratch", "small and reversible"),
+            "project_viability_scope": "If you are deciding whether to custom-build a product, feature, or technical system",
             "method_heading": "Methods it may use",
             "base_method": "It always starts with basic analysis",
+            "method_recommendation": "it may recommend one or more of the methods below",
+            "core_method_intro": "The two core methods are:",
+            "automatic_method_execution": r"(?<!not )\b(?:it|the Skill)\s+(?:will\s+)?automatically\s+(?:adds?|uses?|executes?)\b",
             "core_methods": ("Two-sided Steelman", "Pre-mortem"),
             "specialist_methods": tuple(english_method_labels.get(method.get("id"), "") for method in registered_methods),
-            "method_boundaries": ("do not need to learn or choose these methods in advance", "only the approaches your current question needs", "asks you to confirm before using them", "someone with relevant knowledge", "explains why and asks for your consent first"),
+            "method_boundaries": ("do not need to learn or choose these methods in advance", "only the approaches your current question needs", "asks you to confirm before using them", "someone with relevant knowledge", "explains why each is needed and asks for your consent separately"),
             "removed_phrases": ("## See the shift", "## Say it in your own words", "compressed synthetic illustration", "AI bookkeeping product", "large customer wants to buy my inventory tool", "developer tool for a long time"),
             "install_heading": "Install and use",
             "install_prompt": "Install this Skill for me: https://github.com/zemu2718/think-it-through-skill",
@@ -2674,15 +3235,18 @@ def validate_public_docs(validation: Validation) -> None:
             "cli_command": "npx skills add zemu2718/think-it-through-skill",
             "installation_link": "docs/installation.en.md",
             "compatibility_link": "docs/compatibility-and-evidence.en.md",
+            "safety_heading": "Safe by default",
+            "safety_intro": "While you use this Skill, it does not do any of the following unless you explicitly approve that specific action:",
             "safety_phrases": ("access the network", "access private data", "involve additional Agents", "write files or save anything remotely", "take external action"),
-            "not_for": ("factual lookup", "low-risk execution", "pure creation", "involves no key choice from you", "take protective action first", "qualified professional"),
-            "moments": ("Before starting", "Before choosing a path", "Before committing resources", "Before doubling down", "After results arrive"),
+            "not_for": ("factual lookup", "low-risk execution", "purely creative work", "does not require a key decision from you", "take protective action first", "qualified professional in the relevant field"),
+            "moments": ("Before starting", "Before choosing a path", "Before committing resources", "Before doubling down", "After results or conditions change"),
+            "example_phrases": ("I want to build", "whether it is worth doing", "whether an existing or lighter path could meet the same need", "what to validate first"),
             "invocation_alt": "Thinking Light surrounds a clear opening",
             "removed_category": "A **decision-and-evidence Agent Skill** for consequential commitments.",
-            "runtime_boundary": "completing the installation does not mean the Skill is ready to use in your current tool.",
+            "runtime_boundary": "having the files installed does not mean the Skill can run correctly in your current tool.",
             "invocation_intro": "**Get started:** If you use Claude Code, enter this after installation:",
             "consent_boundary": "Agreeing to one action does not mean you agree to any other action.",
-            "plain_language": ("Questions you can bring", "achieve the real goal", "actually helps achieve your goal", "using the same standards", "ways to limit the damage"),
+            "plain_language": ("Questions you can bring", "achieve the real goal", "understand the real need first", "using the same standards", "ways to limit the damage"),
             "more_heading": "Learn more",
             "detail_groups": ("**Installation and compatibility:**", "**Understand the boundaries:**", "**Help improve it:**"),
             "positioning": POSITIONING_EN,
@@ -2695,14 +3259,18 @@ def validate_public_docs(validation: Validation) -> None:
             "navigation": "[什么时候调用](#什么时候调用) · [如何工作](#它怎样帮你想清楚) · [安装](#安装与使用) · [默认安全](#默认安全)",
             "language_switch": "🌐 [English](README.en.md)",
             "result_heading": "你会得到什么",
-            "result_phrases": ("一个明确方向", "还没开始", "推进", "先验证", "已经开始", "继续、调整、暂停还是停止", "一次能检验判断的小尝试", "重点观察什么", "根据实际结果判断当前方向是否还成立", "一份可回看的判断依据", "为什么这样判断", "还有哪些未知", "什么情况会让你改变方向"),
+            "result_semantics": ("一个明确方向", "现成方案", "关键能力", "验证", "自己开发", "调整、暂停还是停止", "一次能检验判断的小尝试", "一份可回看的判断依据", "还有哪些未知"),
             "workflow_heading": "它怎样帮你想清楚",
-            "workflow_phrases": ("眼下真正要做的选择", "产品、功能或自研方向先作为候选解法", "不直接当成已经成立的问题", "分清事实、推测、假设和未知", "只问一个", "用合适的方式确认关键答案", "他人的承诺向当事人确认", "客户需求看真实行为", "专业问题咨询专业人士", "最有力的路径", "当前判断在什么情况下成立", "设计一个成本可控、随时可以停下的小测试", "拿到结果后重新判断", "最强现实替代还没有合理核验或试用", "只做有限验证，不直接进入全面建设"),
+            "workflow_semantics": ("真实需要", "事实、推测、假设和未知", "一个最可能让你改变", "承诺问当事人", "客户需求看真实行为", "具备相应资质的专业人士", "现成产品", "平台能力", "工具组合", "流程调整", "成本可控、随时能停的小测试", "还没找到可行的现成办法", "不能证明必须自己开发", "小范围、可撤回"),
+            "project_viability_scope": "如果你正在判断是否自研产品、功能或技术系统",
             "method_heading": "它可能用到的方法",
             "base_method": "它每次都会先做基础分析",
+            "method_recommendation": "它可能推荐下面的方法",
+            "core_method_intro": "两种核心方法是：",
+            "automatic_method_execution": r"(?<!不)(?:会在推荐后自动|会自动|将自动)(?:加入|使用|执行)",
             "core_methods": ("双向钢人", "失败预演"),
             "specialist_methods": tuple(method.get("name", "") for method in registered_methods),
-            "method_boundaries": ("不需要提前了解或选择这些方法", "当前问题真正需要的思考角度", "使用前请你确认", "知情的人补充信息", "先说明原因并征得你的同意"),
+            "method_boundaries": ("不需要提前了解或选择这些方法", "当前问题真正需要的思考角度", "使用前请你确认", "向知情的人了解情况", "先说明原因，再分别征得你的同意"),
             "removed_phrases": ("## 先看它会改变什么", "## 直接说出你的想法", "压缩后的合成示意", "AI 记账产品", "大客户愿意买我的库存工具", "开发者工具已经做了很久"),
             "install_heading": "安装与使用",
             "install_prompt": "帮我安装这个 Skill：https://github.com/zemu2718/think-it-through-skill",
@@ -2711,15 +3279,18 @@ def validate_public_docs(validation: Validation) -> None:
             "cli_command": "npx skills add zemu2718/think-it-through-skill",
             "installation_link": "docs/installation.md",
             "compatibility_link": "docs/compatibility-and-evidence.md",
+            "safety_heading": "默认安全",
+            "safety_intro": "使用这个 Skill 时，除非你明确同意某项具体操作，否则它默认：",
             "safety_phrases": ("不联网", "不读取私有数据", "不调用其他 Agent", "不写入文件，也不保存到远端", "不替你执行外部操作"),
-            "not_for": ("查事实", "已经决定的低风险任务", "纯创作", "不涉及关键选择", "先采取保护措施", "咨询相应的专业人士"),
-            "moments": ("立项前", "选方向前", "投入资源前", "继续加码前", "结果回来后"),
+            "not_for": ("查事实", "已经决定的低风险任务", "纯创作", "不涉及关键选择", "先采取保护措施", "咨询具备相应资质的专业人士"),
+            "moments": ("立项前", "选方向前", "投入资源前", "继续加码前", "结果或条件变化后"),
+            "example_phrases": ("我想做", "是否值得做", "有没有现成或更轻的办法", "现在最该验证什么"),
             "invocation_alt": "思考之光围绕清晰开口",
             "removed_category": "一个用于重要投入前后判断的**决策与证据 Agent Skill**。",
-            "runtime_boundary": "即使安装完成，也不代表这个 Skill 已经能在当前工具中正常使用。",
+            "runtime_boundary": "安装好文件都不代表这个 Skill 已经能在当前工具中正常运行。",
             "invocation_intro": "**开始使用：** 如果你使用 Claude Code，安装完成后输入：",
             "consent_boundary": "你同意一项操作，不代表也同意其他操作。",
-            "plain_language": ("适合讨论的问题", "更能实现真正目标", "真的有助于实现目标", "用同一套标准", "如何控制损失"),
+            "plain_language": ("适合讨论的问题", "更能实现真正目标", "真实需要的判断", "用同一套标准", "如何控制损失"),
             "more_heading": "更多信息",
             "detail_groups": ("**安装与兼容：**", "**了解边界：**", "**参与改进：**"),
             "positioning": POSITIONING_ZH,
@@ -2745,7 +3316,7 @@ def validate_public_docs(validation: Validation) -> None:
             "assets/readme-invocation-card-dark.png" in preface
             and "assets/readme-invocation-card-light.png" in preface
             and '<img src="assets/readme-invocation-card-light.png"' in preface
-            and 'width="140"' in preface,
+            and 'width="200"' in preface,
             f"{name} 首屏缺少正确的 light/dark README Invocation Card、light fallback 或紧凑显示宽度",
         )
         picture_position = preface.find("<picture>")
@@ -2765,7 +3336,7 @@ def validate_public_docs(validation: Validation) -> None:
             re.search(r"(?<![\w-])/think-it-through(?![\w-])", preface_without_picture) is None,
             f"{name} 首屏仅允许 Invocation Card 表达调用入口，不得在卡片之外重复添加文本调用",
         )
-        alt_match = re.search(r'<img src="assets/readme-invocation-card-light\.png" alt="([^"]+)" width="140">', picture)
+        alt_match = re.search(r'<img src="assets/readme-invocation-card-light\.png" alt="([^"]+)" width="200">', picture)
         validation.require(
             alt_match is not None
             and bool(alt_match.group(1).strip())
@@ -2782,7 +3353,7 @@ def validate_public_docs(validation: Validation) -> None:
         validation.require(not any(phrase in readme for phrase in contract["removed_phrases"]), f"{name} 不得重新加入已删除的案例或示例输入")
 
         result = _markdown_h2_section(readme, contract["result_heading"])
-        validation.require(all(phrase in result for phrase in contract["result_phrases"]), f"{name} 缺少明确方向、可验证的下一步和可回看的依据三项用户结果")
+        validation.require(all(phrase in result for phrase in contract["result_semantics"]), f"{name} 缺少明确方向、可验证的下一步和可回看的依据三项用户结果")
         validation.require(
             all(f"| **{moment}** |" in readme for moment in contract["moments"]),
             f"{name} 缺少行动前后五个具体调用时机",
@@ -2791,9 +3362,13 @@ def validate_public_docs(validation: Validation) -> None:
         validation.require(all(phrase in readme for phrase in contract["plain_language"]), f"{name} 仍缺少面向普通用户的自然表达")
 
         workflow = _markdown_h2_section(readme, contract["workflow_heading"])
-        validation.require(all(phrase in workflow for phrase in contract["workflow_phrases"]), f"{name} 缺少从真实决定到现实复判的白话工作原理")
+        validation.require(all(phrase in workflow for phrase in contract["workflow_semantics"]), f"{name} 缺少从真实决定到现实复判的白话工作原理")
+        validation.require(contract["project_viability_scope"] in workflow, f"{name} 必须把自研与现实替代路径限定在对应项目可行性议题")
         validation.require(f"### {contract['method_heading']}" in workflow, f"{name} 缺少按需方法说明")
         validation.require(contract["base_method"] in workflow, f"{name} 必须说明每次先做基础分析")
+        validation.require(contract["method_recommendation"] in workflow, f"{name} 必须说明额外方法只会按需推荐，不得写成自动加入")
+        validation.require(re.search(contract["automatic_method_execution"], workflow, re.IGNORECASE) is None, f"{name} 不得在保留推荐说明的同时声称自动执行额外方法")
+        validation.require(contract["core_method_intro"] in workflow, f"{name} 必须以中性分类说明两种核心方法，不得添加无证据支持的使用频率")
         validation.require(all(method in workflow for method in contract["core_methods"]), f"{name} 缺少双向钢人与失败预演两种核心方法")
         validation.require(all(method and method in workflow for method in contract["specialist_methods"]), f"{name} 专项方法必须完整来自 registry.yaml")
         validation.require(all(phrase in workflow for phrase in contract["method_boundaries"]), f"{name} 缺少方法按需推荐、用户确认或能力征求同意的说明")
@@ -2806,10 +3381,17 @@ def validate_public_docs(validation: Validation) -> None:
         validation.require(contract["runtime_boundary"] in install, f"{name} 必须区分文件安装与真实 runtime 验证")
         validation.require(contract["invocation_intro"] in install, f"{name} 必须以面向用户的开始使用步骤把调用方式限定在 Claude Code")
         validation.require("```text\n/think-it-through\n```" in install, f"{name} 缺少可靠显式入口")
+        validation.require(
+            all(phrase in install for phrase in contract["example_phrases"]),
+            f"{name} 缺少体现当前产品价值的可复制使用示例",
+        )
         validation.require(contract["installation_link"] in install and contract["compatibility_link"] in install, f"{name} 缺少详细安装或兼容说明链接")
-        validation.require(all(phrase in readme for phrase in contract["safety_phrases"]), f"{name} 缺少五项默认安全语义")
-        validation.require(contract["consent_boundary"] in readme, f"{name} 缺少单项同意不扩张到其他操作的自然说明")
-        validation.require(f"### {contract['more_heading']}" in readme, f"{name} 缺少更多信息入口")
+
+        safety = _markdown_h2_section(readme, contract["safety_heading"])
+        validation.require(contract["safety_intro"] in safety, f"{name} 默认安全引导必须准确限定 Skill 使用范围、具体授权和行为极性")
+        validation.require(all(phrase in safety for phrase in contract["safety_phrases"]), f"{name} 缺少五项默认安全语义")
+        validation.require(contract["consent_boundary"] in safety, f"{name} 缺少单项同意不扩张到其他操作的自然说明")
+        validation.require(f"### {contract['more_heading']}" in safety, f"{name} 缺少更多信息入口")
         validation.require(all(group in readme for group in contract["detail_groups"]), f"{name} 缺少安装与兼容、了解边界和参与改进三组详情入口")
         validation.require(all(link in readme for link in readme_links), f"{name} 缺少普通用户所需详情链接")
         validation.require(feedback_path in readme and "Star" in readme, f"{name} 缺少反馈与克制的 Star 入口")
@@ -2958,10 +3540,11 @@ def validate_public_docs(validation: Validation) -> None:
         "普通正文先自然说清",
         "assumptions` 与 `unknowns` 必须分别呈现",
         "L3～L5 只接受绑定准确 runtime version 的 `real_runtime` 证据",
-        f"v{CURRENT_CONTRACT_VERSION} 是当前稳定源码版本、正式产品合同和最新真实公开发布",
-        "同名不可变 Git tag、GitHub Release、可下载 asset 与校验和共同建立公开发布身份",
+        f"v{CURRENT_CONTRACT_VERSION} 是当前发布候选源码与正式产品合同",
+        f"最新真实公开 tag / GitHub Release / `.skill` asset / 校验和仍是 v{LATEST_PUBLISHED_VERSION}",
+        "公开发布身份只由已创建并核验的对应对象建立",
         f"v{PREVIOUS_PUBLISHED_VERSION} 继续作为历史发布保留",
-        "逐客户端真实加载、纯文本行为和原生能力属于发布后的兼容观察",
+        "逐客户端真实加载、纯文本行为和原生能力属于独立兼容观察",
         "不得由此推导“所有 AI 客户端已验证”",
         "PROJECT_VIABILITY",
         "grader-only",
@@ -2991,8 +3574,9 @@ def validate_public_docs(validation: Validation) -> None:
         "主现实证据闭环",
         "决策快照",
         "纯文本仍保留完整状态",
-        f"v{CURRENT_CONTRACT_VERSION} 是当前稳定源码版本、正式产品合同和最新真实公开发布",
-        "同名不可变 Git tag、GitHub Release、可下载 asset 与校验和共同建立公开发布身份",
+        f"v{CURRENT_CONTRACT_VERSION} 是当前发布候选源码与正式产品合同",
+        f"最新真实公开发布仍为 v{LATEST_PUBLISHED_VERSION}",
+        "由其不可变 Git tag、GitHub Release、可下载 asset 与校验和共同建立身份",
         f"v{PREVIOUS_PUBLISHED_VERSION} 继续作为历史发布保留",
         "实现形态只是候选",
         "自研承担更高举证责任",
@@ -3017,8 +3601,9 @@ def validate_public_docs(validation: Validation) -> None:
         "DecisionRecord",
         f"scripts/grade_contracts.py` 是 v{CURRENT_CONTRACT_VERSION} 当前评分器",
         "版本、发布范围与证据声明",
-        f"v{CURRENT_CONTRACT_VERSION} 是当前稳定源码版本、正式产品合同和最新真实公开 tag / Release / asset / 校验和",
-        f"v{PREVIOUS_PUBLISHED_VERSION} 继续作为历史发布保留",
+        f"v{CURRENT_CONTRACT_VERSION} 是当前发布候选源码与正式产品合同，尚未创建同名公开对象",
+        f"v{LATEST_PUBLISHED_VERSION} 是最新真实公开 tag / Release / asset / 校验和",
+        f"v0.2.0 与 v{PREVIOUS_PUBLISHED_VERSION} 继续作为历史发布保留",
         "PROJECT_VIABILITY` 是 grader-only sidecar stage",
         "稳定源码准入由合同、schema、fixtures、grader",
         "用户 Issue 和安装观察属于发布后反馈线索",
@@ -3048,6 +3633,14 @@ def validate_public_docs(validation: Validation) -> None:
         "mutation test 验证语义缺失或错误声明，而不是阻止自然润色",
     ):
         validation.require(phrase in claude_md, f"CLAUDE.md 缺少双语 README 文案维护规则：{phrase}")
+
+    for phrase in (
+        "--stage B",
+        "--interaction-json /path/to/interaction-evidence.json",
+        "--decision-record-json /path/to/decision-record.json",
+        "--visible-snapshot-json /path/to/visible-snapshot.json",
+    ):
+        validation.require(phrase in claude_md, f"CLAUDE.md 缺少 B CLI 快照参数：{phrase}")
 
     for phrase in (
         "四类授权彼此独立",
@@ -3092,8 +3685,8 @@ def validate_public_docs(validation: Validation) -> None:
         )
 
     for phrase in (
-        f"状态：v{CURRENT_CONTRACT_VERSION} 当前稳定源码的非规范性架构说明",
-        f"v{CURRENT_CONTRACT_VERSION} 是当前稳定源码、正式产品合同和最新真实公开发布",
+        f"状态：v{CURRENT_ARCHITECTURE_VERSION} 当前稳定源码的非规范性架构说明",
+        f"v{CURRENT_ARCHITECTURE_VERSION} 是当前稳定源码、正式产品合同和最新真实公开发布",
         "不提升任何未运行的 runtime 兼容层级",
         "不新增 Veto Gate 或协议状态",
         "四个价值维度与四种认识状态",
@@ -3107,7 +3700,7 @@ def validate_public_docs(validation: Validation) -> None:
     ):
         validation.require(
             phrase in current_architecture,
-            f"v{CURRENT_CONTRACT_VERSION} 当前架构文档缺少项目可行性或发布边界：{phrase}",
+            f"v{CURRENT_ARCHITECTURE_VERSION} 架构基线缺少项目可行性或发布边界：{phrase}",
         )
 
     validation.require("不构成逐项实现或验收规范" in product and "REQUIREMENTS.md" in product, "PRODUCT.md 必须明确只负责产品愿景而非验收合同")
@@ -3118,7 +3711,8 @@ def validate_public_docs(validation: Validation) -> None:
         POSITIONING_EN,
         VALUE_STATEMENT_ZH,
         VALUE_STATEMENT_EN,
-        f"v{CURRENT_CONTRACT_VERSION} is the current stable source and formal product contract on `main` and the latest published immutable Git tag, GitHub Release, downloadable `think-it-through.skill`, and `SHA256SUMS`",
+        f"v{CURRENT_CONTRACT_VERSION} is the current release-candidate source and formal product contract, with no same-version public objects yet",
+        f"v{LATEST_PUBLISHED_VERSION} remains the latest published immutable Git tag, GitHub Release, downloadable `think-it-through.skill`, and `SHA256SUMS`",
         f"v{PREVIOUS_PUBLISHED_VERSION} remains a historical release",
         "Publication does not promote any unrun runtime compatibility level",
         "real multi-turn behavior, natural-language discovery, external search, alternative trials, and independent-Agent behavior remain `not_run`",
@@ -3131,6 +3725,7 @@ def validate_public_docs(validation: Validation) -> None:
         "Avoid exposing internal protocol language",
         "Installation is explicitly separated from successful real-runtime execution",
         "separate the compact safety section from detail links grouped under installation and compatibility, boundaries, and improvement",
+        "state safety defaults during Skill use as concrete user choices",
         "internal protocol vocabulary",
     ):
         validation.require(phrase in brand_context, f"品牌摘要缺少产品定位、README 用户路径、稳定源码或证据边界：{phrase}")
@@ -3162,6 +3757,13 @@ def validate_public_docs(validation: Validation) -> None:
     validation.require("ci-candidate" not in validate_workflow and "candidate archive" not in validate_workflow.lower(), "validate workflow 不得把稳定分发归档称为 candidate")
 
     validation.require("## [Unreleased]" in changelog, "CHANGELOG.md 必须保留 Unreleased 节")
+    unreleased = changelog.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0]
+    validation.require(
+        "显示宽度调整为 200px" in unreleased
+        and "精简“明确方向”和工作原理第 3、4 步" in unreleased
+        and "默认安全只描述 Skill 使用过程" in unreleased,
+        "CHANGELOG.md 的 Unreleased 节缺少 README 显示、文案或默认安全范围精修记录",
+    )
     validation.require(
         "用户结果 → 调用时机 → 工作原理与最小必要方法 → 安装使用 → 默认安全" in changelog
         and "只在安装区保留 `/think-it-through`" in changelog
@@ -3176,19 +3778,35 @@ def validate_public_docs(validation: Validation) -> None:
         "CHANGELOG.md 缺少结果优先 README 路径、首屏精简、普通用户表达、安装边界、Skills CLI 入口或详情分组变更",
     )
     validation.require(
-        f"新增 v{CURRENT_CONTRACT_VERSION} 项目可行性参考" in changelog
-        and f"将当前稳定源码与正式产品合同升级为 v{CURRENT_CONTRACT_VERSION}" in changelog,
-        f"CHANGELOG.md 的 Unreleased 节缺少 v{CURRENT_CONTRACT_VERSION} 当前源码合同记录",
+        f"将当前源码合同升级为 v{CURRENT_CONTRACT_VERSION} 发布候选" in unreleased
+        and "闭合 `A → Gate-routing → 条件 Gate → Gate-routing → B` 回路与显式停止优先级" in unreleased
+        and "四个 canonical core schema" in unreleased
+        and "执行授权不再接受长期偏好代替本轮同意" in unreleased
+        and "真人参与和实际发送、邀请或联系分别需要参与委派与外部行动授权" in unreleased
+        and "高投入方向必须引用与现实试用一致的来源和回执" in unreleased
+        and "同一次 B 用户可见输出中确定性重建 DecisionRecord 与可见决策快照" in unreleased,
+        f"CHANGELOG.md 的 Unreleased 节缺少 v{CURRENT_CONTRACT_VERSION} 发布候选的关键合同、授权、证据链或 runtime smoke 记录",
     )
     validation.require(
-        f"将 v{CURRENT_CONTRACT_VERSION} 设为当前稳定源码、正式产品合同和最新真实公开发布" in changelog
+        "Python 3.12 完整单元测试 220 项通过" in unreleased
+        and "确定性仓库校验 3350 项通过" in unreleased
+        and "两个独立空目录构建的 SHA-256 一致" in unreleased
+        and "固定 `skills@1.5.23` 在 Node 22.20.0 下" in unreleased
+        and "未运行 Claude Code / Codex provider smoke" in unreleased
+        and "公开兼容矩阵继续如实保持 `not_run`" in unreleased,
+        "CHANGELOG.md 的 Unreleased 节缺少 v0.4.1 发布前验证事实或未运行边界",
+    )
+    validation.require(
+        f"v{LATEST_PUBLISHED_VERSION} 继续作为最新真实公开发布" in unreleased
+        and f"v{CURRENT_CONTRACT_VERSION} 的 tag、Release 与 asset 仅在实际创建后声明" in unreleased
+        and f"将 v{LATEST_PUBLISHED_VERSION} 设为当前稳定源码、正式产品合同和最新真实公开发布" in changelog
         and "同名不可变 Git tag、GitHub Release、可下载 asset 与校验和共同建立公开发布身份" in changelog
         and f"v{PREVIOUS_PUBLISHED_VERSION} 继续作为历史发布保留" in changelog,
-        "CHANGELOG.md 缺少当前源码、最新公开发布与历史发布的分层说明",
+        "CHANGELOG.md 缺少发布候选、最新公开发布与历史发布的分层说明",
     )
     validation.require(
-        f"## [{CURRENT_CONTRACT_VERSION}] - 2026-09-02" in changelog,
-        f"CHANGELOG.md 缺少 v{CURRENT_CONTRACT_VERSION} 发布记录",
+        f"## [{CURRENT_CONTRACT_VERSION}]" not in changelog,
+        f"CHANGELOG.md 不得在公开对象创建前预造 v{CURRENT_CONTRACT_VERSION} 发布记录",
     )
     validation.require(
         f"## [{PREVIOUS_PUBLISHED_VERSION}] - 2026-08-31" in changelog,

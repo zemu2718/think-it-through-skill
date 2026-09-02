@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.4.0",
+  "contract_version": "0.4.1",
   "id": "a-answer-shapes",
   "domain": "question-contract",
   "cases": [

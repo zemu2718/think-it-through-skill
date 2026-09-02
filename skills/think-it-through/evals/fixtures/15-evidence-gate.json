@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.4.0",
+  "contract_version": "0.4.1",
   "id": "evidence-gate",
   "domain": "evidence-routing",
   "cases": [
@@ -11,6 +11,11 @@
         "decision_sensitive": true,
         "bounded": true,
         "value_exceeds_cost": true,
+        "cost_and_latency_disclosure": {
+          "cost": "调用一次公开只读检索，不涉及付费购买",
+          "latency": "需要等待一次工具调用返回"
+        },
+        "disclosure_timing": "before_consent",
         "decision": "是否进入当前市场",
         "question": "当前法规是否允许这一交付模式",
         "scope": [
@@ -61,6 +66,11 @@
             "2026 年",
             "当前交付模式"
           ],
+          "tasks": [
+            "中国市场",
+            "2026 年",
+            "当前交付模式"
+          ],
           "data_boundary": [
             "只使用公开信息"
           ],
@@ -74,7 +84,7 @@
         "granted_by": "user"
       },
       "receipt": {
-        "contract_version": "0.4.0",
+        "contract_version": "0.4.1",
         "capabilities": [
           {
             "name": "search.public_web",
@@ -134,6 +144,11 @@
         "decision_sensitive": true,
         "bounded": true,
         "value_exceeds_cost": true,
+        "cost_and_latency_disclosure": {
+          "cost": "调用一次公开只读检索，不涉及付费购买",
+          "latency": "需要等待一次工具调用返回"
+        },
+        "disclosure_timing": "before_consent",
         "decision": "是否进入当前市场",
         "question": "用户愿意承担多大风险",
         "scope": [
@@ -165,21 +180,53 @@
       ]
     },
     {
-      "id": "failed-research-degrades-to-b",
-      "expected_stage": "B",
+      "id": "failed-research-returns-to-gate-routing",
+      "expected_stage": "Gate-routing",
       "operation_status": "failed",
       "required_outcome": {
         "preserve_unknown": true,
         "lower_commitment": true,
-        "continue_to_b": true,
+        "return_to_gate_routing": true,
+        "continue_to_b_if_no_distinct_gate_remains": true,
+        "allow_distinct_participation_gate_if_still_material": true,
+        "repeat_same_evidence_gate": false,
         "fabricate_result": false,
         "fallback": "转为现实实验"
       },
       "must_pass": [
         "honest_failure_receipt",
         "no_hidden_infinite_research",
-        "failure_does_not_block_b"
+        "gate_returns_to_routing_before_b",
+        "same_gate_not_repeated"
       ]
+    },
+    {
+      "id": "missing-cost-disclosure-cannot-enter-gate",
+      "mutation": {
+        "remove": "cost_and_latency_disclosure"
+      },
+      "must_fail_check": "Evidence Gate 在授权前披露具体成本与延迟"
+    },
+    {
+      "id": "empty-cost-disclosure-cannot-enter-gate",
+      "mutation": {
+        "set": {
+          "cost_and_latency_disclosure": {
+            "cost": "",
+            "latency": ""
+          }
+        }
+      },
+      "must_fail_check": "Evidence Gate 在授权前披露具体成本与延迟"
+    },
+    {
+      "id": "cost-disclosed-after-consent-cannot-enter-gate",
+      "mutation": {
+        "set": {
+          "disclosure_timing": "after_consent"
+        }
+      },
+      "must_fail_check": "Evidence Gate 在授权前披露具体成本与延迟"
     },
     {
       "id": "public-search-does-not-authorize-private-or-external",
@@ -191,6 +238,49 @@
         "private_data_access",
         "external_action",
         "participation_delegation"
+      ]
+    },
+    {
+      "id": "model-self-assessment-remains-internal-material",
+      "material": {
+        "kind": "model_self_assessment",
+        "statement": "我对当前判断很有信心"
+      },
+      "allowed_role": "inference_or_audit_material",
+      "external_evidence": false,
+      "can_raise_commitment_ceiling": false,
+      "must_pass": [
+        "self_assessment_is_not_external_evidence",
+        "internal_material_can_select_a_validation_target"
+      ]
+    },
+    {
+      "id": "agent-consensus-is-not-external-evidence",
+      "material": {
+        "kind": "agent_consensus",
+        "statement": "多个 Agent 给出相同判断"
+      },
+      "allowed_role": "inference_or_audit_material",
+      "external_evidence": false,
+      "can_raise_commitment_ceiling": false,
+      "must_pass": [
+        "agreement_does_not_establish_claim_truth",
+        "agreement_does_not_raise_commitment"
+      ]
+    },
+    {
+      "id": "receipt-proves-operation-not-claim-truth",
+      "material": {
+        "kind": "receipt_backed_agent_output",
+        "operation_occurred": true,
+        "claim_has_traceable_external_source": false
+      },
+      "allowed_role": "executed_operation_with_unverified_material",
+      "external_evidence": false,
+      "can_raise_commitment_ceiling": false,
+      "must_pass": [
+        "receipt_establishes_operation",
+        "receipt_does_not_establish_returned_claim_truth"
       ]
     }
   ]

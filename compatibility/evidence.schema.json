@@ -26,7 +26,7 @@
       "required": ["id", "version"],
       "properties": {
         "id": {"const": "think-it-through"},
-        "version": {"const": "0.4.0"}
+        "version": {"const": "0.4.1"}
       },
       "additionalProperties": false
     },

@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.4.0",
+  "contract_version": "0.4.1",
   "id": "cancel-method",
   "domain": "executed-project",
   "already_executed": true,

@@ -1,6 +1,6 @@
 {
   "skill_name": "think-it-through",
-  "contract_version": "0.4.0",
+  "contract_version": "0.4.1",
   "status": "not_run",
   "evaluation_mode": "multi-turn-episode",
   "fixture": "fixtures/19-contextual-checkpoint.json",

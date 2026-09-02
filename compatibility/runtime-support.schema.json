@@ -13,7 +13,7 @@
   "properties": {
     "$schema": {"const": "./runtime-support.schema.json"},
     "schema_version": {"const": "1"},
-    "skill_version": {"const": "0.4.0"},
+    "skill_version": {"const": "0.4.1"},
     "source_commit": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40}$"},
     "package_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
     "runtimes": {

@@ -4,7 +4,7 @@
 
 This document explains how to install and verify files. It is not a second behavior, safety, or compatibility contract. See [`REQUIREMENTS.md`](../REQUIREMENTS.md) and [`SECURITY.md`](../SECURITY.md) for behavior and safety; see [Compatibility and evidence](compatibility-and-evidence.en.md) and the linked machine sources for runtime status.
 
-The current stable source contract on `main` and the latest real public release are both v0.4.0. The pinned tag, archive, and checksum below jointly identify this immutable release; runtime compatibility remains a separate evidence-backed claim.
+The current source and formal product contract are the v0.4.1 release candidate, with no same-version public objects yet. The pinned tag, archive, and checksum below still identify v0.4.0, the latest real public release; runtime compatibility remains a separate evidence-backed claim.
 
 ## Recommended
 

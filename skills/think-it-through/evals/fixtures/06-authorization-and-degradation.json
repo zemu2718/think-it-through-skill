@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.4.0",
+  "contract_version": "0.4.1",
   "id": "authorization-and-degradation",
   "domain": "external-validation",
   "already_executed": false,
@@ -66,42 +66,59 @@
       ]
     },
     {
-      "user": "如果目标客户没有这个问题，我就不会进入；目前这点未知。",
+      "id": "gate-routing-to-evidence",
+      "user": "如果目标客户没有这个问题，我就不会进入；目前这点未知，而且公开证据能低成本区分。",
       "expected_stage": "Gate-routing",
-      "next_stage_if_public_evidence_is_decision_sensitive": "Evidence Gate",
-      "next_stage_if_evidence_is_not_worth_cost": "B",
+      "next_stage": "Evidence Gate",
       "confirmed_methods": [
         "recommended"
       ],
-      "host_capabilities": {
-        "selection_control": "available",
-        "host_free_text": true
-      },
-      "expected_interaction": {
-        "host_control_status": "available",
-        "surface": "native-control",
-        "tool_call_observed": true,
-        "selection_mode": "single",
-        "options": [
-          "方向符合我",
-          "调整下一步",
-          "不同意这个判断",
-          "暂时先放一放"
+      "expected_gate": {
+        "decision": "是否进入这个陌生市场",
+        "evidence_question": "目标客户是否存在足以改变进入决定的问题",
+        "scope": [
+          "只读公开来源"
         ],
-        "product_option_count": 4,
-        "host_free_text_available": true,
-        "question_text": "选中后，你仍可以再发一条普通消息补充、纠正或提供新事实。\n\n这份判断更接近你的哪种反馈？",
-        "supplement_mode": "follow-up-message",
-        "semantic_paragraphs": true,
-        "question_is_last_paragraph": true,
-        "main_loop_roles_separate_paragraphs": true
+        "stop_condition": "获得足以改变进入判断的支持、反对或冲突材料后停止",
+        "provider": "待当前会话能力协商",
+        "data_boundary": [
+          "不读取私有文件或账号资源"
+        ],
+        "cost_and_delay": "低成本、短延迟；价值高于获取成本",
+        "fallback": "未授权、不可用或失败时保留未知并进入条件化 B",
+        "consent_type": "capability_call",
+        "wait_for_user": true
       },
+      "expected_interaction": null,
       "mechanical": [
         "gate_routing_after_a_answer",
         "evidence_gate_only_for_decision_sensitive_public_fact",
         "specific_capability_consent_before_call",
-        "private_data_and_external_action_separate",
-        "failure_or_refusal_continues_to_b"
+        "no_b_feedback_before-b",
+        "private_data_and_external_action_separate"
+      ]
+    },
+    {
+      "id": "gate-routing-to-b",
+      "user": "同一未知目前没有值得成本的可执行取证路径，请基于现有信息给出条件化判断。",
+      "expected_stage": "Gate-routing",
+      "next_stage": "B",
+      "confirmed_methods": [
+        "recommended"
+      ],
+      "b_requirements": [
+        "conditional_judgment",
+        "one_main_reality_experiment",
+        "lossless_decision_snapshot",
+        "feedback_only_after-complete-b"
+      ],
+      "expected_interaction": null,
+      "mechanical": [
+        "gate_routing_after_a_answer",
+        "no_material_gate_remains",
+        "unknown_preserved",
+        "continue_to-conditional-b",
+        "no_b_feedback_in-gate-routing"
       ]
     }
   ],

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""对“想清楚”v0.4.0 的阶段输出与 Gate 记录执行确定性合同检查。"""
+"""对“想清楚”v0.4.1 的阶段输出与 Gate 记录执行确定性合同检查。"""
 
 from __future__ import annotations
 
@@ -8,8 +8,13 @@ import json
 import re
 from dataclasses import asdict, dataclass
 from decimal import Decimal
+from functools import lru_cache
 from pathlib import Path
 
+from jsonschema import Draft202012Validator, FormatChecker
+
+ROOT = Path(__file__).resolve().parents[1]
+CORE_SCHEMA_DIR = ROOT / "skills" / "think-it-through" / "core"
 QUESTION_MARK_RE = re.compile(r"[?？]")
 
 UNEXECUTED_STATES = ("暂不行动", "小步验证", "有条件推进", "可以推进")
@@ -170,6 +175,15 @@ AGENT_PAYLOAD_KEYS = {
     "uncertainties",
     "conflicts",
     "what_would_reverse_this",
+}
+PARTICIPATION_SYNTHESIS_KEYS = {
+    "completed_tasks",
+    "adopted_material",
+    "set_aside_material",
+    "unresolved_material",
+    "conflict_handling",
+    "judgment_impact",
+    "main_reality_loop_impact",
 }
 PROJECT_VIABILITY_KEYS = {
     "contract_version",
@@ -700,6 +714,42 @@ def _check(name: str, passed: bool, evidence: str, severe: bool = False) -> Chec
     return Check(text=name, passed=passed, evidence=evidence, severe=severe)
 
 
+@lru_cache(maxsize=None)
+def _schema_validator(schema_name: str) -> Draft202012Validator:
+    schema = json.loads((CORE_SCHEMA_DIR / schema_name).read_text(encoding="utf-8"))
+    Draft202012Validator.check_schema(schema)
+    return Draft202012Validator(schema, format_checker=FormatChecker())
+
+
+def _schema_errors(instance: object, schema_name: str) -> list[str]:
+    errors = sorted(
+        _schema_validator(schema_name).iter_errors(instance),
+        key=lambda error: (
+            tuple(str(part) for part in error.absolute_path),
+            error.message,
+        ),
+    )
+    rendered = []
+    for error in errors:
+        path = ".".join(str(part) for part in error.absolute_path) or "$"
+        rendered.append(f"{path}: {error.message}")
+    return rendered
+
+
+def _schema_check(name: str, instance: object, schema_name: str) -> tuple[Check, bool]:
+    errors = _schema_errors(instance, schema_name)
+    valid = not errors
+    return (
+        _check(
+            name,
+            valid,
+            "canonical schema 校验通过" if valid else "；".join(errors),
+            severe=True,
+        ),
+        valid,
+    )
+
+
 def _duplicate_headings(text: str) -> list[str]:
     headings = [match.strip().casefold() for match in re.findall(r"(?m)^#{1,6}\s+(.+?)\s*$", text)]
     return sorted({heading for heading in headings if headings.count(heading) > 1})
@@ -819,7 +869,7 @@ def resolve_b_feedback_route(
     direction_id: str,
     supplement_type: str = "none",
 ) -> FeedbackRoute:
-    """按 fixture 已标注的反馈语义返回下一状态，不猜测任意自然语言。"""
+    """按 fixture 已标注的反馈语义返回下一位置，不猜测任意自然语言。"""
     if direction_id not in FEEDBACK_DIRECTION_IDS:
         raise ValueError(f"不支持的反馈方向：{direction_id}")
     if supplement_type not in FEEDBACK_SUPPLEMENT_TYPES:
@@ -827,14 +877,16 @@ def resolve_b_feedback_route(
 
     if supplement_type == "purpose-change":
         return FeedbackRoute("R-align", False, direction_id != "disagree")
-    if supplement_type in {"judgment-disagreement", "new-fact"}:
+    if supplement_type == "new-fact":
+        return FeedbackRoute("A", False, direction_id != "disagree")
+    if supplement_type == "judgment-disagreement":
         return FeedbackRoute("R-method", False, direction_id != "disagree")
     if supplement_type == "experiment-adjustment":
-        return FeedbackRoute("R-method", True, direction_id != "adjust-next-step")
+        return FeedbackRoute("B-revision", True, direction_id != "adjust-next-step")
     if direction_id in {"accept", "set-aside"}:
         return FeedbackRoute("end", True, False)
     if direction_id == "adjust-next-step":
-        return FeedbackRoute("R-method", True, False)
+        return FeedbackRoute("await-supplement", True, False)
     return FeedbackRoute("R-method", False, False)
 
 
@@ -1878,11 +1930,124 @@ def _independent_action_items(action: str) -> list[str]:
     return re.findall(r"(?m)^\s*(?:[-*+] |\d+[.)]\s+)(.+)$", action)
 
 
+def _path_value(record: dict[str, object], path: str) -> object:
+    current: object = record
+    for part in path.split("."):
+        if not isinstance(current, dict) or part not in current:
+            return None
+        current = current[part]
+    return current
+
+
+def _visible_snapshot_contract(
+    text: str,
+    decision_record: dict[str, object] | None,
+    visible_snapshot: dict[str, object] | None,
+) -> tuple[bool, str]:
+    required_paths = {
+        "contract_version",
+        "topic",
+        "true_objectives",
+        "decision",
+        "confirmed_methods",
+        "judgment.state",
+        "judgment.recommendation",
+        "judgment.rationale",
+        "judgment.validity_conditions",
+        "evidence.confirmed_facts",
+        "evidence.inferences",
+        "evidence.assumptions",
+        "evidence.unknowns",
+        "evidence.sources",
+        "reversal_signals",
+        "main_experiment.core_hypothesis",
+        "main_experiment.action",
+        "main_experiment.observation",
+        "main_experiment.reassessment",
+        "main_experiment.user_supplied_boundaries",
+        "main_experiment.suggested_boundaries",
+        "reassessment_triggers",
+        "participation_and_capabilities",
+        "persistence",
+    }
+    record_valid = bool(
+        isinstance(decision_record, dict)
+        and all(check.passed for check in grade_decision_record(decision_record))
+    )
+    snapshot_shape_valid = bool(
+        isinstance(visible_snapshot, dict)
+        and visible_snapshot
+        and all(
+            isinstance(label, str)
+            and bool(label.strip())
+            and _exact_keys(item, {"path", "value", "rendered"})
+            and _nonempty_string(item.get("path"))
+            and _nonempty_string(item.get("rendered"))
+            for label, item in visible_snapshot.items()
+        )
+    )
+    snapshot_paths = {
+        item.get("path")
+        for item in visible_snapshot.values()
+        if isinstance(item, dict)
+    } if isinstance(visible_snapshot, dict) else set()
+    values_match = bool(
+        snapshot_shape_valid
+        and isinstance(decision_record, dict)
+        and all(
+            item.get("value") == _path_value(decision_record, item["path"])
+            for item in visible_snapshot.values()
+            if isinstance(item, dict)
+        )
+    )
+    assumptions_and_unknowns_separate = bool(
+        isinstance(visible_snapshot, dict)
+        and any(
+            item.get("path") == "evidence.assumptions"
+            for item in visible_snapshot.values()
+            if isinstance(item, dict)
+        )
+        and any(
+            item.get("path") == "evidence.unknowns"
+            for item in visible_snapshot.values()
+            if isinstance(item, dict)
+        )
+    )
+    snapshot_rendered = bool(
+        snapshot_shape_valid
+        and re.search(r"(?mi)^#{1,3}\s+(?:决策快照|decision snapshot)\s*$", text)
+        and all(
+            f"{label}：{item['rendered']}" in text
+            or f"{label}: {item['rendered']}" in text
+            for label, item in visible_snapshot.items()
+            if isinstance(item, dict)
+        )
+    )
+    passed = bool(
+        record_valid
+        and snapshot_shape_valid
+        and snapshot_paths == required_paths
+        and values_match
+        and assumptions_and_unknowns_separate
+        and snapshot_rendered
+    )
+    missing_paths = sorted(required_paths - snapshot_paths)
+    extra_paths = sorted(snapshot_paths - required_paths)
+    return passed, (
+        f"record_valid={record_valid}；snapshot_shape_valid={snapshot_shape_valid}；"
+        f"缺少路径={missing_paths}；额外路径={extra_paths}；"
+        f"values_match={values_match}；假设与未知分离={assumptions_and_unknowns_separate}；"
+        f"快照已实际呈现={snapshot_rendered}"
+    )
+
+
 def grade_b(
     text: str,
     already_executed: bool,
     user_numbers: list[str] | None = None,
     interaction: InteractionEvidence | None = None,
+    decision_record: dict[str, object] | None = None,
+    visible_snapshot: dict[str, object] | None = None,
 ) -> list[Check]:
     visible_text = _visible_interaction_text(text, interaction)
     body_marks = QUESTION_MARK_RE.findall(text)
@@ -1900,7 +2065,10 @@ def grade_b(
     multiple_actions = _matches_any(action_content, MULTI_ACTION_PATTERNS)
     legacy_prefixes = B_LOOP_PREFIX_RE.findall(_b_main_content(text))
     authorization_inference = _matches_any(visible_text, AUTHORIZATION_INFERENCE_PATTERNS)
-    unattributed_numbers = _unattributed_b_numbers(visible_text, user_numbers)
+    unattributed_numbers = _unattributed_b_numbers(
+        _b_main_content(visible_text),
+        user_numbers,
+    )
     external_position = min(
         [
             position
@@ -1949,6 +2117,11 @@ def grade_b(
             if interaction and interaction.surface == "native-control"
             else not visible_marks
         )
+    )
+    snapshot_check, snapshot_evidence = _visible_snapshot_contract(
+        text,
+        decision_record,
+        visible_snapshot,
     )
 
     return [
@@ -1999,6 +2172,12 @@ def grade_b(
                 f"反馈问号={feedback_question_count}；信息问题模式={info_questions}；"
                 f"隐藏信息请求={hidden_requests}"
             ),
+            severe=True,
+        ),
+        _check(
+            "阶段 B 包含与 canonical DecisionRecord 无损对应的可见决策快照",
+            snapshot_check,
+            snapshot_evidence,
             severe=True,
         ),
         _check(
@@ -2160,14 +2339,80 @@ def _operation_privilege_flags_valid(operation: dict[str, object] | None) -> boo
 
 
 def _agent_payload_valid(payload: object) -> bool:
+    content_fields = AGENT_PAYLOAD_KEYS - {"assigned_question"}
     return bool(
         _exact_keys(payload, AGENT_PAYLOAD_KEYS)
         and _nonempty_string(payload.get("assigned_question"))
-        and all(
-            _string_list(payload.get(field))
-            for field in AGENT_PAYLOAD_KEYS - {"assigned_question"}
+        and all(_string_list(payload.get(field)) for field in content_fields)
+        and any(payload.get(field) for field in content_fields)
+    )
+
+
+def _participation_synthesis_valid(
+    synthesis: object,
+    completed_tasks: object,
+    failed_tasks: object,
+) -> tuple[bool, dict[str, object]]:
+    shape_valid = _exact_keys(synthesis, PARTICIPATION_SYNTHESIS_KEYS)
+    if not shape_valid:
+        return False, {
+            "shape_valid": False,
+            "expected_keys": sorted(PARTICIPATION_SYNTHESIS_KEYS),
+        }
+
+    synthesis_tasks = synthesis.get("completed_tasks")
+    adopted = synthesis.get("adopted_material")
+    set_aside = synthesis.get("set_aside_material")
+    unresolved = synthesis.get("unresolved_material")
+    lists_valid = bool(
+        _unique_string_list(synthesis_tasks)
+        and _string_list(adopted)
+        and _string_list(set_aside)
+        and _string_list(unresolved)
+    )
+    completed_tasks_match = bool(
+        lists_valid
+        and _unique_string_list(completed_tasks)
+        and synthesis_tasks == completed_tasks
+    )
+    material_present = bool(
+        lists_valid
+        and (adopted or set_aside or unresolved)
+    )
+    failed_tasks_explicit = bool(
+        _unique_string_list(failed_tasks)
+        and (
+            not failed_tasks
+            or (
+                _string_list(unresolved, min_items=1)
+                and set(failed_tasks) <= set(unresolved)
+            )
         )
     )
+    effects_valid = all(
+        _nonempty_string(synthesis.get(field))
+        for field in (
+            "conflict_handling",
+            "judgment_impact",
+            "main_reality_loop_impact",
+        )
+    )
+    return bool(
+        lists_valid
+        and completed_tasks_match
+        and material_present
+        and failed_tasks_explicit
+        and effects_valid
+    ), {
+        "shape_valid": shape_valid,
+        "completed_tasks": completed_tasks,
+        "synthesis_completed_tasks": synthesis_tasks,
+        "completed_tasks_match": completed_tasks_match,
+        "failed_tasks": failed_tasks,
+        "failed_tasks_explicit": failed_tasks_explicit,
+        "material_present": material_present,
+        "effects_valid": effects_valid,
+    }
 
 
 def _consent_contract(
@@ -2176,32 +2421,27 @@ def _consent_contract(
 ) -> tuple[bool, dict[str, object]]:
     if expected_type not in CONSENT_TYPES:
         raise ValueError(f"不支持的授权类型：{expected_type}")
-    if consent is None:
-        return False, {"reason": "缺少授权记录"}
+    schema_errors = _schema_errors(consent, "consent.schema.json")
+    if schema_errors or not isinstance(consent, dict):
+        return False, {"schema_errors": schema_errors or ["缺少授权记录"]}
     scope = consent.get("scope")
-    required = {
-        "consent_id",
-        "consent_type",
-        "status",
-        "scope",
-        "valid_for",
-        "requested_by",
-        "granted_by",
-    }
     scope_valid = bool(
-        _required_keys(scope, {"purpose", "operations", "resources"})
+        isinstance(scope, dict)
         and _nonempty_string(scope.get("purpose"))
-        and _string_list(scope.get("operations"), min_items=1)
-        and _string_list(scope.get("resources"))
+        and _unique_string_list(scope.get("operations"), min_items=1)
+        and _unique_string_list(scope.get("resources"))
+        and all(
+            field not in scope or _unique_string_list(scope.get(field))
+            for field in ("tasks", "data_boundary", "excluded")
+        )
     )
     valid = bool(
-        _required_keys(consent, required)
-        and _nonempty_string(consent.get("consent_id"))
+        _nonempty_string(consent.get("consent_id"))
         and consent.get("consent_type") == expected_type
         and consent.get("status") == "granted"
         and consent.get("requested_by") == "main_agent"
         and consent.get("granted_by") == "user"
-        and consent.get("valid_for") in {"this_action", "this_turn", "this_session", "saved_preference"}
+        and consent.get("valid_for") in {"this_action", "this_turn", "this_session"}
         and scope_valid
     )
     return valid, {
@@ -2247,11 +2487,76 @@ def _capabilities_valid(receipt_bundle: dict[str, object] | None) -> bool:
     return True
 
 
+def _evidence_terminal_valid(
+    operation: dict[str, object] | None,
+    supporting: object,
+    opposing: object,
+    conflicts: object,
+    impact: object,
+) -> tuple[bool, dict[str, object]]:
+    if operation is None:
+        return False, {"reason": "缺少 research operation"}
+    status = operation.get("status")
+    sources = operation.get("sources")
+    fallback = operation.get("fallback")
+    source_records_valid = bool(isinstance(sources, list) and sources)
+    evidence_lists_valid = _string_list(supporting) and _string_list(opposing)
+    has_material = bool(supporting or opposing)
+    if status == "completed":
+        valid = bool(
+            source_records_valid
+            and evidence_lists_valid
+            and _string_list(conflicts)
+            and impact in {"changed", "unchanged", "uncertain"}
+            and (impact != "changed" or has_material)
+            and fallback == ""
+        )
+    elif status == "partial":
+        valid = bool(
+            source_records_valid
+            and evidence_lists_valid
+            and _unique_string_list(conflicts, min_items=1)
+            and impact in {"changed", "unchanged", "uncertain"}
+            and (impact != "changed" or has_material)
+            and _nonempty_string(fallback)
+        )
+    elif status in {"failed", "declined", "cancelled", "unavailable"}:
+        valid = bool(
+            sources == []
+            and supporting == []
+            and opposing == []
+            and _unique_string_list(conflicts, min_items=1)
+            and impact == "uncertain"
+            and _nonempty_string(fallback)
+        )
+    else:
+        valid = False
+    return valid, {
+        "status": status,
+        "source_count": len(sources) if isinstance(sources, list) else None,
+        "supporting": supporting,
+        "opposing": opposing,
+        "conflicts_and_gaps": conflicts,
+        "impact": impact,
+        "fallback": fallback,
+    }
+
+
 def grade_evidence_gate(
     record: dict[str, object],
     consent: dict[str, object] | None,
     receipt_bundle: dict[str, object] | None,
 ) -> list[Check]:
+    consent_schema_check, consent_schema_valid = _schema_check(
+        "Evidence Gate consent 符合 canonical schema",
+        consent,
+        "consent.schema.json",
+    )
+    receipt_schema_check, receipt_schema_valid = _schema_check(
+        "Evidence Gate receipt bundle 符合 canonical schema",
+        receipt_bundle,
+        "receipts.schema.json",
+    )
     decision = record.get("decision")
     question = record.get("question")
     scope = record.get("scope")
@@ -2266,6 +2571,14 @@ def grade_evidence_gate(
     decision_sensitive = record.get("decision_sensitive")
     bounded = record.get("bounded")
     value_exceeds_cost = record.get("value_exceeds_cost")
+    cost_and_latency_disclosure = record.get("cost_and_latency_disclosure")
+    disclosure_timing = record.get("disclosure_timing")
+    cost_disclosure_valid = bool(
+        _exact_keys(cost_and_latency_disclosure, {"cost", "latency"})
+        and _nonempty_string(cost_and_latency_disclosure.get("cost"))
+        and _nonempty_string(cost_and_latency_disclosure.get("latency"))
+        and disclosure_timing == "before_consent"
+    )
     capability = record.get("capability")
     capability_ready = bool(
         isinstance(capability, dict)
@@ -2274,23 +2587,21 @@ def grade_evidence_gate(
         and _nonempty_string(capability.get("provider"))
     )
     consent_valid, consent_evidence = _consent_contract(consent, "capability_call")
-    operation = _find_operation(receipt_bundle, "research")
+    operation = _find_operation(receipt_bundle, "research") if receipt_schema_valid else None
     operation_status = operation.get("status") if operation else None
     consent_scope_valid, consent_scope_evidence = _operation_consent_and_scope_valid(
         operation,
-        consent,
+        consent if consent_schema_valid else None,
     )
     provider_valid, provider_evidence = _operation_provider_valid(
         operation,
-        receipt_bundle,
+        receipt_bundle if receipt_schema_valid else None,
         capability.get("provider") if isinstance(capability, dict) else None,
         {"search.public_web", "search.private_corpus", "tools.read"},
     )
     operation_valid = bool(
         operation
         and operation_status in TERMINAL_OPERATION_STATUSES
-        and _nonempty_string(operation.get("receipt_id"))
-        and _nonempty_string(operation.get("provider"))
         and _unique_string_list(operation.get("scope"), min_items=1)
         and _unique_string_list(operation.get("consent_ids"), min_items=1)
         and _operation_privilege_flags_valid(operation)
@@ -2300,41 +2611,29 @@ def grade_evidence_gate(
     operation_matches_record = bool(
         operation
         and operation.get("scope") == scope
-        and (
-            operation_status not in {"completed", "partial"}
-            or operation.get("conflicts_and_gaps", []) == conflicts
-        )
+        and operation.get("conflicts_and_gaps", []) == conflicts
     )
-    capability_called = bool(record.get("capability_called"))
+    capability_called = record.get("capability_called") is True
     route_allowed = bool(
         unknown_type == "external_verifiable_fact"
         and decision_sensitive is True
         and bounded is True
         and value_exceeds_cost is True
+        and cost_disclosure_valid
         and capability_ready
+        and consent_schema_valid
         and consent_valid
     )
-    sources = operation.get("sources", []) if operation else []
-    source_records_valid = bool(
-        not capability_called
-        or (
-            operation_status in {"completed", "partial"}
-            and isinstance(sources, list)
-            and len(sources) > 0
-            and all(
-                _required_keys(source, {"title", "locator", "retrieved_at"})
-                and _nonempty_string(source.get("title"))
-                and _nonempty_string(source.get("locator"))
-                and _nonempty_string(source.get("retrieved_at"))
-                for source in sources
-            )
-        )
-        or operation_status in {"failed", "declined", "cancelled", "unavailable"}
+    terminal_valid, terminal_evidence = _evidence_terminal_valid(
+        operation,
+        supporting,
+        opposing,
+        conflicts,
+        impact,
     )
-    failed_or_declined = operation_status in {"failed", "declined", "cancelled", "unavailable"}
-    fallback = operation.get("fallback") if operation else ""
-    failure_degraded = not failed_or_declined or _nonempty_string(fallback)
     return [
+        consent_schema_check,
+        receipt_schema_check,
         _check(
             "Evidence Gate 只路由决定敏感的外部可验证事实",
             unknown_type == "external_verifiable_fact" and decision_sensitive is True,
@@ -2346,25 +2645,39 @@ def grade_evidence_gate(
             bool(
                 _nonempty_string(decision)
                 and _nonempty_string(question)
-                and _string_list(scope, min_items=1)
-                and _string_list(stop_conditions, min_items=1)
-                and _string_list(source_requirements, min_items=1)
+                and _unique_string_list(scope, min_items=1)
+                and _unique_string_list(stop_conditions, min_items=1)
+                and _unique_string_list(source_requirements, min_items=1)
                 and bounded is True
             ),
             f"decision={decision!r}；scope={scope!r}；stop={stop_conditions!r}；sources={source_requirements!r}",
             severe=True,
         ),
         _check(
+            "Evidence Gate 在授权前披露具体成本与延迟",
+            cost_disclosure_valid,
+            (
+                f"cost_and_latency_disclosure={cost_and_latency_disclosure!r}；"
+                f"disclosure_timing={disclosure_timing!r}"
+            ),
+            severe=True,
+        ),
+        _check(
             "Evidence Gate 能力可用且已取得本次能力授权",
             route_allowed,
-            f"capability_ready={capability_ready}；consent={consent_evidence}；value_exceeds_cost={value_exceeds_cost!r}",
+            (
+                f"capability_ready={capability_ready}；consent={consent_evidence}；"
+                f"value_exceeds_cost={value_exceeds_cost!r}；"
+                f"cost_disclosure_valid={cost_disclosure_valid}"
+            ),
             severe=True,
         ),
         _check(
             "Evidence Gate 真实调用具有授权关联、同一 provider、终态研究回执且不越权",
-            (not capability_called and not operation) or (
-                capability_called and operation_valid and operation_matches_record
-            ),
+            capability_called
+            and receipt_schema_valid
+            and operation_valid
+            and operation_matches_record,
             (
                 f"capability_called={capability_called}；operation_status={operation_status!r}；"
                 f"operation_valid={operation_valid}；operation_matches_record={operation_matches_record}；"
@@ -2373,28 +2686,27 @@ def grade_evidence_gate(
             severe=True,
         ),
         _check(
+            "Evidence Gate 终态、材料、冲突、判断影响与降级一致",
+            terminal_valid and _nonempty_string(evidence_date),
+            f"terminal={terminal_evidence}；evidence_date={evidence_date!r}",
+            severe=True,
+        ),
+        _check(
             "Evidence Gate 记录支持、反对、冲突、日期和判断影响",
-            bool(
-                _string_list(supporting)
-                and _string_list(opposing)
-                and _string_list(conflicts)
-                and _nonempty_string(evidence_date)
-                and impact in {"changed", "unchanged", "uncertain"}
-                and source_records_valid
-            ),
-            f"supporting={supporting!r}；opposing={opposing!r}；conflicts={conflicts!r}；date={evidence_date!r}；impact={impact!r}",
+            terminal_valid and _nonempty_string(evidence_date),
+            f"terminal={terminal_evidence}；evidence_date={evidence_date!r}",
             severe=True,
         ),
         _check(
             "Evidence Gate 失败或拒绝后保留未知并给出降级",
-            failure_degraded,
-            f"status={operation_status!r}；fallback={fallback!r}",
+            terminal_valid,
+            str(terminal_evidence),
             severe=True,
         ),
         _check(
             "Evidence Gate 回执能力状态使用稳定枚举",
-            _capabilities_valid(receipt_bundle),
-            f"capabilities={(receipt_bundle.get('capabilities') if receipt_bundle else None)!r}",
+            receipt_schema_valid and _capabilities_valid(receipt_bundle),
+            f"capabilities={(receipt_bundle.get('capabilities') if isinstance(receipt_bundle, dict) else None)!r}",
         ),
     ]
 
@@ -2422,7 +2734,7 @@ def _agent_counts_valid(counts: object) -> tuple[bool, dict[str, object]]:
         main == 1
         and min(planned, started, completed, failed, actual_total) >= 0
         and started <= planned
-        and completed + failed <= started
+        and completed + failed == started
         and actual_total == 1 + started
     )
     return passed, dict(counts)
@@ -2433,6 +2745,16 @@ def grade_participation_gate(
     consent: dict[str, object] | None,
     receipt_bundle: dict[str, object] | None,
 ) -> list[Check]:
+    consent_schema_check, consent_schema_valid = _schema_check(
+        "Participation Gate consent 符合 canonical schema",
+        consent,
+        "consent.schema.json",
+    )
+    receipt_schema_check, receipt_schema_valid = _schema_check(
+        "Participation Gate receipt bundle 符合 canonical schema",
+        receipt_bundle,
+        "receipts.schema.json",
+    )
     tasks = record.get("tasks")
     independent_task_count = record.get("independent_task_count")
     user_total_limit = record.get("user_total_limit")
@@ -2463,7 +2785,7 @@ def grade_participation_gate(
         )
     formula_valid = numbers_valid and planned_additional == expected_additional
     consent_valid, consent_evidence = _consent_contract(consent, "participation_delegation")
-    operation = _find_operation(receipt_bundle, "delegation")
+    operation = _find_operation(receipt_bundle, "delegation") if receipt_schema_valid else None
     counts_valid, counts_evidence = _agent_counts_valid(
         operation.get("agent_counts") if operation else None
     )
@@ -2474,10 +2796,14 @@ def grade_participation_gate(
     )
     no_recursive = record.get("recursive_delegation_allowed") is False
     task_payloads = record.get("agent_payloads")
-    payloads_valid = bool(
+    payloads_well_formed = bool(
         isinstance(task_payloads, list)
-        and len(task_payloads) == planned_additional
         and all(_agent_payload_valid(payload) for payload in task_payloads)
+    )
+    payload_questions = (
+        [payload["assigned_question"] for payload in task_payloads]
+        if payloads_well_formed
+        else []
     )
     data_boundaries = record.get("data_boundaries")
     excluded_data = record.get("excluded_data")
@@ -2503,66 +2829,100 @@ def grade_participation_gate(
         consent,
     )
     receipt_tasks_valid = False
+    payloads_match_completed_tasks = False
+    completed_tasks = operation.get("completed_tasks") if operation else None
+    failed_tasks = operation.get("failed_tasks") if operation else None
     task_evidence: dict[str, object] = {"reason": "缺少 delegation operation"}
     if operation:
-        completed_tasks = operation.get("completed_tasks")
-        failed_tasks = operation.get("failed_tasks")
         counts = operation.get("agent_counts")
-        task_lists_valid = bool(
-            _unique_string_list(completed_tasks)
+        task_lists_typed = bool(
+            _unique_string_list(tasks, min_items=1)
+            and _unique_string_list(completed_tasks)
             and _unique_string_list(failed_tasks)
+        )
+        task_lists_valid = bool(
+            task_lists_typed
             and not (set(completed_tasks) & set(failed_tasks))
-            and set(completed_tasks) | set(failed_tasks) <= set(tasks or [])
+            and (set(completed_tasks) | set(failed_tasks)) <= set(tasks)
+        )
+        payloads_match_completed_tasks = bool(
+            task_lists_valid
+            and payloads_well_formed
+            and len(payload_questions) == len(set(payload_questions))
+            and set(payload_questions) == set(completed_tasks)
         )
         terminal_counts_match = bool(
-            isinstance(counts, dict)
+            task_lists_valid
+            and isinstance(counts, dict)
             and len(completed_tasks) == counts.get("completed_additional")
             and len(failed_tasks) == counts.get("failed_additional")
             and len(completed_tasks) + len(failed_tasks) == counts.get("started_additional")
         )
         started = counts.get("started_additional") if isinstance(counts, dict) else None
         planned = counts.get("planned_additional") if isinstance(counts, dict) else None
+        completed_count = counts.get("completed_additional") if isinstance(counts, dict) else None
+        failed_count = counts.get("failed_additional") if isinstance(counts, dict) else None
         status_matches = bool(
             operation_status in TERMINAL_OPERATION_STATUSES
             and (
                 (
                     operation_status == "completed"
                     and started == planned == planned_additional
-                    and not failed_tasks
-                    and len(completed_tasks) == planned_additional
+                    and completed_count == started
+                    and failed_count == 0
                 )
                 or (
                     operation_status == "partial"
                     and isinstance(started, int)
-                    and started > 0
-                    and (started < planned_additional or bool(failed_tasks))
+                    and isinstance(completed_count, int)
+                    and completed_count >= 1
+                    and (started < planned or bool(failed_count))
                 )
                 or (
                     operation_status == "failed"
-                    and not completed_tasks
-                    and (started == 0 or bool(failed_tasks))
+                    and completed_count == 0
+                    and (
+                        started == 0
+                        or (
+                            isinstance(started, int)
+                            and isinstance(failed_count, int)
+                            and failed_count == started
+                        )
+                    )
                 )
                 or (
                     operation_status in {"declined", "cancelled", "unavailable"}
-                    and started == 0
-                    and not completed_tasks
-                    and not failed_tasks
+                    and started == completed_count == failed_count == 0
                 )
             )
         )
-        fallback_required = operation_status != "completed"
+        gaps = operation.get("conflicts_and_gaps")
+        fallback = operation.get("fallback")
+        gap_and_fallback_valid = bool(
+            (operation_status == "completed" and _string_list(gaps) and fallback == "")
+            or (
+                operation_status in {"partial", "failed", "declined", "cancelled", "unavailable"}
+                and _unique_string_list(gaps, min_items=1)
+                and _nonempty_string(fallback)
+            )
+        )
         receipt_tasks_valid = bool(
             task_lists_valid
             and terminal_counts_match
             and status_matches
-            and (not fallback_required or _nonempty_string(operation.get("fallback")))
+            and gap_and_fallback_valid
         )
         task_evidence = {
             "status": operation_status,
+            "task_lists_typed": task_lists_typed,
             "completed_tasks": completed_tasks,
             "failed_tasks": failed_tasks,
+            "payload_questions": payload_questions,
+            "payloads_match_completed_tasks": payloads_match_completed_tasks,
             "terminal_counts_match": terminal_counts_match,
-            "fallback": operation.get("fallback"),
+            "status_matches": status_matches,
+            "conflicts_and_gaps": gaps,
+            "fallback": fallback,
         }
     operation_valid = bool(
         operation
@@ -2573,11 +2933,21 @@ def grade_participation_gate(
         and consent_scope_valid
         and receipt_tasks_valid
         and _operation_privilege_flags_valid(operation)
+        and consent_schema_valid
         and isinstance(consent, dict)
         and isinstance(consent.get("scope"), dict)
-        and set(tasks or []) <= set(consent["scope"].get("tasks", []))
+        and _unique_string_list(tasks, min_items=1)
+        and _unique_string_list(consent["scope"].get("tasks"))
+        and set(tasks) <= set(consent["scope"].get("tasks"))
+    )
+    synthesis_valid, synthesis_evidence = _participation_synthesis_valid(
+        record.get("synthesis"),
+        completed_tasks,
+        failed_tasks,
     )
     return [
+        consent_schema_check,
+        receipt_schema_check,
         _check(
             "Participation Gate 只为不重复的独立增量任务升级",
             bool(
@@ -2614,8 +2984,14 @@ def grade_participation_gate(
         ),
         _check(
             "Participation Gate 额外 Agent 不递归委派且只收最小上下文",
-            no_recursive and payloads_valid,
-            f"recursive_allowed={record.get('recursive_delegation_allowed')!r}；payloads_valid={payloads_valid}",
+            no_recursive and payloads_well_formed,
+            f"recursive_allowed={record.get('recursive_delegation_allowed')!r}；payloads_well_formed={payloads_well_formed}",
+            severe=True,
+        ),
+        _check(
+            "Participation Gate payload 只对应实际完成且唯一的任务",
+            payloads_match_completed_tasks,
+            f"payload_questions={payload_questions!r}；tasks={task_evidence}",
             severe=True,
         ),
         _check(
@@ -2629,9 +3005,12 @@ def grade_participation_gate(
             severe=True,
         ),
         _check(
-            "Participation Gate 由主 Agent 综合且不按多数票",
-            no_vote and _nonempty_string(record.get("synthesis")),
-            f"aggregation={record.get('aggregation')!r}；synthesis={record.get('synthesis')!r}",
+            "Participation Gate 声明 synthesis_not_vote 且结构化综合绑定实际完成任务与判断闭环",
+            no_vote and synthesis_valid,
+            (
+                f"aggregation={record.get('aggregation')!r}；"
+                f"synthesis={synthesis_evidence}"
+            ),
             severe=True,
         ),
         _check(
@@ -2659,12 +3038,16 @@ def _consent_bundle_by_id(
             continue
         consent_id = consent.get("consent_id")
         expected_type = consent.get("consent_type")
-        if not _nonempty_string(consent_id) or consent_id in by_id or expected_type not in CONSENT_TYPES:
+        if (
+            not _nonempty_string(consent_id)
+            or consent_id in by_id
+            or expected_type not in CONSENT_TYPES
+        ):
             valid = False
             continue
         contract_valid, _ = _consent_contract(consent, expected_type)
         valid = valid and contract_valid
-        by_id[consent_id] = consent
+        by_id[str(consent_id)] = consent
     return valid, by_id, {"count": len(consents), "ids": sorted(by_id)}
 
 
@@ -2767,12 +3150,170 @@ def _project_operation_link_valid(
     )
 
 
+def _project_evidence_source_backed(
+    evidence_item_ids: object,
+    evidence_by_id: dict[str, dict[str, object]],
+    sources_by_id: dict[str, dict[str, object]],
+    operations: dict[str, dict[str, object]],
+    *,
+    allowed_receipt_ids: set[str] | None = None,
+) -> bool:
+    if not _unique_string_list(evidence_item_ids, min_items=1):
+        return False
+    for evidence_id in evidence_item_ids:
+        item = evidence_by_id.get(evidence_id)
+        source_ids = item.get("source_ids") if isinstance(item, dict) else None
+        if not _unique_string_list(source_ids, min_items=1):
+            return False
+        for source_id in source_ids:
+            source = sources_by_id.get(source_id)
+            if (
+                source is None
+                or (
+                    allowed_receipt_ids is not None
+                    and source.get("receipt_id") not in allowed_receipt_ids
+                )
+                or not _source_link_valid(source, operations)
+            ):
+                return False
+    return True
+
+
+def _project_evidence_states(
+    evidence_item_ids: object,
+    evidence_by_id: dict[str, dict[str, object]],
+) -> set[str] | None:
+    if not _unique_string_list(evidence_item_ids):
+        return None
+    items = [evidence_by_id.get(evidence_id) for evidence_id in evidence_item_ids]
+    if any(item is None for item in items):
+        return None
+    states = {item.get("state") for item in items if isinstance(item, dict)}
+    if not states <= PROJECT_EVIDENCE_STATES:
+        return None
+    return states
+
+
+def _project_layer_evidence_valid(
+    layer: object,
+    evidence_by_id: dict[str, dict[str, object]],
+) -> bool:
+    if not isinstance(layer, dict):
+        return False
+    states = _project_evidence_states(layer.get("evidence_item_ids"), evidence_by_id)
+    if states is None:
+        return False
+    status = layer.get("status")
+    if status == "supported":
+        return states == {"supports"}
+    if status == "unsupported":
+        return states == {"opposes"}
+    if status == "conflicted":
+        return "conflicts" in states or {"supports", "opposes"} <= states
+    if status == "unknown":
+        return not states or "unknown" in states
+    return False
+
+
+def _project_trial_evidence_valid(
+    result: object,
+    evidence_item_ids: object,
+    evidence_by_id: dict[str, dict[str, object]],
+) -> bool:
+    states = _project_evidence_states(evidence_item_ids, evidence_by_id)
+    if states is None:
+        return False
+    if result == "solves_core":
+        return states == {"supports"}
+    if result == "partially_solves":
+        return "conflicts" in states or {"supports", "opposes"} <= states
+    if result == "does_not_solve":
+        return states == {"opposes"}
+    if result == "unknown":
+        return not states or "unknown" in states
+    return False
+
+
+def _project_adversarial_operation_valid(
+    adversarial: dict[str, object],
+    *,
+    consents: dict[str, dict[str, object]],
+    operations: dict[str, dict[str, object]],
+    receipt_bundle: dict[str, object] | None,
+    expected_status: str,
+) -> bool:
+    consent_id = adversarial.get("consent_id")
+    receipt_id = adversarial.get("receipt_id")
+    if not _project_operation_link_valid(
+        receipt_id=receipt_id,
+        consent_id=consent_id,
+        expected_kind="delegation",
+        consent_type="participation_delegation",
+        consents=consents,
+        operations=operations,
+        receipt_bundle=receipt_bundle,
+        allowed_statuses={expected_status},
+    ):
+        return False
+    consent = consents.get(consent_id)
+    operation = operations.get(receipt_id)
+    if not isinstance(consent, dict) or not isinstance(operation, dict):
+        return False
+    scope = consent.get("scope")
+    authorized_tasks = scope.get("tasks") if isinstance(scope, dict) else None
+    completed_tasks = operation.get("completed_tasks")
+    failed_tasks = operation.get("failed_tasks")
+    counts = operation.get("agent_counts")
+    counts_valid, _ = _agent_counts_valid(counts)
+    if not (
+        _unique_string_list(authorized_tasks, min_items=1)
+        and len(authorized_tasks) == 1
+        and operation.get("scope") == authorized_tasks
+        and operation.get("consent_ids") == [consent_id]
+        and _unique_string_list(completed_tasks)
+        and _unique_string_list(failed_tasks)
+        and counts_valid
+        and isinstance(counts, dict)
+        and counts.get("planned_additional") == 1
+    ):
+        return False
+    task = authorized_tasks[0]
+    if expected_status == "completed":
+        payload = adversarial.get("payload")
+        return bool(
+            _agent_payload_valid(payload)
+            and payload.get("assigned_question") == task
+            and completed_tasks == [task]
+            and failed_tasks == []
+            and counts.get("started_additional") == 1
+            and counts.get("completed_additional") == 1
+            and counts.get("failed_additional") == 0
+            and counts.get("actual_total") == 2
+            and operation.get("fallback") == ""
+        )
+    if expected_status == "failed":
+        started = counts.get("started_additional")
+        expected_failed_tasks = [task] if started == 1 else []
+        return bool(
+            started in {0, 1}
+            and completed_tasks == []
+            and failed_tasks == expected_failed_tasks
+            and counts.get("completed_additional") == 0
+            and counts.get("failed_additional") == started
+            and counts.get("actual_total") == 1 + started
+            and _nonempty_string(operation.get("fallback"))
+        )
+    return False
+
+
 def _project_ceiling(
     layers: dict[str, object],
     search_passes: object,
     candidates: object,
     alternative_trial: object,
     adversarial_review: object,
+    *,
+    receipt_backed_trial_evidence: bool,
 ) -> tuple[int, list[str]]:
     reasons: list[str] = []
     problem_existence = layers.get("problem_existence")
@@ -2847,8 +3388,14 @@ def _project_ceiling(
         return 1, reasons
     if trial_result in {"solves_core", "partially_solves"}:
         return 2, ["现实替代经同任务试用可用"]
-    if trial_status in {"receipt_backed", "user_reported"} and trial_result == "does_not_solve":
-        return 3, ["完整证据链支持进入正式自研比较"]
+    if (
+        trial_status == "receipt_backed"
+        and trial_result == "does_not_solve"
+        and receipt_backed_trial_evidence
+    ):
+        return 3, ["receipt-backed 且 source-backed 的试用证据支持进入正式自研比较"]
+    if trial_status == "user_reported" and trial_result == "does_not_solve":
+        return 1, ["用户报告可保留为输入，但没有 receipt/source chain 时最多有限验证"]
     return 1, ["试用证据不足以升级承诺"]
 
 
@@ -2858,9 +3405,41 @@ def grade_project_viability(
     receipt_bundle: dict[str, object] | None,
 ) -> list[Check]:
     top_level_valid = _exact_keys(record, PROJECT_VIABILITY_KEYS)
-    contract_version_valid = record.get("contract_version") == "0.4.0"
+    contract_version_valid = record.get("contract_version") == "0.4.1"
+    consent_instances = (
+        consent_bundle.get("consents")
+        if _exact_keys(consent_bundle, {"consents"})
+        and isinstance(consent_bundle.get("consents"), list)
+        else []
+    )
+    consent_schema_errors = [
+        error
+        for index, item in enumerate(consent_instances)
+        for error in (
+            f"consents.{index}.{message}"
+            for message in _schema_errors(item, "consent.schema.json")
+        )
+    ]
+    consent_schema_valid = bool(
+        _exact_keys(consent_bundle, {"consents"})
+        and isinstance(consent_bundle.get("consents"), list)
+        and not consent_schema_errors
+    )
+    consent_schema_check = _check(
+        "PROJECT_VIABILITY consents 分别符合 canonical schema",
+        consent_schema_valid,
+        "canonical schema 校验通过" if consent_schema_valid else "；".join(consent_schema_errors or ["consent bundle 形状无效"]),
+        severe=True,
+    )
+    receipt_schema_check, receipt_schema_valid = _schema_check(
+        "PROJECT_VIABILITY receipt bundle 符合 canonical schema",
+        receipt_bundle,
+        "receipts.schema.json",
+    )
     consent_bundle_valid, consents, consent_evidence = _consent_bundle_by_id(consent_bundle)
-    operation_bundle_valid, operations, operation_evidence = _operations_by_receipt_id(receipt_bundle)
+    operation_bundle_valid, operations, operation_evidence = _operations_by_receipt_id(
+        receipt_bundle if receipt_schema_valid else None
+    )
     all_operation_consents_resolve = bool(
         operation_bundle_valid
         and all(
@@ -2870,8 +3449,9 @@ def grade_project_viability(
         )
     )
     receipt_contract_valid = bool(
-        receipt_bundle
-        and receipt_bundle.get("contract_version") == "0.4.0"
+        receipt_schema_valid
+        and receipt_bundle
+        and receipt_bundle.get("contract_version") == "0.4.1"
         and _capabilities_valid(receipt_bundle)
         and all_operation_consents_resolve
         and all(
@@ -2940,6 +3520,7 @@ def grade_project_viability(
             _exact_keys(layers.get(name), PROJECT_LAYER_KEYS)
             and layers[name].get("status") in {"supported", "unsupported", "conflicted", "unknown"}
             and _refs_exist(layers[name].get("evidence_item_ids"), evidence_ids)
+            and _project_layer_evidence_valid(layers[name], evidence_by_id)
             for name in PROJECT_VALIDATION_LAYERS
         )
     )
@@ -3074,6 +3655,29 @@ def grade_project_viability(
     )
 
     trial = record.get("alternative_trial")
+    trial_evidence_ids = (
+        trial.get("evidence_item_ids") if isinstance(trial, dict) else None
+    )
+    trial_receipt_ids = trial.get("receipt_ids") if isinstance(trial, dict) else None
+    trial_evidence_direction_valid = bool(
+        isinstance(trial, dict)
+        and _project_trial_evidence_valid(
+            trial.get("result"),
+            trial_evidence_ids,
+            evidence_by_id,
+        )
+    )
+    receipt_backed_trial_evidence = bool(
+        _unique_string_list(trial_receipt_ids, min_items=1)
+        and _project_evidence_source_backed(
+            trial_evidence_ids,
+            evidence_by_id,
+            sources_by_id,
+            operations,
+            allowed_receipt_ids=set(trial_receipt_ids),
+        )
+        and trial_evidence_direction_valid
+    )
     trial_valid = bool(
         _exact_keys(trial, PROJECT_TRIAL_KEYS)
         and trial.get("status") in PROJECT_TRIAL_STATUSES
@@ -3082,6 +3686,7 @@ def grade_project_viability(
         and _unique_string_list(trial.get("success_criteria"), min_items=1)
         and trial.get("result") in PROJECT_TRIAL_RESULTS
         and _refs_exist(trial.get("evidence_item_ids"), evidence_ids)
+        and trial_evidence_direction_valid
         and _unique_string_list(trial.get("consent_ids"))
         and _unique_string_list(trial.get("receipt_ids"))
         and (
@@ -3106,17 +3711,28 @@ def grade_project_viability(
                         trial.get("consent_ids"), trial.get("receipt_ids")
                     )
                 )
+                and receipt_backed_trial_evidence
             )
             or (
                 trial.get("status") == "user_reported"
                 and not trial.get("consent_ids")
                 and not trial.get("receipt_ids")
-                and _nonempty_string(trial.get("result"))
+                and all(
+                    not evidence_by_id[evidence_id].get("source_ids")
+                    for evidence_id in trial.get("evidence_item_ids")
+                )
+                and trial.get("result") in {
+                    "solves_core",
+                    "partially_solves",
+                    "does_not_solve",
+                }
+                and _nonempty_string(trial.get("reason"))
             )
             or (
                 trial.get("status") == "not_performed"
                 and not trial.get("consent_ids")
                 and not trial.get("receipt_ids")
+                and not trial.get("evidence_item_ids")
                 and trial.get("result") == "unknown"
                 and _nonempty_string(trial.get("reason"))
             )
@@ -3141,16 +3757,12 @@ def grade_project_viability(
             or (
                 adversarial.get("required") is True
                 and adversarial.get("status") == "completed"
-                and _agent_payload_valid(adversarial.get("payload"))
-                and _project_operation_link_valid(
-                    receipt_id=adversarial.get("receipt_id"),
-                    consent_id=adversarial.get("consent_id"),
-                    expected_kind="delegation",
-                    consent_type="participation_delegation",
+                and _project_adversarial_operation_valid(
+                    adversarial,
                     consents=consents,
                     operations=operations,
                     receipt_bundle=receipt_bundle,
-                    allowed_statuses={"completed"},
+                    expected_status="completed",
                 )
             )
             or (
@@ -3166,17 +3778,13 @@ def grade_project_viability(
                 and adversarial.get("status") == "failed"
                 and adversarial.get("payload") is None
                 and _nonempty_string(adversarial.get("reason"))
-                and _project_operation_link_valid(
-                    receipt_id=adversarial.get("receipt_id"),
-                    consent_id=adversarial.get("consent_id"),
-                    expected_kind="delegation",
-                    consent_type="participation_delegation",
+                and _project_adversarial_operation_valid(
+                    adversarial,
                     consents=consents,
                     operations=operations,
                     receipt_bundle=receipt_bundle,
-                    allowed_statuses={"failed"},
+                    expected_status="failed",
                 )
-                and _nonempty_string(operations[adversarial.get("receipt_id")].get("fallback"))
             )
         )
     )
@@ -3203,9 +3811,42 @@ def grade_project_viability(
         candidates,
         trial,
         adversarial,
+        receipt_backed_trial_evidence=receipt_backed_trial_evidence,
     )
     direction = commitment.get("direction") if isinstance(commitment, dict) else None
     chosen_rank = commitment.get("chosen_rank") if isinstance(commitment, dict) else None
+    commitment_evidence_ids = (
+        commitment.get("evidence_item_ids") if isinstance(commitment, dict) else None
+    )
+    commitment_evidence_refs_valid = _refs_exist(
+        commitment_evidence_ids,
+        evidence_ids,
+    )
+    commitment_evidence_source_backed = _project_evidence_source_backed(
+        commitment_evidence_ids,
+        evidence_by_id,
+        sources_by_id,
+        operations,
+    )
+    trial_result = trial.get("result") if isinstance(trial, dict) else None
+    commitment_trial_evidence_valid = bool(
+        _unique_string_list(commitment_evidence_ids, min_items=1)
+        and _unique_string_list(trial_evidence_ids, min_items=1)
+        and set(commitment_evidence_ids) == set(trial_evidence_ids)
+        and trial_evidence_direction_valid
+    )
+    commitment_direction_valid = bool(
+        (
+            chosen_rank == 2
+            and trial_result in {"solves_core", "partially_solves"}
+        )
+        or (
+            chosen_rank == 3
+            and trial_result == "does_not_solve"
+            and receipt_backed_trial_evidence
+        )
+    )
+    source_backing_required = isinstance(chosen_rank, int) and chosen_rank >= 2
     commitment_valid = bool(
         _exact_keys(commitment, PROJECT_COMMITMENT_KEYS)
         and direction in PROJECT_COMMITMENT_DIRECTIONS
@@ -3214,13 +3855,23 @@ def grade_project_viability(
         and chosen_rank == PROJECT_COMMITMENT_DIRECTIONS[direction]
         and chosen_rank <= ceiling_rank
         and _nonempty_string(commitment.get("rationale"))
-        and _refs_exist(commitment.get("evidence_item_ids"), evidence_ids)
+        and commitment_evidence_refs_valid
+        and (
+            not source_backing_required
+            or (
+                commitment_evidence_source_backed
+                and commitment_trial_evidence_valid
+                and commitment_direction_valid
+            )
+        )
         and _unique_string_list(commitment.get("upgrade_conditions"), min_items=1)
     )
 
     return [
+        consent_schema_check,
+        receipt_schema_check,
         _check(
-            "PROJECT_VIABILITY sidecar 顶层 exact keys 与 v0.4.0 identity 正确",
+            "PROJECT_VIABILITY sidecar 顶层 exact keys 与 v0.4.1 identity 正确",
             top_level_valid and contract_version_valid,
             f"keys={sorted(record)}；contract_version={record.get('contract_version')!r}",
             severe=True,
@@ -3276,13 +3927,161 @@ def grade_project_viability(
         _check(
             "PROJECT_VIABILITY chosen commitment 不超过 computed ceiling",
             commitment_valid,
-            f"direction={direction!r}；chosen_rank={chosen_rank!r}；ceiling_rank={ceiling_rank}；reasons={ceiling_reasons}",
+            (
+                f"direction={direction!r}；chosen_rank={chosen_rank!r}；"
+                f"ceiling_rank={ceiling_rank}；source_backing_required={source_backing_required}；"
+                f"source_backed={commitment_evidence_source_backed}；"
+                f"trial_evidence={commitment_trial_evidence_valid}；"
+                f"direction_valid={commitment_direction_valid}；"
+                f"reasons={ceiling_reasons}"
+            ),
             severe=True,
         ),
     ]
 
 
-def grade_human_review(record: dict[str, object]) -> list[Check]:
+def _operation_links_consents(
+    operation: dict[str, object] | None,
+    consents: tuple[dict[str, object] | None, ...],
+) -> tuple[bool, dict[str, object]]:
+    consent_ids = operation.get("consent_ids") if operation else None
+    expected_ids = [
+        consent.get("consent_id") if isinstance(consent, dict) else None
+        for consent in consents
+    ]
+    linked = bool(
+        _unique_string_list(consent_ids, min_items=len(consents))
+        and len(consent_ids) == len(consents)
+        and all(_nonempty_string(consent_id) for consent_id in expected_ids)
+        and set(consent_ids) == set(expected_ids)
+    )
+    scopes_valid = bool(
+        operation
+        and _unique_string_list(operation.get("scope"), min_items=1)
+        and all(
+            isinstance(consent, dict)
+            and isinstance(consent.get("scope"), dict)
+            and set(consent["scope"].get("operations", []))
+            <= set(operation.get("scope", []))
+            and set(consent["scope"].get("resources", []))
+            <= set(operation.get("scope", []))
+            and set(consent["scope"].get("tasks", []))
+            <= set(operation.get("scope", []))
+            for consent in consents
+        )
+    )
+    return linked and scopes_valid, {
+        "operation_consent_ids": consent_ids,
+        "expected_consent_ids": expected_ids,
+        "scopes_valid": scopes_valid,
+    }
+
+
+def _human_target_channel_valid(
+    record: dict[str, object],
+    participation_consent: dict[str, object] | None,
+    external_action_consent: dict[str, object] | None,
+    operation: dict[str, object] | None,
+) -> tuple[bool, dict[str, object]]:
+    participation_scope = (
+        participation_consent.get("scope")
+        if isinstance(participation_consent, dict)
+        else None
+    )
+    external_scope = (
+        external_action_consent.get("scope")
+        if isinstance(external_action_consent, dict)
+        else None
+    )
+    participation_resources = (
+        participation_scope.get("resources")
+        if isinstance(participation_scope, dict)
+        else None
+    )
+    external_resources = (
+        external_scope.get("resources")
+        if isinstance(external_scope, dict)
+        else None
+    )
+    participation_tasks = (
+        participation_scope.get("tasks")
+        if isinstance(participation_scope, dict)
+        else None
+    )
+    external_tasks = (
+        external_scope.get("tasks")
+        if isinstance(external_scope, dict)
+        else None
+    )
+    participation_operations = (
+        participation_scope.get("operations")
+        if isinstance(participation_scope, dict)
+        else None
+    )
+    external_operations = (
+        external_scope.get("operations")
+        if isinstance(external_scope, dict)
+        else None
+    )
+    question = record.get("question")
+    shape_valid = bool(
+        _nonempty_string(question)
+        and _unique_string_list(participation_resources, min_items=1)
+        and len(participation_resources) == 1
+        and _unique_string_list(external_resources, min_items=2)
+        and len(external_resources) == 2
+        and external_resources[0] == participation_resources[0]
+        and external_resources[1] != external_resources[0]
+        and participation_tasks == [question]
+        and external_tasks == [question]
+        and _unique_string_list(participation_operations, min_items=1)
+        and len(participation_operations) == 1
+        and _unique_string_list(external_operations, min_items=1)
+        and len(external_operations) == 1
+        and participation_operations[0] != external_operations[0]
+    )
+    target = participation_resources[0] if shape_valid else None
+    channel = external_resources[1] if shape_valid else None
+    expected_scope = (
+        {
+            question,
+            target,
+            channel,
+            participation_operations[0],
+            external_operations[0],
+        }
+        if shape_valid
+        else set()
+    )
+    operation_scope = operation.get("scope") if isinstance(operation, dict) else None
+    trace_valid = bool(
+        shape_valid
+        and _unique_string_list(operation_scope, min_items=len(expected_scope))
+        and len(operation_scope) == len(expected_scope)
+        and set(operation_scope) == expected_scope
+    )
+    rendered_valid = bool(
+        shape_valid
+        and target in record.get("sender_and_collector", "")
+        and channel in record.get("sender_and_collector", "")
+        and question in record.get("forwardable_draft", "")
+    )
+    return shape_valid and trace_valid and rendered_valid, {
+        "question": question,
+        "target": target,
+        "channel": channel,
+        "operation_scope": operation_scope,
+        "trace_valid": trace_valid,
+        "rendered_valid": rendered_valid,
+    }
+
+
+def grade_human_review(
+    record: dict[str, object],
+    participation_consent: dict[str, object] | None = None,
+    external_action_consent: dict[str, object] | None = None,
+    receipt_bundle: dict[str, object] | None = None,
+) -> list[Check]:
     required_text = (
         "why_needed",
         "question",
@@ -3292,6 +4091,97 @@ def grade_human_review(record: dict[str, object]) -> list[Check]:
         "sender_and_collector",
         "forwardable_draft",
     )
+    draft_only = record.get("external_action_executed") is False
+    authorized_send = record.get("external_action_executed") is True
+    execution_inputs_absent = (
+        participation_consent is None
+        and external_action_consent is None
+        and receipt_bundle is None
+    )
+    participation_schema_check, participation_schema_valid = _schema_check(
+        "真人 authorized_send 的 participation consent 符合 canonical schema",
+        participation_consent,
+        "consent.schema.json",
+    ) if not draft_only else (
+        _check(
+            "真人 draft_only 不携带 execution consent 或 receipt",
+            execution_inputs_absent,
+            f"execution_inputs_absent={execution_inputs_absent}",
+            severe=True,
+        ),
+        execution_inputs_absent,
+    )
+    external_schema_check, external_schema_valid = _schema_check(
+        "真人 authorized_send 的 external-action consent 符合 canonical schema",
+        external_action_consent,
+        "consent.schema.json",
+    ) if not draft_only else (
+        _check(
+            "真人 draft_only 保持外部行动未执行",
+            record.get("external_action_executed") is False,
+            f"external_action_executed={record.get('external_action_executed')!r}",
+            severe=True,
+        ),
+        record.get("external_action_executed") is False,
+    )
+    receipt_schema_check, receipt_schema_valid = _schema_check(
+        "真人 authorized_send receipt bundle 符合 canonical schema",
+        receipt_bundle,
+        "receipts.schema.json",
+    ) if not draft_only else (
+        _check(
+            "真人参与默认只生成材料，不自动发送或联系",
+            execution_inputs_absent,
+            f"external_action_executed={record.get('external_action_executed')!r}；execution_inputs_absent={execution_inputs_absent}",
+            severe=True,
+        ),
+        execution_inputs_absent,
+    )
+    operation = (
+        _find_operation(receipt_bundle, "human_review")
+        if not draft_only and receipt_schema_valid
+        else None
+    )
+    consent_links_valid, consent_link_evidence = _operation_links_consents(
+        operation,
+        (participation_consent, external_action_consent),
+    ) if not draft_only else (execution_inputs_absent, {"draft_only": True})
+    provider_valid, provider_evidence = _operation_provider_valid(
+        operation,
+        receipt_bundle if receipt_schema_valid else None,
+        operation.get("provider") if operation else None,
+        {"humans.request_review"},
+    ) if not draft_only else (execution_inputs_absent, {"draft_only": True})
+    participation_valid, participation_evidence = _consent_contract(
+        participation_consent,
+        "participation_delegation",
+    ) if not draft_only else (execution_inputs_absent, {"draft_only": True})
+    external_valid, external_evidence = _consent_contract(
+        external_action_consent,
+        "external_action",
+    ) if not draft_only else (execution_inputs_absent, {"draft_only": True})
+    target_channel_valid, target_channel_evidence = _human_target_channel_valid(
+        record,
+        participation_consent,
+        external_action_consent,
+        operation,
+    ) if not draft_only else (execution_inputs_absent, {"draft_only": True})
+    authorized_send_valid = bool(
+        authorized_send
+        and participation_schema_valid
+        and external_schema_valid
+        and receipt_schema_valid
+        and participation_valid
+        and external_valid
+        and consent_links_valid
+        and provider_valid
+        and target_channel_valid
+        and operation
+        and operation.get("status") == "completed"
+        and operation.get("external_action_executed") is True
+        and operation.get("private_data_accessed") is False
+        and operation.get("fallback", "") == ""
+    )
     return [
         _check(
             "真人参与请求具有最小可转发合同",
@@ -3299,16 +4189,30 @@ def grade_human_review(record: dict[str, object]) -> list[Check]:
             f"fields={{field: bool(record.get(field)) for field in {required_text!r}}}",
             severe=True,
         ),
+        participation_schema_check,
+        external_schema_check,
+        receipt_schema_check,
         _check(
-            "真人参与默认只生成材料，不自动发送或联系",
-            record.get("external_action_executed") is False,
-            f"external_action_executed={record.get('external_action_executed')!r}",
+            "真人实际发送同时具有 participation 与 external-action 授权及双引用回执",
+            execution_inputs_absent if draft_only else authorized_send_valid,
+            (
+                f"draft_only={draft_only}；authorized_send={authorized_send}；"
+                f"participation={participation_evidence}；external={external_evidence}；"
+                f"links={consent_link_evidence}；provider={provider_evidence}；"
+                f"target_channel={target_channel_evidence}；"
+                f"operation_status={operation.get('status') if operation else None!r}"
+            ),
             severe=True,
         ),
     ]
 
 
 def grade_decision_record(record: dict[str, object]) -> list[Check]:
+    schema_check, schema_valid = _schema_check(
+        "DecisionRecord 符合 canonical schema",
+        record,
+        "decision-record.schema.json",
+    )
     required = {
         "contract_version",
         "topic",
@@ -3322,11 +4226,11 @@ def grade_decision_record(record: dict[str, object]) -> list[Check]:
         "participation_and_capabilities",
         "persistence",
     }
-    judgment = record.get("judgment")
-    evidence = record.get("evidence")
-    experiment = record.get("main_experiment")
-    participation = record.get("participation_and_capabilities")
-    persistence = record.get("persistence")
+    judgment = record.get("judgment") if schema_valid else None
+    evidence = record.get("evidence") if schema_valid else None
+    experiment = record.get("main_experiment") if schema_valid else None
+    participation = record.get("participation_and_capabilities") if schema_valid else None
+    persistence = record.get("persistence") if schema_valid else None
     evidence_valid = bool(
         _required_keys(evidence, {"confirmed_facts", "inferences", "assumptions", "unknowns", "sources"})
         and all(
@@ -3380,7 +4284,7 @@ def grade_decision_record(record: dict[str, object]) -> list[Check]:
             )
         )
         and participation.get("additional_agents_started") <= participation.get("additional_agents_planned")
-        and participation.get("additional_agents_completed") + participation.get("additional_agents_failed") <= participation.get("additional_agents_started")
+        and participation.get("additional_agents_completed") + participation.get("additional_agents_failed") == participation.get("additional_agents_started")
         and isinstance(participation.get("private_data_accessed"), bool)
         and isinstance(participation.get("external_action_executed"), bool)
         and _string_list(participation.get("consent_ids"))
@@ -3404,9 +4308,10 @@ def grade_decision_record(record: dict[str, object]) -> list[Check]:
         )
     )
     return [
+        schema_check,
         _check(
-            "DecisionRecord 使用 v0.4.0 且包含全部核心字段",
-            _required_keys(record, required) and record.get("contract_version") == "0.4.0",
+            "DecisionRecord 使用 v0.4.1 且包含全部核心字段",
+            schema_valid and _required_keys(record, required) and record.get("contract_version") == "0.4.1",
             f"缺少字段={sorted(required - set(record))}；version={record.get('contract_version')!r}",
             severe=True,
         ),
@@ -3447,6 +4352,8 @@ def grade(
     interaction: InteractionEvidence | None = None,
     answer_shape: str | None = None,
     checkpoint_context: CheckpointContext | None = None,
+    decision_record: dict[str, object] | None = None,
+    visible_snapshot: dict[str, object] | None = None,
 ) -> list[Check]:
     resolved_answer_shape = answer_shape or (
         "compatible-set" if stage == "R" else "open"
@@ -3473,7 +4380,14 @@ def grade(
             answer_shape=resolved_answer_shape,
         )
     if stage == "B":
-        return grade_b(text, already_executed, user_numbers, interaction=interaction)
+        return grade_b(
+            text,
+            already_executed,
+            user_numbers,
+            interaction=interaction,
+            decision_record=decision_record,
+            visible_snapshot=visible_snapshot,
+        )
     raise ValueError(f"不支持的阶段：{stage}")
 
 
@@ -3495,8 +4409,10 @@ def main() -> int:
     )
     parser.add_argument("--interaction-json", type=Path, help="CHECKPOINT/R/A/B 的本轮结构化交互证据 JSON")
     parser.add_argument("--context-json", type=Path, help="CHECKPOINT 的结构化会话上下文 JSON")
-    parser.add_argument("--consent-json", type=Path, help="Evidence / Participation 的授权记录或 PROJECT_VIABILITY consent bundle JSON")
-    parser.add_argument("--receipt-json", type=Path, help="Evidence / Participation / PROJECT_VIABILITY 的能力回执 JSON")
+    parser.add_argument("--decision-record-json", type=Path, help="B 的 canonical DecisionRecord JSON")
+    parser.add_argument("--visible-snapshot-json", type=Path, help="B 的用户可见快照投影 JSON")
+    parser.add_argument("--consent-json", type=Path, help="Evidence / Participation 的授权记录、HUMAN consent bundle 或 PROJECT_VIABILITY consent bundle JSON")
+    parser.add_argument("--receipt-json", type=Path, help="Evidence / Participation / HUMAN / PROJECT_VIABILITY 的能力回执 JSON")
     parser.add_argument("--cancelled-method", action="append", default=[])
     parser.add_argument("--confirmed-method", action="append", default=[])
     parser.add_argument("--recommended-method", action="append", default=[])
@@ -3537,8 +4453,26 @@ def main() -> int:
         else:
             if args.interaction_json is None:
                 parser.error("R/A/B 阶段必须提供 --interaction-json")
+            if args.stage == "B" and (
+                args.decision_record_json is None
+                or args.visible_snapshot_json is None
+            ):
+                parser.error(
+                    "B 阶段必须同时提供 --decision-record-json 和 "
+                    "--visible-snapshot-json"
+                )
             text = args.input.read_text(encoding="utf-8")
             interaction = parse_interaction_evidence(args.interaction_json)
+            decision_record = (
+                parse_json_object(args.decision_record_json, "B DecisionRecord")
+                if args.stage == "B"
+                else None
+            )
+            visible_snapshot = (
+                parse_json_object(args.visible_snapshot_json, "B visible snapshot")
+                if args.stage == "B"
+                else None
+            )
             checks = grade(
                 args.stage,
                 text,
@@ -3550,6 +4484,8 @@ def main() -> int:
                 args.r_mode,
                 interaction,
                 args.answer_shape,
+                decision_record=decision_record,
+                visible_snapshot=visible_snapshot,
             )
     else:
         record = parse_json_object(args.input, args.stage)
@@ -3565,12 +4501,41 @@ def main() -> int:
             else:
                 checks = grade_project_viability(record, consent, receipt)
         elif args.stage == "HUMAN":
-            checks = grade_human_review(record)
+            if (args.consent_json is None) != (args.receipt_json is None):
+                parser.error("HUMAN authorized_send 必须同时提供 --consent-json 和 --receipt-json")
+            if args.consent_json is None:
+                checks = grade_human_review(record)
+            else:
+                consent_bundle = parse_json_object(args.consent_json, "HUMAN consent bundle")
+                receipt = parse_json_object(args.receipt_json, "receipt")
+                consents = consent_bundle.get("consents")
+                if not _exact_keys(consent_bundle, {"consents"}) or not isinstance(consents, list):
+                    parser.error("HUMAN --consent-json 必须是仅含 consents 数组的对象")
+                participation_consents = [
+                    consent
+                    for consent in consents
+                    if isinstance(consent, dict)
+                    and consent.get("consent_type") == "participation_delegation"
+                ]
+                external_consents = [
+                    consent
+                    for consent in consents
+                    if isinstance(consent, dict)
+                    and consent.get("consent_type") == "external_action"
+                ]
+                if len(consents) != 2 or len(participation_consents) != 1 or len(external_consents) != 1:
+                    parser.error("HUMAN authorized_send 必须提供且仅提供一份 participation 与一份 external-action consent")
+                checks = grade_human_review(
+                    record,
+                    participation_consents[0],
+                    external_consents[0],
+                    receipt,
+                )
         else:
             checks = grade_decision_record(record)
     passed = sum(check.passed for check in checks)
     result = {
-        "contract_version": "0.4.0",
+        "contract_version": "0.4.1",
         "stage": args.stage,
         "expectations": [
             {key: value for key, value in asdict(check).items() if key != "severe"}

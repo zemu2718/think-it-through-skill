@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.4.0",
+  "contract_version": "0.4.1",
   "id": "b-experiment-and-feedback",
   "domain": "judgment-experiment-feedback",
   "already_executed": false,
@@ -48,34 +48,28 @@
     },
     {
       "user": "我点了‘这个方向符合我’，但补充一句：我刚拿到第一笔陌生客户付款，所以判断依据变了。",
-      "expected_stage": "R",
-      "r_mode": "method",
+      "expected_stage": "A",
       "input_precedence": "free-text-over-control",
       "host_capabilities": {
         "selection_control": "available",
         "host_free_text": true
       },
       "expected_interaction": {
-        "surface": "native-control",
-        "tool_call_observed": true,
-        "selection_mode": "multi",
-        "product_option_count": {
-          "min": 2,
-          "max": 4
-        },
-        "host_free_text_available": true,
-        "product_other_forbidden": true,
+        "surface": "free-answer",
+        "tool_call_observed": false,
+        "selection_mode": "none",
+        "product_option_count": 0,
         "semantic_paragraphs": true,
-        "question_is_last_paragraph": true,
-        "option_labels_parallel": true
+        "question_is_last_paragraph": true
       },
       "mechanical": [
-        "new_fact_starts_new_r",
+        "new_fact_returns_to-a",
+        "one_decision-sensitive-answer-slot",
         "does_not_auto_execute_experiment",
         "does_not_infer_external_authorization",
         "reroutes_with-new-evidence"
       ],
-      "answer_shape": "compatible-set"
+      "answer_shape": "open"
     }
   ],
   "feedback_routes": [
@@ -98,7 +92,7 @@
     {
       "direction_id": "adjust-next-step",
       "supplement_type": "none",
-      "expected_stage": "R-method",
+      "expected_stage": "await-supplement",
       "preserve_judgment": true,
       "text_overrode_selection": false,
       "authorization_effect": "none"
@@ -114,7 +108,7 @@
     {
       "direction_id": "accept",
       "supplement_type": "new-fact",
-      "expected_stage": "R-method",
+      "expected_stage": "A",
       "preserve_judgment": false,
       "text_overrode_selection": true,
       "authorization_effect": "none"
@@ -141,6 +135,7 @@
   "semantic": [
     "action-observe-review-serve-one-hypothesis",
     "feedback-does-not-create-fourth-stage",
-    "new-fact-can-change-judgment"
+    "adjust-without-supplement-waits",
+    "new-fact-returns-to-a"
   ]
 }

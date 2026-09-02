@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.4.0",
+  "contract_version": "0.4.1",
   "id": "native-control-and-fallback",
   "domain": "interaction-evidence",
   "cases": [
@@ -224,7 +224,233 @@
         "native_single_feedback",
         "stable_feedback_directions",
         "supplement_via_follow_up_message"
-      ]
+      ],
+      "decision_record": {
+        "contract_version": "0.4.1",
+        "topic": "是否继续开发当前产品",
+        "true_objectives": [
+          "验证陌生客户是否愿意付费"
+        ],
+        "decision": "继续开发还是先验证付费意愿",
+        "confirmed_methods": [
+          "two-sided-steelman"
+        ],
+        "judgment": {
+          "state": "small_test",
+          "recommendation": "先验证真实付款，再决定是否继续开发",
+          "rationale": [
+            "付费意愿仍是会改变决定的最大未知"
+          ],
+          "validity_conditions": [
+            "现有版本足以展示核心价值"
+          ]
+        },
+        "evidence": {
+          "confirmed_facts": [
+            "已有可展示版本"
+          ],
+          "inferences": [
+            "继续开发暂时无法减少最大未知"
+          ],
+          "assumptions": [
+            "陌生对象反馈比熟人反馈更能区分方向"
+          ],
+          "unknowns": [
+            "陌生对象是否愿意真实付款"
+          ],
+          "sources": []
+        },
+        "reversal_signals": [
+          "出现真实付款"
+        ],
+        "main_experiment": {
+          "core_hypothesis": "现有版本解决了足以付费的问题",
+          "action": "向符合画像的陌生对象展示现有版本并邀请真实付款",
+          "observation": "记录付款、明确拒绝与拒绝理由",
+          "reassessment": "出现真实付款时复判是否推进，否则停止新增投入",
+          "user_supplied_boundaries": [],
+          "suggested_boundaries": []
+        },
+        "reassessment_triggers": [
+          "出现真实付款或持续只有明确拒绝"
+        ],
+        "participation_and_capabilities": {
+          "main_agents": 1,
+          "additional_agents_planned": 0,
+          "additional_agents_started": 0,
+          "additional_agents_completed": 0,
+          "additional_agents_failed": 0,
+          "human_participants_requested": [],
+          "capabilities_used": [],
+          "private_data_accessed": false,
+          "external_action_executed": false,
+          "consent_ids": [],
+          "receipt_ids": [],
+          "conflicts_and_gaps": []
+        },
+        "persistence": {
+          "mode": "conversation_only",
+          "authorized": false
+        }
+      },
+      "visible_snapshot": {
+        "记录版本": {
+          "path": "contract_version",
+          "value": "0.4.1",
+          "rendered": "0.4.1"
+        },
+        "这次要想清楚的事": {
+          "path": "topic",
+          "value": "是否继续开发当前产品",
+          "rendered": "是否继续开发当前产品"
+        },
+        "真正想得到或保护的结果": {
+          "path": "true_objectives",
+          "value": [
+            "验证陌生客户是否愿意付费"
+          ],
+          "rendered": "验证陌生客户是否愿意付费"
+        },
+        "本轮需要决定什么": {
+          "path": "decision",
+          "value": "继续开发还是先验证付费意愿",
+          "rendered": "继续开发还是先验证付费意愿"
+        },
+        "本轮采用的思考角度": {
+          "path": "confirmed_methods",
+          "value": [
+            "two-sided-steelman"
+          ],
+          "rendered": "双向钢人（two-sided-steelman）"
+        },
+        "当前判断": {
+          "path": "judgment.state",
+          "value": "small_test",
+          "rendered": "小步验证（small_test）"
+        },
+        "目前更合适的方向": {
+          "path": "judgment.recommendation",
+          "value": "先验证真实付款，再决定是否继续开发",
+          "rendered": "先验证真实付款，再决定是否继续开发"
+        },
+        "为什么这样判断": {
+          "path": "judgment.rationale",
+          "value": [
+            "付费意愿仍是会改变决定的最大未知"
+          ],
+          "rendered": "付费意愿仍是会改变决定的最大未知"
+        },
+        "判断成立的前提": {
+          "path": "judgment.validity_conditions",
+          "value": [
+            "现有版本足以展示核心价值"
+          ],
+          "rendered": "现有版本足以展示核心价值"
+        },
+        "已经确认的信息": {
+          "path": "evidence.confirmed_facts",
+          "value": [
+            "已有可展示版本"
+          ],
+          "rendered": "已有可展示版本"
+        },
+        "根据现有信息可以推断": {
+          "path": "evidence.inferences",
+          "value": [
+            "继续开发暂时无法减少最大未知"
+          ],
+          "rendered": "继续开发暂时无法减少最大未知"
+        },
+        "当前判断仍依赖": {
+          "path": "evidence.assumptions",
+          "value": [
+            "陌生对象反馈比熟人反馈更能区分方向"
+          ],
+          "rendered": "陌生对象反馈比熟人反馈更能区分方向"
+        },
+        "仍不知道的关键问题": {
+          "path": "evidence.unknowns",
+          "value": [
+            "陌生对象是否愿意真实付款"
+          ],
+          "rendered": "陌生对象是否愿意真实付款"
+        },
+        "本轮依据来自哪里": {
+          "path": "evidence.sources",
+          "value": [],
+          "rendered": "本轮未调用外部来源"
+        },
+        "什么情况会改变判断": {
+          "path": "reversal_signals",
+          "value": [
+            "出现真实付款"
+          ],
+          "rendered": "出现真实付款"
+        },
+        "要弄清什么": {
+          "path": "main_experiment.core_hypothesis",
+          "value": "现有版本解决了足以付费的问题",
+          "rendered": "现有版本解决了足以付费的问题"
+        },
+        "先做什么": {
+          "path": "main_experiment.action",
+          "value": "向符合画像的陌生对象展示现有版本并邀请真实付款",
+          "rendered": "向符合画像的陌生对象展示现有版本并邀请真实付款"
+        },
+        "看哪些现实信号": {
+          "path": "main_experiment.observation",
+          "value": "记录付款、明确拒绝与拒绝理由",
+          "rendered": "记录付款、明确拒绝与拒绝理由"
+        },
+        "什么时候重新决定": {
+          "path": "main_experiment.reassessment",
+          "value": "出现真实付款时复判是否推进，否则停止新增投入",
+          "rendered": "出现真实付款时复判是否推进，否则停止新增投入"
+        },
+        "用户给定的实验边界": {
+          "path": "main_experiment.user_supplied_boundaries",
+          "value": [],
+          "rendered": "本轮没有用户另行给定的实验边界"
+        },
+        "系统建议的实验边界": {
+          "path": "main_experiment.suggested_boundaries",
+          "value": [],
+          "rendered": "本轮没有系统新增的实验边界"
+        },
+        "何时触发复判": {
+          "path": "reassessment_triggers",
+          "value": [
+            "出现真实付款或持续只有明确拒绝"
+          ],
+          "rendered": "出现真实付款或持续只有明确拒绝"
+        },
+        "本轮参与者与使用的能力": {
+          "path": "participation_and_capabilities",
+          "value": {
+            "main_agents": 1,
+            "additional_agents_planned": 0,
+            "additional_agents_started": 0,
+            "additional_agents_completed": 0,
+            "additional_agents_failed": 0,
+            "human_participants_requested": [],
+            "capabilities_used": [],
+            "private_data_accessed": false,
+            "external_action_executed": false,
+            "consent_ids": [],
+            "receipt_ids": [],
+            "conflicts_and_gaps": []
+          },
+          "rendered": "主 Agent 1 个；未计划、启动、完成或失败额外 Agent；未请求真人参与；未调用额外能力；未访问私有数据；未执行外部行动；没有授权、回执、冲突或缺口"
+        },
+        "这份记录保存在哪里": {
+          "path": "persistence",
+          "value": {
+            "mode": "conversation_only",
+            "authorized": false
+          },
+          "rendered": "仅在当前对话中呈现，未授权写入文件或远端"
+        }
+      }
     },
     {
       "id": "b-native-note-synthetic-contract",
@@ -261,7 +487,233 @@
         "native_single_feedback",
         "native_note_observed"
       ],
-      "evidence_note": "静态能力合同；不证明任何真实客户端已呈现独立附注。"
+      "evidence_note": "静态能力合同；不证明任何真实客户端已呈现独立附注。",
+      "decision_record": {
+        "contract_version": "0.4.1",
+        "topic": "是否继续开发当前产品",
+        "true_objectives": [
+          "验证陌生客户是否愿意付费"
+        ],
+        "decision": "继续开发还是先验证付费意愿",
+        "confirmed_methods": [
+          "two-sided-steelman"
+        ],
+        "judgment": {
+          "state": "small_test",
+          "recommendation": "先验证真实付款，再决定是否继续开发",
+          "rationale": [
+            "付费意愿仍是会改变决定的最大未知"
+          ],
+          "validity_conditions": [
+            "现有版本足以展示核心价值"
+          ]
+        },
+        "evidence": {
+          "confirmed_facts": [
+            "已有可展示版本"
+          ],
+          "inferences": [
+            "继续开发暂时无法减少最大未知"
+          ],
+          "assumptions": [
+            "陌生对象反馈比熟人反馈更能区分方向"
+          ],
+          "unknowns": [
+            "陌生对象是否愿意真实付款"
+          ],
+          "sources": []
+        },
+        "reversal_signals": [
+          "出现真实付款"
+        ],
+        "main_experiment": {
+          "core_hypothesis": "现有版本解决了足以付费的问题",
+          "action": "向符合画像的陌生对象展示现有版本并邀请真实付款",
+          "observation": "记录付款、明确拒绝与拒绝理由",
+          "reassessment": "出现真实付款时复判是否推进，否则停止新增投入",
+          "user_supplied_boundaries": [],
+          "suggested_boundaries": []
+        },
+        "reassessment_triggers": [
+          "出现真实付款或持续只有明确拒绝"
+        ],
+        "participation_and_capabilities": {
+          "main_agents": 1,
+          "additional_agents_planned": 0,
+          "additional_agents_started": 0,
+          "additional_agents_completed": 0,
+          "additional_agents_failed": 0,
+          "human_participants_requested": [],
+          "capabilities_used": [],
+          "private_data_accessed": false,
+          "external_action_executed": false,
+          "consent_ids": [],
+          "receipt_ids": [],
+          "conflicts_and_gaps": []
+        },
+        "persistence": {
+          "mode": "conversation_only",
+          "authorized": false
+        }
+      },
+      "visible_snapshot": {
+        "记录版本": {
+          "path": "contract_version",
+          "value": "0.4.1",
+          "rendered": "0.4.1"
+        },
+        "这次要想清楚的事": {
+          "path": "topic",
+          "value": "是否继续开发当前产品",
+          "rendered": "是否继续开发当前产品"
+        },
+        "真正想得到或保护的结果": {
+          "path": "true_objectives",
+          "value": [
+            "验证陌生客户是否愿意付费"
+          ],
+          "rendered": "验证陌生客户是否愿意付费"
+        },
+        "本轮需要决定什么": {
+          "path": "decision",
+          "value": "继续开发还是先验证付费意愿",
+          "rendered": "继续开发还是先验证付费意愿"
+        },
+        "本轮采用的思考角度": {
+          "path": "confirmed_methods",
+          "value": [
+            "two-sided-steelman"
+          ],
+          "rendered": "双向钢人（two-sided-steelman）"
+        },
+        "当前判断": {
+          "path": "judgment.state",
+          "value": "small_test",
+          "rendered": "小步验证（small_test）"
+        },
+        "目前更合适的方向": {
+          "path": "judgment.recommendation",
+          "value": "先验证真实付款，再决定是否继续开发",
+          "rendered": "先验证真实付款，再决定是否继续开发"
+        },
+        "为什么这样判断": {
+          "path": "judgment.rationale",
+          "value": [
+            "付费意愿仍是会改变决定的最大未知"
+          ],
+          "rendered": "付费意愿仍是会改变决定的最大未知"
+        },
+        "判断成立的前提": {
+          "path": "judgment.validity_conditions",
+          "value": [
+            "现有版本足以展示核心价值"
+          ],
+          "rendered": "现有版本足以展示核心价值"
+        },
+        "已经确认的信息": {
+          "path": "evidence.confirmed_facts",
+          "value": [
+            "已有可展示版本"
+          ],
+          "rendered": "已有可展示版本"
+        },
+        "根据现有信息可以推断": {
+          "path": "evidence.inferences",
+          "value": [
+            "继续开发暂时无法减少最大未知"
+          ],
+          "rendered": "继续开发暂时无法减少最大未知"
+        },
+        "当前判断仍依赖": {
+          "path": "evidence.assumptions",
+          "value": [
+            "陌生对象反馈比熟人反馈更能区分方向"
+          ],
+          "rendered": "陌生对象反馈比熟人反馈更能区分方向"
+        },
+        "仍不知道的关键问题": {
+          "path": "evidence.unknowns",
+          "value": [
+            "陌生对象是否愿意真实付款"
+          ],
+          "rendered": "陌生对象是否愿意真实付款"
+        },
+        "本轮依据来自哪里": {
+          "path": "evidence.sources",
+          "value": [],
+          "rendered": "本轮未调用外部来源"
+        },
+        "什么情况会改变判断": {
+          "path": "reversal_signals",
+          "value": [
+            "出现真实付款"
+          ],
+          "rendered": "出现真实付款"
+        },
+        "要弄清什么": {
+          "path": "main_experiment.core_hypothesis",
+          "value": "现有版本解决了足以付费的问题",
+          "rendered": "现有版本解决了足以付费的问题"
+        },
+        "先做什么": {
+          "path": "main_experiment.action",
+          "value": "向符合画像的陌生对象展示现有版本并邀请真实付款",
+          "rendered": "向符合画像的陌生对象展示现有版本并邀请真实付款"
+        },
+        "看哪些现实信号": {
+          "path": "main_experiment.observation",
+          "value": "记录付款、明确拒绝与拒绝理由",
+          "rendered": "记录付款、明确拒绝与拒绝理由"
+        },
+        "什么时候重新决定": {
+          "path": "main_experiment.reassessment",
+          "value": "出现真实付款时复判是否推进，否则停止新增投入",
+          "rendered": "出现真实付款时复判是否推进，否则停止新增投入"
+        },
+        "用户给定的实验边界": {
+          "path": "main_experiment.user_supplied_boundaries",
+          "value": [],
+          "rendered": "本轮没有用户另行给定的实验边界"
+        },
+        "系统建议的实验边界": {
+          "path": "main_experiment.suggested_boundaries",
+          "value": [],
+          "rendered": "本轮没有系统新增的实验边界"
+        },
+        "何时触发复判": {
+          "path": "reassessment_triggers",
+          "value": [
+            "出现真实付款或持续只有明确拒绝"
+          ],
+          "rendered": "出现真实付款或持续只有明确拒绝"
+        },
+        "本轮参与者与使用的能力": {
+          "path": "participation_and_capabilities",
+          "value": {
+            "main_agents": 1,
+            "additional_agents_planned": 0,
+            "additional_agents_started": 0,
+            "additional_agents_completed": 0,
+            "additional_agents_failed": 0,
+            "human_participants_requested": [],
+            "capabilities_used": [],
+            "private_data_accessed": false,
+            "external_action_executed": false,
+            "consent_ids": [],
+            "receipt_ids": [],
+            "conflicts_and_gaps": []
+          },
+          "rendered": "主 Agent 1 个；未计划、启动、完成或失败额外 Agent；未请求真人参与；未调用额外能力；未访问私有数据；未执行外部行动；没有授权、回执、冲突或缺口"
+        },
+        "这份记录保存在哪里": {
+          "path": "persistence",
+          "value": {
+            "mode": "conversation_only",
+            "authorized": false
+          },
+          "rendered": "仅在当前对话中呈现，未授权写入文件或远端"
+        }
+      }
     },
     {
       "id": "b-unavailable-text-fallback",
@@ -298,7 +750,233 @@
       "must_pass": [
         "numbered_text_fallback",
         "inline_supplement"
-      ]
+      ],
+      "decision_record": {
+        "contract_version": "0.4.1",
+        "topic": "是否继续开发当前产品",
+        "true_objectives": [
+          "验证陌生客户是否愿意付费"
+        ],
+        "decision": "继续开发还是先验证付费意愿",
+        "confirmed_methods": [
+          "two-sided-steelman"
+        ],
+        "judgment": {
+          "state": "small_test",
+          "recommendation": "先验证真实付款，再决定是否继续开发",
+          "rationale": [
+            "付费意愿仍是会改变决定的最大未知"
+          ],
+          "validity_conditions": [
+            "现有版本足以展示核心价值"
+          ]
+        },
+        "evidence": {
+          "confirmed_facts": [
+            "已有可展示版本"
+          ],
+          "inferences": [
+            "继续开发暂时无法减少最大未知"
+          ],
+          "assumptions": [
+            "陌生对象反馈比熟人反馈更能区分方向"
+          ],
+          "unknowns": [
+            "陌生对象是否愿意真实付款"
+          ],
+          "sources": []
+        },
+        "reversal_signals": [
+          "出现真实付款"
+        ],
+        "main_experiment": {
+          "core_hypothesis": "现有版本解决了足以付费的问题",
+          "action": "向符合画像的陌生对象展示现有版本并邀请真实付款",
+          "observation": "记录付款、明确拒绝与拒绝理由",
+          "reassessment": "出现真实付款时复判是否推进，否则停止新增投入",
+          "user_supplied_boundaries": [],
+          "suggested_boundaries": []
+        },
+        "reassessment_triggers": [
+          "出现真实付款或持续只有明确拒绝"
+        ],
+        "participation_and_capabilities": {
+          "main_agents": 1,
+          "additional_agents_planned": 0,
+          "additional_agents_started": 0,
+          "additional_agents_completed": 0,
+          "additional_agents_failed": 0,
+          "human_participants_requested": [],
+          "capabilities_used": [],
+          "private_data_accessed": false,
+          "external_action_executed": false,
+          "consent_ids": [],
+          "receipt_ids": [],
+          "conflicts_and_gaps": []
+        },
+        "persistence": {
+          "mode": "conversation_only",
+          "authorized": false
+        }
+      },
+      "visible_snapshot": {
+        "记录版本": {
+          "path": "contract_version",
+          "value": "0.4.1",
+          "rendered": "0.4.1"
+        },
+        "这次要想清楚的事": {
+          "path": "topic",
+          "value": "是否继续开发当前产品",
+          "rendered": "是否继续开发当前产品"
+        },
+        "真正想得到或保护的结果": {
+          "path": "true_objectives",
+          "value": [
+            "验证陌生客户是否愿意付费"
+          ],
+          "rendered": "验证陌生客户是否愿意付费"
+        },
+        "本轮需要决定什么": {
+          "path": "decision",
+          "value": "继续开发还是先验证付费意愿",
+          "rendered": "继续开发还是先验证付费意愿"
+        },
+        "本轮采用的思考角度": {
+          "path": "confirmed_methods",
+          "value": [
+            "two-sided-steelman"
+          ],
+          "rendered": "双向钢人（two-sided-steelman）"
+        },
+        "当前判断": {
+          "path": "judgment.state",
+          "value": "small_test",
+          "rendered": "小步验证（small_test）"
+        },
+        "目前更合适的方向": {
+          "path": "judgment.recommendation",
+          "value": "先验证真实付款，再决定是否继续开发",
+          "rendered": "先验证真实付款，再决定是否继续开发"
+        },
+        "为什么这样判断": {
+          "path": "judgment.rationale",
+          "value": [
+            "付费意愿仍是会改变决定的最大未知"
+          ],
+          "rendered": "付费意愿仍是会改变决定的最大未知"
+        },
+        "判断成立的前提": {
+          "path": "judgment.validity_conditions",
+          "value": [
+            "现有版本足以展示核心价值"
+          ],
+          "rendered": "现有版本足以展示核心价值"
+        },
+        "已经确认的信息": {
+          "path": "evidence.confirmed_facts",
+          "value": [
+            "已有可展示版本"
+          ],
+          "rendered": "已有可展示版本"
+        },
+        "根据现有信息可以推断": {
+          "path": "evidence.inferences",
+          "value": [
+            "继续开发暂时无法减少最大未知"
+          ],
+          "rendered": "继续开发暂时无法减少最大未知"
+        },
+        "当前判断仍依赖": {
+          "path": "evidence.assumptions",
+          "value": [
+            "陌生对象反馈比熟人反馈更能区分方向"
+          ],
+          "rendered": "陌生对象反馈比熟人反馈更能区分方向"
+        },
+        "仍不知道的关键问题": {
+          "path": "evidence.unknowns",
+          "value": [
+            "陌生对象是否愿意真实付款"
+          ],
+          "rendered": "陌生对象是否愿意真实付款"
+        },
+        "本轮依据来自哪里": {
+          "path": "evidence.sources",
+          "value": [],
+          "rendered": "本轮未调用外部来源"
+        },
+        "什么情况会改变判断": {
+          "path": "reversal_signals",
+          "value": [
+            "出现真实付款"
+          ],
+          "rendered": "出现真实付款"
+        },
+        "要弄清什么": {
+          "path": "main_experiment.core_hypothesis",
+          "value": "现有版本解决了足以付费的问题",
+          "rendered": "现有版本解决了足以付费的问题"
+        },
+        "先做什么": {
+          "path": "main_experiment.action",
+          "value": "向符合画像的陌生对象展示现有版本并邀请真实付款",
+          "rendered": "向符合画像的陌生对象展示现有版本并邀请真实付款"
+        },
+        "看哪些现实信号": {
+          "path": "main_experiment.observation",
+          "value": "记录付款、明确拒绝与拒绝理由",
+          "rendered": "记录付款、明确拒绝与拒绝理由"
+        },
+        "什么时候重新决定": {
+          "path": "main_experiment.reassessment",
+          "value": "出现真实付款时复判是否推进，否则停止新增投入",
+          "rendered": "出现真实付款时复判是否推进，否则停止新增投入"
+        },
+        "用户给定的实验边界": {
+          "path": "main_experiment.user_supplied_boundaries",
+          "value": [],
+          "rendered": "本轮没有用户另行给定的实验边界"
+        },
+        "系统建议的实验边界": {
+          "path": "main_experiment.suggested_boundaries",
+          "value": [],
+          "rendered": "本轮没有系统新增的实验边界"
+        },
+        "何时触发复判": {
+          "path": "reassessment_triggers",
+          "value": [
+            "出现真实付款或持续只有明确拒绝"
+          ],
+          "rendered": "出现真实付款或持续只有明确拒绝"
+        },
+        "本轮参与者与使用的能力": {
+          "path": "participation_and_capabilities",
+          "value": {
+            "main_agents": 1,
+            "additional_agents_planned": 0,
+            "additional_agents_started": 0,
+            "additional_agents_completed": 0,
+            "additional_agents_failed": 0,
+            "human_participants_requested": [],
+            "capabilities_used": [],
+            "private_data_accessed": false,
+            "external_action_executed": false,
+            "consent_ids": [],
+            "receipt_ids": [],
+            "conflicts_and_gaps": []
+          },
+          "rendered": "主 Agent 1 个；未计划、启动、完成或失败额外 Agent；未请求真人参与；未调用额外能力；未访问私有数据；未执行外部行动；没有授权、回执、冲突或缺口"
+        },
+        "这份记录保存在哪里": {
+          "path": "persistence",
+          "value": {
+            "mode": "conversation_only",
+            "authorized": false
+          },
+          "rendered": "仅在当前对话中呈现，未授权写入文件或远端"
+        }
+      }
     },
     {
       "id": "b-failed-text-fallback",
@@ -335,7 +1013,233 @@
       "must_pass": [
         "failed_call_trace_observed",
         "numbered_text_fallback"
-      ]
+      ],
+      "decision_record": {
+        "contract_version": "0.4.1",
+        "topic": "是否继续开发当前产品",
+        "true_objectives": [
+          "验证陌生客户是否愿意付费"
+        ],
+        "decision": "继续开发还是先验证付费意愿",
+        "confirmed_methods": [
+          "two-sided-steelman"
+        ],
+        "judgment": {
+          "state": "small_test",
+          "recommendation": "先验证真实付款，再决定是否继续开发",
+          "rationale": [
+            "付费意愿仍是会改变决定的最大未知"
+          ],
+          "validity_conditions": [
+            "现有版本足以展示核心价值"
+          ]
+        },
+        "evidence": {
+          "confirmed_facts": [
+            "已有可展示版本"
+          ],
+          "inferences": [
+            "继续开发暂时无法减少最大未知"
+          ],
+          "assumptions": [
+            "陌生对象反馈比熟人反馈更能区分方向"
+          ],
+          "unknowns": [
+            "陌生对象是否愿意真实付款"
+          ],
+          "sources": []
+        },
+        "reversal_signals": [
+          "出现真实付款"
+        ],
+        "main_experiment": {
+          "core_hypothesis": "现有版本解决了足以付费的问题",
+          "action": "向符合画像的陌生对象展示现有版本并邀请真实付款",
+          "observation": "记录付款、明确拒绝与拒绝理由",
+          "reassessment": "出现真实付款时复判是否推进，否则停止新增投入",
+          "user_supplied_boundaries": [],
+          "suggested_boundaries": []
+        },
+        "reassessment_triggers": [
+          "出现真实付款或持续只有明确拒绝"
+        ],
+        "participation_and_capabilities": {
+          "main_agents": 1,
+          "additional_agents_planned": 0,
+          "additional_agents_started": 0,
+          "additional_agents_completed": 0,
+          "additional_agents_failed": 0,
+          "human_participants_requested": [],
+          "capabilities_used": [],
+          "private_data_accessed": false,
+          "external_action_executed": false,
+          "consent_ids": [],
+          "receipt_ids": [],
+          "conflicts_and_gaps": []
+        },
+        "persistence": {
+          "mode": "conversation_only",
+          "authorized": false
+        }
+      },
+      "visible_snapshot": {
+        "记录版本": {
+          "path": "contract_version",
+          "value": "0.4.1",
+          "rendered": "0.4.1"
+        },
+        "这次要想清楚的事": {
+          "path": "topic",
+          "value": "是否继续开发当前产品",
+          "rendered": "是否继续开发当前产品"
+        },
+        "真正想得到或保护的结果": {
+          "path": "true_objectives",
+          "value": [
+            "验证陌生客户是否愿意付费"
+          ],
+          "rendered": "验证陌生客户是否愿意付费"
+        },
+        "本轮需要决定什么": {
+          "path": "decision",
+          "value": "继续开发还是先验证付费意愿",
+          "rendered": "继续开发还是先验证付费意愿"
+        },
+        "本轮采用的思考角度": {
+          "path": "confirmed_methods",
+          "value": [
+            "two-sided-steelman"
+          ],
+          "rendered": "双向钢人（two-sided-steelman）"
+        },
+        "当前判断": {
+          "path": "judgment.state",
+          "value": "small_test",
+          "rendered": "小步验证（small_test）"
+        },
+        "目前更合适的方向": {
+          "path": "judgment.recommendation",
+          "value": "先验证真实付款，再决定是否继续开发",
+          "rendered": "先验证真实付款，再决定是否继续开发"
+        },
+        "为什么这样判断": {
+          "path": "judgment.rationale",
+          "value": [
+            "付费意愿仍是会改变决定的最大未知"
+          ],
+          "rendered": "付费意愿仍是会改变决定的最大未知"
+        },
+        "判断成立的前提": {
+          "path": "judgment.validity_conditions",
+          "value": [
+            "现有版本足以展示核心价值"
+          ],
+          "rendered": "现有版本足以展示核心价值"
+        },
+        "已经确认的信息": {
+          "path": "evidence.confirmed_facts",
+          "value": [
+            "已有可展示版本"
+          ],
+          "rendered": "已有可展示版本"
+        },
+        "根据现有信息可以推断": {
+          "path": "evidence.inferences",
+          "value": [
+            "继续开发暂时无法减少最大未知"
+          ],
+          "rendered": "继续开发暂时无法减少最大未知"
+        },
+        "当前判断仍依赖": {
+          "path": "evidence.assumptions",
+          "value": [
+            "陌生对象反馈比熟人反馈更能区分方向"
+          ],
+          "rendered": "陌生对象反馈比熟人反馈更能区分方向"
+        },
+        "仍不知道的关键问题": {
+          "path": "evidence.unknowns",
+          "value": [
+            "陌生对象是否愿意真实付款"
+          ],
+          "rendered": "陌生对象是否愿意真实付款"
+        },
+        "本轮依据来自哪里": {
+          "path": "evidence.sources",
+          "value": [],
+          "rendered": "本轮未调用外部来源"
+        },
+        "什么情况会改变判断": {
+          "path": "reversal_signals",
+          "value": [
+            "出现真实付款"
+          ],
+          "rendered": "出现真实付款"
+        },
+        "要弄清什么": {
+          "path": "main_experiment.core_hypothesis",
+          "value": "现有版本解决了足以付费的问题",
+          "rendered": "现有版本解决了足以付费的问题"
+        },
+        "先做什么": {
+          "path": "main_experiment.action",
+          "value": "向符合画像的陌生对象展示现有版本并邀请真实付款",
+          "rendered": "向符合画像的陌生对象展示现有版本并邀请真实付款"
+        },
+        "看哪些现实信号": {
+          "path": "main_experiment.observation",
+          "value": "记录付款、明确拒绝与拒绝理由",
+          "rendered": "记录付款、明确拒绝与拒绝理由"
+        },
+        "什么时候重新决定": {
+          "path": "main_experiment.reassessment",
+          "value": "出现真实付款时复判是否推进，否则停止新增投入",
+          "rendered": "出现真实付款时复判是否推进，否则停止新增投入"
+        },
+        "用户给定的实验边界": {
+          "path": "main_experiment.user_supplied_boundaries",
+          "value": [],
+          "rendered": "本轮没有用户另行给定的实验边界"
+        },
+        "系统建议的实验边界": {
+          "path": "main_experiment.suggested_boundaries",
+          "value": [],
+          "rendered": "本轮没有系统新增的实验边界"
+        },
+        "何时触发复判": {
+          "path": "reassessment_triggers",
+          "value": [
+            "出现真实付款或持续只有明确拒绝"
+          ],
+          "rendered": "出现真实付款或持续只有明确拒绝"
+        },
+        "本轮参与者与使用的能力": {
+          "path": "participation_and_capabilities",
+          "value": {
+            "main_agents": 1,
+            "additional_agents_planned": 0,
+            "additional_agents_started": 0,
+            "additional_agents_completed": 0,
+            "additional_agents_failed": 0,
+            "human_participants_requested": [],
+            "capabilities_used": [],
+            "private_data_accessed": false,
+            "external_action_executed": false,
+            "consent_ids": [],
+            "receipt_ids": [],
+            "conflicts_and_gaps": []
+          },
+          "rendered": "主 Agent 1 个；未计划、启动、完成或失败额外 Agent；未请求真人参与；未调用额外能力；未访问私有数据；未执行外部行动；没有授权、回执、冲突或缺口"
+        },
+        "这份记录保存在哪里": {
+          "path": "persistence",
+          "value": {
+            "mode": "conversation_only",
+            "authorized": false
+          },
+          "rendered": "仅在当前对话中呈现，未授权写入文件或远端"
+        }
+      }
     },
     {
       "id": "b-rejected-text-fallback",
@@ -372,7 +1276,233 @@
       "must_pass": [
         "rejected_call_trace_observed",
         "numbered_text_fallback"
-      ]
+      ],
+      "decision_record": {
+        "contract_version": "0.4.1",
+        "topic": "是否继续开发当前产品",
+        "true_objectives": [
+          "验证陌生客户是否愿意付费"
+        ],
+        "decision": "继续开发还是先验证付费意愿",
+        "confirmed_methods": [
+          "two-sided-steelman"
+        ],
+        "judgment": {
+          "state": "small_test",
+          "recommendation": "先验证真实付款，再决定是否继续开发",
+          "rationale": [
+            "付费意愿仍是会改变决定的最大未知"
+          ],
+          "validity_conditions": [
+            "现有版本足以展示核心价值"
+          ]
+        },
+        "evidence": {
+          "confirmed_facts": [
+            "已有可展示版本"
+          ],
+          "inferences": [
+            "继续开发暂时无法减少最大未知"
+          ],
+          "assumptions": [
+            "陌生对象反馈比熟人反馈更能区分方向"
+          ],
+          "unknowns": [
+            "陌生对象是否愿意真实付款"
+          ],
+          "sources": []
+        },
+        "reversal_signals": [
+          "出现真实付款"
+        ],
+        "main_experiment": {
+          "core_hypothesis": "现有版本解决了足以付费的问题",
+          "action": "向符合画像的陌生对象展示现有版本并邀请真实付款",
+          "observation": "记录付款、明确拒绝与拒绝理由",
+          "reassessment": "出现真实付款时复判是否推进，否则停止新增投入",
+          "user_supplied_boundaries": [],
+          "suggested_boundaries": []
+        },
+        "reassessment_triggers": [
+          "出现真实付款或持续只有明确拒绝"
+        ],
+        "participation_and_capabilities": {
+          "main_agents": 1,
+          "additional_agents_planned": 0,
+          "additional_agents_started": 0,
+          "additional_agents_completed": 0,
+          "additional_agents_failed": 0,
+          "human_participants_requested": [],
+          "capabilities_used": [],
+          "private_data_accessed": false,
+          "external_action_executed": false,
+          "consent_ids": [],
+          "receipt_ids": [],
+          "conflicts_and_gaps": []
+        },
+        "persistence": {
+          "mode": "conversation_only",
+          "authorized": false
+        }
+      },
+      "visible_snapshot": {
+        "记录版本": {
+          "path": "contract_version",
+          "value": "0.4.1",
+          "rendered": "0.4.1"
+        },
+        "这次要想清楚的事": {
+          "path": "topic",
+          "value": "是否继续开发当前产品",
+          "rendered": "是否继续开发当前产品"
+        },
+        "真正想得到或保护的结果": {
+          "path": "true_objectives",
+          "value": [
+            "验证陌生客户是否愿意付费"
+          ],
+          "rendered": "验证陌生客户是否愿意付费"
+        },
+        "本轮需要决定什么": {
+          "path": "decision",
+          "value": "继续开发还是先验证付费意愿",
+          "rendered": "继续开发还是先验证付费意愿"
+        },
+        "本轮采用的思考角度": {
+          "path": "confirmed_methods",
+          "value": [
+            "two-sided-steelman"
+          ],
+          "rendered": "双向钢人（two-sided-steelman）"
+        },
+        "当前判断": {
+          "path": "judgment.state",
+          "value": "small_test",
+          "rendered": "小步验证（small_test）"
+        },
+        "目前更合适的方向": {
+          "path": "judgment.recommendation",
+          "value": "先验证真实付款，再决定是否继续开发",
+          "rendered": "先验证真实付款，再决定是否继续开发"
+        },
+        "为什么这样判断": {
+          "path": "judgment.rationale",
+          "value": [
+            "付费意愿仍是会改变决定的最大未知"
+          ],
+          "rendered": "付费意愿仍是会改变决定的最大未知"
+        },
+        "判断成立的前提": {
+          "path": "judgment.validity_conditions",
+          "value": [
+            "现有版本足以展示核心价值"
+          ],
+          "rendered": "现有版本足以展示核心价值"
+        },
+        "已经确认的信息": {
+          "path": "evidence.confirmed_facts",
+          "value": [
+            "已有可展示版本"
+          ],
+          "rendered": "已有可展示版本"
+        },
+        "根据现有信息可以推断": {
+          "path": "evidence.inferences",
+          "value": [
+            "继续开发暂时无法减少最大未知"
+          ],
+          "rendered": "继续开发暂时无法减少最大未知"
+        },
+        "当前判断仍依赖": {
+          "path": "evidence.assumptions",
+          "value": [
+            "陌生对象反馈比熟人反馈更能区分方向"
+          ],
+          "rendered": "陌生对象反馈比熟人反馈更能区分方向"
+        },
+        "仍不知道的关键问题": {
+          "path": "evidence.unknowns",
+          "value": [
+            "陌生对象是否愿意真实付款"
+          ],
+          "rendered": "陌生对象是否愿意真实付款"
+        },
+        "本轮依据来自哪里": {
+          "path": "evidence.sources",
+          "value": [],
+          "rendered": "本轮未调用外部来源"
+        },
+        "什么情况会改变判断": {
+          "path": "reversal_signals",
+          "value": [
+            "出现真实付款"
+          ],
+          "rendered": "出现真实付款"
+        },
+        "要弄清什么": {
+          "path": "main_experiment.core_hypothesis",
+          "value": "现有版本解决了足以付费的问题",
+          "rendered": "现有版本解决了足以付费的问题"
+        },
+        "先做什么": {
+          "path": "main_experiment.action",
+          "value": "向符合画像的陌生对象展示现有版本并邀请真实付款",
+          "rendered": "向符合画像的陌生对象展示现有版本并邀请真实付款"
+        },
+        "看哪些现实信号": {
+          "path": "main_experiment.observation",
+          "value": "记录付款、明确拒绝与拒绝理由",
+          "rendered": "记录付款、明确拒绝与拒绝理由"
+        },
+        "什么时候重新决定": {
+          "path": "main_experiment.reassessment",
+          "value": "出现真实付款时复判是否推进，否则停止新增投入",
+          "rendered": "出现真实付款时复判是否推进，否则停止新增投入"
+        },
+        "用户给定的实验边界": {
+          "path": "main_experiment.user_supplied_boundaries",
+          "value": [],
+          "rendered": "本轮没有用户另行给定的实验边界"
+        },
+        "系统建议的实验边界": {
+          "path": "main_experiment.suggested_boundaries",
+          "value": [],
+          "rendered": "本轮没有系统新增的实验边界"
+        },
+        "何时触发复判": {
+          "path": "reassessment_triggers",
+          "value": [
+            "出现真实付款或持续只有明确拒绝"
+          ],
+          "rendered": "出现真实付款或持续只有明确拒绝"
+        },
+        "本轮参与者与使用的能力": {
+          "path": "participation_and_capabilities",
+          "value": {
+            "main_agents": 1,
+            "additional_agents_planned": 0,
+            "additional_agents_started": 0,
+            "additional_agents_completed": 0,
+            "additional_agents_failed": 0,
+            "human_participants_requested": [],
+            "capabilities_used": [],
+            "private_data_accessed": false,
+            "external_action_executed": false,
+            "consent_ids": [],
+            "receipt_ids": [],
+            "conflicts_and_gaps": []
+          },
+          "rendered": "主 Agent 1 个；未计划、启动、完成或失败额外 Agent；未请求真人参与；未调用额外能力；未访问私有数据；未执行外部行动；没有授权、回执、冲突或缺口"
+        },
+        "这份记录保存在哪里": {
+          "path": "persistence",
+          "value": {
+            "mode": "conversation_only",
+            "authorized": false
+          },
+          "rendered": "仅在当前对话中呈现，未授权写入文件或远端"
+        }
+      }
     },
     {
       "id": "b-pseudo-radio-is-invalid",
@@ -407,7 +1537,233 @@
       ],
       "must_fail": [
         "pseudo_native_feedback_forbidden"
-      ]
+      ],
+      "decision_record": {
+        "contract_version": "0.4.1",
+        "topic": "是否继续开发当前产品",
+        "true_objectives": [
+          "验证陌生客户是否愿意付费"
+        ],
+        "decision": "继续开发还是先验证付费意愿",
+        "confirmed_methods": [
+          "two-sided-steelman"
+        ],
+        "judgment": {
+          "state": "small_test",
+          "recommendation": "先验证真实付款，再决定是否继续开发",
+          "rationale": [
+            "付费意愿仍是会改变决定的最大未知"
+          ],
+          "validity_conditions": [
+            "现有版本足以展示核心价值"
+          ]
+        },
+        "evidence": {
+          "confirmed_facts": [
+            "已有可展示版本"
+          ],
+          "inferences": [
+            "继续开发暂时无法减少最大未知"
+          ],
+          "assumptions": [
+            "陌生对象反馈比熟人反馈更能区分方向"
+          ],
+          "unknowns": [
+            "陌生对象是否愿意真实付款"
+          ],
+          "sources": []
+        },
+        "reversal_signals": [
+          "出现真实付款"
+        ],
+        "main_experiment": {
+          "core_hypothesis": "现有版本解决了足以付费的问题",
+          "action": "向符合画像的陌生对象展示现有版本并邀请真实付款",
+          "observation": "记录付款、明确拒绝与拒绝理由",
+          "reassessment": "出现真实付款时复判是否推进，否则停止新增投入",
+          "user_supplied_boundaries": [],
+          "suggested_boundaries": []
+        },
+        "reassessment_triggers": [
+          "出现真实付款或持续只有明确拒绝"
+        ],
+        "participation_and_capabilities": {
+          "main_agents": 1,
+          "additional_agents_planned": 0,
+          "additional_agents_started": 0,
+          "additional_agents_completed": 0,
+          "additional_agents_failed": 0,
+          "human_participants_requested": [],
+          "capabilities_used": [],
+          "private_data_accessed": false,
+          "external_action_executed": false,
+          "consent_ids": [],
+          "receipt_ids": [],
+          "conflicts_and_gaps": []
+        },
+        "persistence": {
+          "mode": "conversation_only",
+          "authorized": false
+        }
+      },
+      "visible_snapshot": {
+        "记录版本": {
+          "path": "contract_version",
+          "value": "0.4.1",
+          "rendered": "0.4.1"
+        },
+        "这次要想清楚的事": {
+          "path": "topic",
+          "value": "是否继续开发当前产品",
+          "rendered": "是否继续开发当前产品"
+        },
+        "真正想得到或保护的结果": {
+          "path": "true_objectives",
+          "value": [
+            "验证陌生客户是否愿意付费"
+          ],
+          "rendered": "验证陌生客户是否愿意付费"
+        },
+        "本轮需要决定什么": {
+          "path": "decision",
+          "value": "继续开发还是先验证付费意愿",
+          "rendered": "继续开发还是先验证付费意愿"
+        },
+        "本轮采用的思考角度": {
+          "path": "confirmed_methods",
+          "value": [
+            "two-sided-steelman"
+          ],
+          "rendered": "双向钢人（two-sided-steelman）"
+        },
+        "当前判断": {
+          "path": "judgment.state",
+          "value": "small_test",
+          "rendered": "小步验证（small_test）"
+        },
+        "目前更合适的方向": {
+          "path": "judgment.recommendation",
+          "value": "先验证真实付款，再决定是否继续开发",
+          "rendered": "先验证真实付款，再决定是否继续开发"
+        },
+        "为什么这样判断": {
+          "path": "judgment.rationale",
+          "value": [
+            "付费意愿仍是会改变决定的最大未知"
+          ],
+          "rendered": "付费意愿仍是会改变决定的最大未知"
+        },
+        "判断成立的前提": {
+          "path": "judgment.validity_conditions",
+          "value": [
+            "现有版本足以展示核心价值"
+          ],
+          "rendered": "现有版本足以展示核心价值"
+        },
+        "已经确认的信息": {
+          "path": "evidence.confirmed_facts",
+          "value": [
+            "已有可展示版本"
+          ],
+          "rendered": "已有可展示版本"
+        },
+        "根据现有信息可以推断": {
+          "path": "evidence.inferences",
+          "value": [
+            "继续开发暂时无法减少最大未知"
+          ],
+          "rendered": "继续开发暂时无法减少最大未知"
+        },
+        "当前判断仍依赖": {
+          "path": "evidence.assumptions",
+          "value": [
+            "陌生对象反馈比熟人反馈更能区分方向"
+          ],
+          "rendered": "陌生对象反馈比熟人反馈更能区分方向"
+        },
+        "仍不知道的关键问题": {
+          "path": "evidence.unknowns",
+          "value": [
+            "陌生对象是否愿意真实付款"
+          ],
+          "rendered": "陌生对象是否愿意真实付款"
+        },
+        "本轮依据来自哪里": {
+          "path": "evidence.sources",
+          "value": [],
+          "rendered": "本轮未调用外部来源"
+        },
+        "什么情况会改变判断": {
+          "path": "reversal_signals",
+          "value": [
+            "出现真实付款"
+          ],
+          "rendered": "出现真实付款"
+        },
+        "要弄清什么": {
+          "path": "main_experiment.core_hypothesis",
+          "value": "现有版本解决了足以付费的问题",
+          "rendered": "现有版本解决了足以付费的问题"
+        },
+        "先做什么": {
+          "path": "main_experiment.action",
+          "value": "向符合画像的陌生对象展示现有版本并邀请真实付款",
+          "rendered": "向符合画像的陌生对象展示现有版本并邀请真实付款"
+        },
+        "看哪些现实信号": {
+          "path": "main_experiment.observation",
+          "value": "记录付款、明确拒绝与拒绝理由",
+          "rendered": "记录付款、明确拒绝与拒绝理由"
+        },
+        "什么时候重新决定": {
+          "path": "main_experiment.reassessment",
+          "value": "出现真实付款时复判是否推进，否则停止新增投入",
+          "rendered": "出现真实付款时复判是否推进，否则停止新增投入"
+        },
+        "用户给定的实验边界": {
+          "path": "main_experiment.user_supplied_boundaries",
+          "value": [],
+          "rendered": "本轮没有用户另行给定的实验边界"
+        },
+        "系统建议的实验边界": {
+          "path": "main_experiment.suggested_boundaries",
+          "value": [],
+          "rendered": "本轮没有系统新增的实验边界"
+        },
+        "何时触发复判": {
+          "path": "reassessment_triggers",
+          "value": [
+            "出现真实付款或持续只有明确拒绝"
+          ],
+          "rendered": "出现真实付款或持续只有明确拒绝"
+        },
+        "本轮参与者与使用的能力": {
+          "path": "participation_and_capabilities",
+          "value": {
+            "main_agents": 1,
+            "additional_agents_planned": 0,
+            "additional_agents_started": 0,
+            "additional_agents_completed": 0,
+            "additional_agents_failed": 0,
+            "human_participants_requested": [],
+            "capabilities_used": [],
+            "private_data_accessed": false,
+            "external_action_executed": false,
+            "consent_ids": [],
+            "receipt_ids": [],
+            "conflicts_and_gaps": []
+          },
+          "rendered": "主 Agent 1 个；未计划、启动、完成或失败额外 Agent；未请求真人参与；未调用额外能力；未访问私有数据；未执行外部行动；没有授权、回执、冲突或缺口"
+        },
+        "这份记录保存在哪里": {
+          "path": "persistence",
+          "value": {
+            "mode": "conversation_only",
+            "authorized": false
+          },
+          "rendered": "仅在当前对话中呈现，未授权写入文件或远端"
+        }
+      }
     },
     {
       "id": "b-host-other-is-not-native-note",
@@ -442,7 +1798,233 @@
       ],
       "must_fail": [
         "native_note_requires_observed_note_capability"
-      ]
+      ],
+      "decision_record": {
+        "contract_version": "0.4.1",
+        "topic": "是否继续开发当前产品",
+        "true_objectives": [
+          "验证陌生客户是否愿意付费"
+        ],
+        "decision": "继续开发还是先验证付费意愿",
+        "confirmed_methods": [
+          "two-sided-steelman"
+        ],
+        "judgment": {
+          "state": "small_test",
+          "recommendation": "先验证真实付款，再决定是否继续开发",
+          "rationale": [
+            "付费意愿仍是会改变决定的最大未知"
+          ],
+          "validity_conditions": [
+            "现有版本足以展示核心价值"
+          ]
+        },
+        "evidence": {
+          "confirmed_facts": [
+            "已有可展示版本"
+          ],
+          "inferences": [
+            "继续开发暂时无法减少最大未知"
+          ],
+          "assumptions": [
+            "陌生对象反馈比熟人反馈更能区分方向"
+          ],
+          "unknowns": [
+            "陌生对象是否愿意真实付款"
+          ],
+          "sources": []
+        },
+        "reversal_signals": [
+          "出现真实付款"
+        ],
+        "main_experiment": {
+          "core_hypothesis": "现有版本解决了足以付费的问题",
+          "action": "向符合画像的陌生对象展示现有版本并邀请真实付款",
+          "observation": "记录付款、明确拒绝与拒绝理由",
+          "reassessment": "出现真实付款时复判是否推进，否则停止新增投入",
+          "user_supplied_boundaries": [],
+          "suggested_boundaries": []
+        },
+        "reassessment_triggers": [
+          "出现真实付款或持续只有明确拒绝"
+        ],
+        "participation_and_capabilities": {
+          "main_agents": 1,
+          "additional_agents_planned": 0,
+          "additional_agents_started": 0,
+          "additional_agents_completed": 0,
+          "additional_agents_failed": 0,
+          "human_participants_requested": [],
+          "capabilities_used": [],
+          "private_data_accessed": false,
+          "external_action_executed": false,
+          "consent_ids": [],
+          "receipt_ids": [],
+          "conflicts_and_gaps": []
+        },
+        "persistence": {
+          "mode": "conversation_only",
+          "authorized": false
+        }
+      },
+      "visible_snapshot": {
+        "记录版本": {
+          "path": "contract_version",
+          "value": "0.4.1",
+          "rendered": "0.4.1"
+        },
+        "这次要想清楚的事": {
+          "path": "topic",
+          "value": "是否继续开发当前产品",
+          "rendered": "是否继续开发当前产品"
+        },
+        "真正想得到或保护的结果": {
+          "path": "true_objectives",
+          "value": [
+            "验证陌生客户是否愿意付费"
+          ],
+          "rendered": "验证陌生客户是否愿意付费"
+        },
+        "本轮需要决定什么": {
+          "path": "decision",
+          "value": "继续开发还是先验证付费意愿",
+          "rendered": "继续开发还是先验证付费意愿"
+        },
+        "本轮采用的思考角度": {
+          "path": "confirmed_methods",
+          "value": [
+            "two-sided-steelman"
+          ],
+          "rendered": "双向钢人（two-sided-steelman）"
+        },
+        "当前判断": {
+          "path": "judgment.state",
+          "value": "small_test",
+          "rendered": "小步验证（small_test）"
+        },
+        "目前更合适的方向": {
+          "path": "judgment.recommendation",
+          "value": "先验证真实付款，再决定是否继续开发",
+          "rendered": "先验证真实付款，再决定是否继续开发"
+        },
+        "为什么这样判断": {
+          "path": "judgment.rationale",
+          "value": [
+            "付费意愿仍是会改变决定的最大未知"
+          ],
+          "rendered": "付费意愿仍是会改变决定的最大未知"
+        },
+        "判断成立的前提": {
+          "path": "judgment.validity_conditions",
+          "value": [
+            "现有版本足以展示核心价值"
+          ],
+          "rendered": "现有版本足以展示核心价值"
+        },
+        "已经确认的信息": {
+          "path": "evidence.confirmed_facts",
+          "value": [
+            "已有可展示版本"
+          ],
+          "rendered": "已有可展示版本"
+        },
+        "根据现有信息可以推断": {
+          "path": "evidence.inferences",
+          "value": [
+            "继续开发暂时无法减少最大未知"
+          ],
+          "rendered": "继续开发暂时无法减少最大未知"
+        },
+        "当前判断仍依赖": {
+          "path": "evidence.assumptions",
+          "value": [
+            "陌生对象反馈比熟人反馈更能区分方向"
+          ],
+          "rendered": "陌生对象反馈比熟人反馈更能区分方向"
+        },
+        "仍不知道的关键问题": {
+          "path": "evidence.unknowns",
+          "value": [
+            "陌生对象是否愿意真实付款"
+          ],
+          "rendered": "陌生对象是否愿意真实付款"
+        },
+        "本轮依据来自哪里": {
+          "path": "evidence.sources",
+          "value": [],
+          "rendered": "本轮未调用外部来源"
+        },
+        "什么情况会改变判断": {
+          "path": "reversal_signals",
+          "value": [
+            "出现真实付款"
+          ],
+          "rendered": "出现真实付款"
+        },
+        "要弄清什么": {
+          "path": "main_experiment.core_hypothesis",
+          "value": "现有版本解决了足以付费的问题",
+          "rendered": "现有版本解决了足以付费的问题"
+        },
+        "先做什么": {
+          "path": "main_experiment.action",
+          "value": "向符合画像的陌生对象展示现有版本并邀请真实付款",
+          "rendered": "向符合画像的陌生对象展示现有版本并邀请真实付款"
+        },
+        "看哪些现实信号": {
+          "path": "main_experiment.observation",
+          "value": "记录付款、明确拒绝与拒绝理由",
+          "rendered": "记录付款、明确拒绝与拒绝理由"
+        },
+        "什么时候重新决定": {
+          "path": "main_experiment.reassessment",
+          "value": "出现真实付款时复判是否推进，否则停止新增投入",
+          "rendered": "出现真实付款时复判是否推进，否则停止新增投入"
+        },
+        "用户给定的实验边界": {
+          "path": "main_experiment.user_supplied_boundaries",
+          "value": [],
+          "rendered": "本轮没有用户另行给定的实验边界"
+        },
+        "系统建议的实验边界": {
+          "path": "main_experiment.suggested_boundaries",
+          "value": [],
+          "rendered": "本轮没有系统新增的实验边界"
+        },
+        "何时触发复判": {
+          "path": "reassessment_triggers",
+          "value": [
+            "出现真实付款或持续只有明确拒绝"
+          ],
+          "rendered": "出现真实付款或持续只有明确拒绝"
+        },
+        "本轮参与者与使用的能力": {
+          "path": "participation_and_capabilities",
+          "value": {
+            "main_agents": 1,
+            "additional_agents_planned": 0,
+            "additional_agents_started": 0,
+            "additional_agents_completed": 0,
+            "additional_agents_failed": 0,
+            "human_participants_requested": [],
+            "capabilities_used": [],
+            "private_data_accessed": false,
+            "external_action_executed": false,
+            "consent_ids": [],
+            "receipt_ids": [],
+            "conflicts_and_gaps": []
+          },
+          "rendered": "主 Agent 1 个；未计划、启动、完成或失败额外 Agent；未请求真人参与；未调用额外能力；未访问私有数据；未执行外部行动；没有授权、回执、冲突或缺口"
+        },
+        "这份记录保存在哪里": {
+          "path": "persistence",
+          "value": {
+            "mode": "conversation_only",
+            "authorized": false
+          },
+          "rendered": "仅在当前对话中呈现，未授权写入文件或远端"
+        }
+      }
     },
     {
       "id": "b-feedback-does-not-authorize-action",
@@ -477,7 +2059,233 @@
       ],
       "must_fail": [
         "feedback_is_not_authorization"
-      ]
+      ],
+      "decision_record": {
+        "contract_version": "0.4.1",
+        "topic": "是否继续开发当前产品",
+        "true_objectives": [
+          "验证陌生客户是否愿意付费"
+        ],
+        "decision": "继续开发还是先验证付费意愿",
+        "confirmed_methods": [
+          "two-sided-steelman"
+        ],
+        "judgment": {
+          "state": "small_test",
+          "recommendation": "先验证真实付款，再决定是否继续开发",
+          "rationale": [
+            "付费意愿仍是会改变决定的最大未知"
+          ],
+          "validity_conditions": [
+            "现有版本足以展示核心价值"
+          ]
+        },
+        "evidence": {
+          "confirmed_facts": [
+            "已有可展示版本"
+          ],
+          "inferences": [
+            "继续开发暂时无法减少最大未知"
+          ],
+          "assumptions": [
+            "陌生对象反馈比熟人反馈更能区分方向"
+          ],
+          "unknowns": [
+            "陌生对象是否愿意真实付款"
+          ],
+          "sources": []
+        },
+        "reversal_signals": [
+          "出现真实付款"
+        ],
+        "main_experiment": {
+          "core_hypothesis": "现有版本解决了足以付费的问题",
+          "action": "向符合画像的陌生对象展示现有版本并邀请真实付款",
+          "observation": "记录付款、明确拒绝与拒绝理由",
+          "reassessment": "出现真实付款时复判是否推进，否则停止新增投入",
+          "user_supplied_boundaries": [],
+          "suggested_boundaries": []
+        },
+        "reassessment_triggers": [
+          "出现真实付款或持续只有明确拒绝"
+        ],
+        "participation_and_capabilities": {
+          "main_agents": 1,
+          "additional_agents_planned": 0,
+          "additional_agents_started": 0,
+          "additional_agents_completed": 0,
+          "additional_agents_failed": 0,
+          "human_participants_requested": [],
+          "capabilities_used": [],
+          "private_data_accessed": false,
+          "external_action_executed": false,
+          "consent_ids": [],
+          "receipt_ids": [],
+          "conflicts_and_gaps": []
+        },
+        "persistence": {
+          "mode": "conversation_only",
+          "authorized": false
+        }
+      },
+      "visible_snapshot": {
+        "记录版本": {
+          "path": "contract_version",
+          "value": "0.4.1",
+          "rendered": "0.4.1"
+        },
+        "这次要想清楚的事": {
+          "path": "topic",
+          "value": "是否继续开发当前产品",
+          "rendered": "是否继续开发当前产品"
+        },
+        "真正想得到或保护的结果": {
+          "path": "true_objectives",
+          "value": [
+            "验证陌生客户是否愿意付费"
+          ],
+          "rendered": "验证陌生客户是否愿意付费"
+        },
+        "本轮需要决定什么": {
+          "path": "decision",
+          "value": "继续开发还是先验证付费意愿",
+          "rendered": "继续开发还是先验证付费意愿"
+        },
+        "本轮采用的思考角度": {
+          "path": "confirmed_methods",
+          "value": [
+            "two-sided-steelman"
+          ],
+          "rendered": "双向钢人（two-sided-steelman）"
+        },
+        "当前判断": {
+          "path": "judgment.state",
+          "value": "small_test",
+          "rendered": "小步验证（small_test）"
+        },
+        "目前更合适的方向": {
+          "path": "judgment.recommendation",
+          "value": "先验证真实付款，再决定是否继续开发",
+          "rendered": "先验证真实付款，再决定是否继续开发"
+        },
+        "为什么这样判断": {
+          "path": "judgment.rationale",
+          "value": [
+            "付费意愿仍是会改变决定的最大未知"
+          ],
+          "rendered": "付费意愿仍是会改变决定的最大未知"
+        },
+        "判断成立的前提": {
+          "path": "judgment.validity_conditions",
+          "value": [
+            "现有版本足以展示核心价值"
+          ],
+          "rendered": "现有版本足以展示核心价值"
+        },
+        "已经确认的信息": {
+          "path": "evidence.confirmed_facts",
+          "value": [
+            "已有可展示版本"
+          ],
+          "rendered": "已有可展示版本"
+        },
+        "根据现有信息可以推断": {
+          "path": "evidence.inferences",
+          "value": [
+            "继续开发暂时无法减少最大未知"
+          ],
+          "rendered": "继续开发暂时无法减少最大未知"
+        },
+        "当前判断仍依赖": {
+          "path": "evidence.assumptions",
+          "value": [
+            "陌生对象反馈比熟人反馈更能区分方向"
+          ],
+          "rendered": "陌生对象反馈比熟人反馈更能区分方向"
+        },
+        "仍不知道的关键问题": {
+          "path": "evidence.unknowns",
+          "value": [
+            "陌生对象是否愿意真实付款"
+          ],
+          "rendered": "陌生对象是否愿意真实付款"
+        },
+        "本轮依据来自哪里": {
+          "path": "evidence.sources",
+          "value": [],
+          "rendered": "本轮未调用外部来源"
+        },
+        "什么情况会改变判断": {
+          "path": "reversal_signals",
+          "value": [
+            "出现真实付款"
+          ],
+          "rendered": "出现真实付款"
+        },
+        "要弄清什么": {
+          "path": "main_experiment.core_hypothesis",
+          "value": "现有版本解决了足以付费的问题",
+          "rendered": "现有版本解决了足以付费的问题"
+        },
+        "先做什么": {
+          "path": "main_experiment.action",
+          "value": "向符合画像的陌生对象展示现有版本并邀请真实付款",
+          "rendered": "向符合画像的陌生对象展示现有版本并邀请真实付款"
+        },
+        "看哪些现实信号": {
+          "path": "main_experiment.observation",
+          "value": "记录付款、明确拒绝与拒绝理由",
+          "rendered": "记录付款、明确拒绝与拒绝理由"
+        },
+        "什么时候重新决定": {
+          "path": "main_experiment.reassessment",
+          "value": "出现真实付款时复判是否推进，否则停止新增投入",
+          "rendered": "出现真实付款时复判是否推进，否则停止新增投入"
+        },
+        "用户给定的实验边界": {
+          "path": "main_experiment.user_supplied_boundaries",
+          "value": [],
+          "rendered": "本轮没有用户另行给定的实验边界"
+        },
+        "系统建议的实验边界": {
+          "path": "main_experiment.suggested_boundaries",
+          "value": [],
+          "rendered": "本轮没有系统新增的实验边界"
+        },
+        "何时触发复判": {
+          "path": "reassessment_triggers",
+          "value": [
+            "出现真实付款或持续只有明确拒绝"
+          ],
+          "rendered": "出现真实付款或持续只有明确拒绝"
+        },
+        "本轮参与者与使用的能力": {
+          "path": "participation_and_capabilities",
+          "value": {
+            "main_agents": 1,
+            "additional_agents_planned": 0,
+            "additional_agents_started": 0,
+            "additional_agents_completed": 0,
+            "additional_agents_failed": 0,
+            "human_participants_requested": [],
+            "capabilities_used": [],
+            "private_data_accessed": false,
+            "external_action_executed": false,
+            "consent_ids": [],
+            "receipt_ids": [],
+            "conflicts_and_gaps": []
+          },
+          "rendered": "主 Agent 1 个；未计划、启动、完成或失败额外 Agent；未请求真人参与；未调用额外能力；未访问私有数据；未执行外部行动；没有授权、回执、冲突或缺口"
+        },
+        "这份记录保存在哪里": {
+          "path": "persistence",
+          "value": {
+            "mode": "conversation_only",
+            "authorized": false
+          },
+          "rendered": "仅在当前对话中呈现，未授权写入文件或远端"
+        }
+      }
     }
   ],
   "semantic": [

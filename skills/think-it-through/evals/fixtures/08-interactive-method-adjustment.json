@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.4.0",
+  "contract_version": "0.4.1",
   "id": "interactive-method-adjustment",
   "domain": "product",
   "already_executed": false,
@@ -174,16 +174,50 @@
       ]
     }
   ],
-  "fallback": {
-    "allowed_host_statuses": [
-      "unavailable",
-      "failed"
-    ],
-    "surface": "text-fallback",
-    "tool_call_observed": false,
-    "when_interactive_controls_unavailable": "show-equivalent-relevant-choices-and-equal-free-expression",
-    "must_preserve_selection_semantics": true
-  },
+  "fallback_cases": [
+    {
+      "id": "method-control-unavailable",
+      "host_control_status": "unavailable",
+      "surface": "text-fallback",
+      "tool_call_observed": false,
+      "selection_mode": "multi",
+      "options": [],
+      "host_free_text_available": true,
+      "question_text": "",
+      "supplement_mode": "none",
+      "must_preserve_selection_semantics": true,
+      "must_preserve_structured_method_meaning": true,
+      "must_not_retry_same_call": true
+    },
+    {
+      "id": "method-control-failed",
+      "host_control_status": "failed",
+      "surface": "text-fallback",
+      "tool_call_observed": true,
+      "selection_mode": "multi",
+      "options": [],
+      "host_free_text_available": true,
+      "question_text": "",
+      "supplement_mode": "none",
+      "must_preserve_selection_semantics": true,
+      "must_preserve_structured_method_meaning": true,
+      "must_not_retry_same_call": true
+    },
+    {
+      "id": "method-control-rejected",
+      "host_control_status": "rejected",
+      "surface": "text-fallback",
+      "tool_call_observed": true,
+      "selection_mode": "multi",
+      "options": [],
+      "host_free_text_available": true,
+      "question_text": "",
+      "supplement_mode": "none",
+      "must_preserve_selection_semantics": true,
+      "must_preserve_structured_method_meaning": true,
+      "must_not_retry_same_call": true
+    }
+  ],
   "semantic": [
     "formal-method-names-remain-visible",
     "add-preserves-current-recommendation",

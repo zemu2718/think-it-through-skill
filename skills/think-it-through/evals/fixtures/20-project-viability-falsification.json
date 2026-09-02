@@ -1,10 +1,10 @@
 {
-  "contract_version": "0.4.0",
+  "contract_version": "0.4.1",
   "id": "project-viability-falsification",
   "domain": "project-viability",
   "positive": {
     "record": {
-      "contract_version": "0.4.0",
+      "contract_version": "0.4.1",
       "decision_context": {
         "decision": "采用现实替代还是正式自研",
         "commitment_type": "重大且难撤回的产品建设",
@@ -396,8 +396,7 @@
         "chosen_rank": 3,
         "rationale": "完整证据链仍显示核心缺口",
         "evidence_item_ids": [
-          "e-trial",
-          "e-adversarial"
+          "e-trial"
         ],
         "upgrade_conditions": [
           "仅围绕已证明缺口收缩范围"
@@ -518,7 +517,7 @@
               "已确认事实"
             ],
             "tasks": [
-              "独立反方任务"
+              "独立挑战正式自研必要性"
             ],
             "data_boundary": [
               "最小上下文"
@@ -536,7 +535,7 @@
       ]
     },
     "receipt_bundle": {
-      "contract_version": "0.4.0",
+      "contract_version": "0.4.1",
       "capabilities": [
         {
           "name": "search.public_web",
@@ -630,7 +629,7 @@
           "status": "completed",
           "provider": "test-host",
           "scope": [
-            "独立反方任务"
+            "独立挑战正式自研必要性"
           ],
           "consent_ids": [
             "consent-adversarial"
@@ -644,7 +643,7 @@
             "actual_total": 2
           },
           "completed_tasks": [
-            "独立反方任务"
+            "独立挑战正式自研必要性"
           ],
           "failed_tasks": [],
           "private_data_accessed": false,
@@ -655,6 +654,50 @@
     },
     "must_pass": true
   },
+  "subtractive_path_cases": [
+    {
+      "id": "do-not-add-new-platform",
+      "proposal": "不建设新平台，继续使用已能完成核心任务的现状",
+      "mapped_candidate_category": "status_quo",
+      "mapped_direction": "hold",
+      "must_not_create_new_category": true
+    },
+    {
+      "id": "remove-redundant-approval-step",
+      "proposal": "删除重复审批步骤并简化交接流程",
+      "mapped_candidate_category": "manual_or_process",
+      "mapped_direction": "adopt",
+      "must_not_create_new_category": true
+    },
+    {
+      "id": "keep-only-thin-connection",
+      "proposal": "不做完整系统，只保留连接现有工具的导出脚本",
+      "mapped_candidate_category": "plugin_script_or_thin_integration",
+      "mapped_direction": "thin_integration",
+      "must_not_create_new_category": true
+    },
+    {
+      "id": "retain-only-critical-local-gap",
+      "proposal": "删除通用能力，只补现成方案缺失的最小关键能力",
+      "mapped_candidate_category": "local_supplement",
+      "mapped_direction": "combine",
+      "must_not_create_new_category": true
+    },
+    {
+      "id": "shrink-formal-build-to-validation",
+      "proposal": "把正式开发缩小为可撤回的小范围验证",
+      "mapped_candidate_category": "local_supplement",
+      "mapped_direction": "limited_validation",
+      "must_not_create_new_category": true
+    },
+    {
+      "id": "stop-existing-build",
+      "proposal": "停止继续加码并停掉当前自研方向",
+      "mapped_candidate_category": "independent_build",
+      "mapped_direction": "stop",
+      "must_not_create_new_category": true
+    }
+  ],
   "mutations": [
     {
       "id": "focal-solution-not-candidate",
@@ -736,9 +779,58 @@
       }
     },
     {
+      "id": "layer-supported-with-unknown-evidence",
+      "target": "record.evidence_items[0].state",
+      "replacement": "unknown"
+    },
+    {
+      "id": "layer-supported-with-opposing-evidence",
+      "target": "record.evidence_items[0].state",
+      "replacement": "opposes"
+    },
+    {
+      "id": "trial-evidence-direction-reversed",
+      "target": "record.evidence_items[4].state",
+      "replacement": "supports"
+    },
+    {
+      "id": "commitment-unrelated-source-backed",
+      "target": "record.commitment.evidence_item_ids",
+      "replacement": [
+        "e-fit"
+      ]
+    },
+    {
+      "id": "adversarial-missing-agent-counts",
+      "target": "receipt_bundle.operations[3].agent_counts",
+      "operation": "delete"
+    },
+    {
+      "id": "adversarial-wrong-completed-task",
+      "target": "receipt_bundle.operations[3].completed_tasks",
+      "replacement": [
+        "其他任务"
+      ]
+    },
+    {
+      "id": "adversarial-hidden-failed-task",
+      "target": "receipt_bundle.operations[3].failed_tasks",
+      "replacement": [
+        "独立挑战正式自研必要性"
+      ]
+    },
+    {
       "id": "chosen-rank-over-ceiling",
       "target": "record.validation_layers.alternative_ecosystem.status",
       "replacement": "unknown"
+    },
+    {
+      "id": "source-less-material-cannot-support-build",
+      "target": "record.commitment.evidence_item_ids",
+      "replacement": [
+        "e-trial",
+        "e-adversarial"
+      ]
     },
     {
       "id": "dangling-no-go-reference",
@@ -755,5 +847,5 @@
       ]
     }
   ],
-  "evidence_boundary": "本 fixture 只证明 v0.4.0 sidecar 的确定性合同，不证明真实搜索、来源可信、候选最强、现实试用、Agent 独立性或 runtime 兼容。"
+  "evidence_boundary": "本 fixture 只证明 v0.4.1 sidecar 的确定性合同，不证明真实搜索、来源可信、候选最强、现实试用、Agent 独立性或 runtime 兼容。"
 }

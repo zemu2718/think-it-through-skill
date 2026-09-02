@@ -22,7 +22,7 @@ from typing import Any
 from build_distribution import ROOT, SKILL_DIR, build_archive, load_manifest
 from grade_contracts import InteractionEvidence, grade
 
-CONTRACT_VERSION = "0.4.0"
+CONTRACT_VERSION = "0.4.1"
 AUTHORIZATION_PHRASE = "I_AUTHORIZE_PROVIDER_CALLS"
 OUTPUT_ROOT = ROOT / "dist" / "runtime-smoke"
 FEEDBACK_OPTIONS = (
@@ -48,11 +48,66 @@ SYSTEM_PROMPT = """这是已安装 Skill 的隔离 runtime smoke。
 每轮只输出 Skill 在当前对话状态要求的用户可见内容，不解释测试 harness，也不要输出隐藏思维链。
 """
 
+SNAPSHOT_FIELDS = (
+    ("记录版本", "contract_version"),
+    ("这次要想清楚的事", "topic"),
+    ("真正想得到或保护的结果", "true_objectives"),
+    ("本轮需要决定什么", "decision"),
+    ("本轮采用的思考角度", "confirmed_methods"),
+    ("当前判断", "judgment.state"),
+    ("目前更合适的方向", "judgment.recommendation"),
+    ("为什么这样判断", "judgment.rationale"),
+    ("判断成立的前提", "judgment.validity_conditions"),
+    ("已经确认的信息", "evidence.confirmed_facts"),
+    ("根据现有信息可以推断", "evidence.inferences"),
+    ("当前判断仍依赖", "evidence.assumptions"),
+    ("仍不知道的关键问题", "evidence.unknowns"),
+    ("本轮依据来自哪里", "evidence.sources"),
+    ("什么情况会改变判断", "reversal_signals"),
+    ("要弄清什么", "main_experiment.core_hypothesis"),
+    ("先做什么", "main_experiment.action"),
+    ("看哪些现实信号", "main_experiment.observation"),
+    ("什么时候重新决定", "main_experiment.reassessment"),
+    ("用户给定的实验边界", "main_experiment.user_supplied_boundaries"),
+    ("系统建议的实验边界", "main_experiment.suggested_boundaries"),
+    ("何时触发复判", "reassessment_triggers"),
+    ("本轮参与者与使用的能力", "participation_and_capabilities"),
+    ("这份记录保存在哪里", "persistence"),
+)
+SNAPSHOT_LABELS = tuple(label for label, _ in SNAPSHOT_FIELDS)
+SNAPSHOT_PATHS = {label: path for label, path in SNAPSHOT_FIELDS}
+
 TURN_PROMPTS = (
     """我想做一个面向小商家的排班工具。现在请先帮我想清楚，但我还没说这次最想保护或得到什么。""",
     """我最想确认陌生店主是否真的愿意为现有版本付费；在没有这个证据前，我不想继续投入。""",
     """我确认这轮只做基本梳理，不加入额外方法。""",
-    """会让我放弃继续投入的现实结果是：陌生店主明确拒绝为现有版本付费。""",
+    """会让我放弃继续投入的现实结果是：陌生店主明确拒绝为现有版本付费。
+请完成这一轮，并在“## 决策快照”下逐行使用以下字段名；每个字段值都写成单行 JSON，字符串、数组、对象、布尔值和数字均使用标准 JSON 语法。不要省略字段，不要增加字段，也不要把数组或对象改写成普通话摘要：
+记录版本
+这次要想清楚的事
+真正想得到或保护的结果
+本轮需要决定什么
+本轮采用的思考角度
+当前判断
+目前更合适的方向
+为什么这样判断
+判断成立的前提
+已经确认的信息
+根据现有信息可以推断
+当前判断仍依赖
+仍不知道的关键问题
+本轮依据来自哪里
+什么情况会改变判断
+要弄清什么
+先做什么
+看哪些现实信号
+什么时候重新决定
+用户给定的实验边界
+系统建议的实验边界
+何时触发复判
+本轮参与者与使用的能力
+这份记录保存在哪里
+这只是让本轮用户可见快照可无损复制和审阅；不要展示内部 schema key。""",
 )
 
 ACTIVATION_PROMPTS = {
@@ -376,7 +431,97 @@ def _interaction(
     )
 
 
-def _grade_outputs(outputs: tuple[str, ...]) -> list[dict[str, Any]]:
+def _snapshot_section(text: str) -> str:
+    heading = re.search(r"(?mi)^#{1,3}\s+(?:决策快照|decision snapshot)\s*$", text)
+    if heading is None:
+        raise ValueError("B 输出缺少决策快照标题")
+    section = text[heading.end():]
+    boundary = re.search(r"(?mi)^#{1,3}\s+(?:反馈|feedback)\s*$", section)
+    return section[:boundary.start()] if boundary else section
+
+
+def _parse_visible_snapshot(text: str) -> tuple[dict[str, object], dict[str, object]]:
+    section = _snapshot_section(text)
+    values: dict[str, object] = {}
+    rendered: dict[str, str] = {}
+    labels = sorted(SNAPSHOT_LABELS, key=len, reverse=True)
+    field_re = re.compile(
+        rf"(?m)^\s*(?:[-*+]\s+)?(?P<label>{'|'.join(re.escape(label) for label in labels)})[：:]\s*(?P<value>\S.*)\s*$"
+    )
+    for match in field_re.finditer(section):
+        label = match.group("label")
+        if label in values:
+            raise ValueError(f"B 决策快照字段重复：{label}")
+        raw_value = match.group("value").strip()
+        try:
+            values[label] = json.loads(raw_value)
+        except json.JSONDecodeError as error:
+            raise ValueError(f"B 决策快照字段不是单行 JSON：{label}") from error
+        rendered[label] = raw_value
+
+    missing = [label for label in SNAPSHOT_LABELS if label not in values]
+    unknown_lines = [
+        line.strip()
+        for line in section.splitlines()
+        if line.strip()
+        and not field_re.fullmatch(line)
+    ]
+    if missing or unknown_lines:
+        raise ValueError(
+            f"B 决策快照字段不完整或包含额外内容：missing={missing}；extra={unknown_lines}"
+        )
+
+    decision_record = {
+        "contract_version": values["记录版本"],
+        "topic": values["这次要想清楚的事"],
+        "true_objectives": values["真正想得到或保护的结果"],
+        "decision": values["本轮需要决定什么"],
+        "confirmed_methods": values["本轮采用的思考角度"],
+        "judgment": {
+            "state": values["当前判断"],
+            "recommendation": values["目前更合适的方向"],
+            "rationale": values["为什么这样判断"],
+            "validity_conditions": values["判断成立的前提"],
+        },
+        "evidence": {
+            "confirmed_facts": values["已经确认的信息"],
+            "inferences": values["根据现有信息可以推断"],
+            "assumptions": values["当前判断仍依赖"],
+            "unknowns": values["仍不知道的关键问题"],
+            "sources": values["本轮依据来自哪里"],
+        },
+        "reversal_signals": values["什么情况会改变判断"],
+        "main_experiment": {
+            "core_hypothesis": values["要弄清什么"],
+            "action": values["先做什么"],
+            "observation": values["看哪些现实信号"],
+            "reassessment": values["什么时候重新决定"],
+            "user_supplied_boundaries": values["用户给定的实验边界"],
+            "suggested_boundaries": values["系统建议的实验边界"],
+        },
+        "reassessment_triggers": values["何时触发复判"],
+        "participation_and_capabilities": values["本轮参与者与使用的能力"],
+        "persistence": values["这份记录保存在哪里"],
+    }
+    visible_snapshot = {
+        label: {
+            "path": SNAPSHOT_PATHS[label],
+            "value": values[label],
+            "rendered": rendered[label],
+        }
+        for label in SNAPSHOT_LABELS
+    }
+    return decision_record, visible_snapshot
+
+
+def _grade_outputs(outputs: tuple[str, ...]) -> tuple[
+    list[dict[str, Any]],
+    dict[str, object],
+    dict[str, object],
+]:
+    if len(outputs) != len(TURN_PROMPTS):
+        raise ValueError(f"runtime smoke 应生成 {len(TURN_PROMPTS)} 轮输出，实际为 {len(outputs)}")
+    decision_record, visible_snapshot = _parse_visible_snapshot(outputs[-1])
     specifications = (
         ("R", "align", "open", [], []),
         ("R", "method", "compatible-set", [], []),
@@ -396,6 +541,8 @@ def _grade_outputs(outputs: tuple[str, ...]) -> list[dict[str, Any]]:
             r_mode,
             _interaction(stage, r_mode, answer_shape),
             answer_shape,
+            decision_record=decision_record if stage == "B" else None,
+            visible_snapshot=visible_snapshot if stage == "B" else None,
         )
         failed = [check.text for check in checks if not check.passed]
         reports.append(
@@ -410,7 +557,7 @@ def _grade_outputs(outputs: tuple[str, ...]) -> list[dict[str, Any]]:
                 ],
             }
         )
-    return reports
+    return reports, decision_record, visible_snapshot
 
 
 def _redact_text(text: str, replacements: dict[str, str]) -> str:
@@ -438,6 +585,8 @@ def _record_artifacts(
     package_sha: str,
     result: RuntimeResult,
     reports: list[dict[str, Any]],
+    decision_record: dict[str, object],
+    visible_snapshot: dict[str, object],
     recorded_at: str,
 ) -> None:
     output_dir.mkdir(parents=True)
@@ -459,9 +608,17 @@ def _record_artifacts(
     redacted_reports = json.loads(
         _redact_text(json.dumps(reports, ensure_ascii=False), replacements)
     )
+    redacted_decision_record = json.loads(
+        _redact_text(json.dumps(decision_record, ensure_ascii=False), replacements)
+    )
+    redacted_visible_snapshot = json.loads(
+        _redact_text(json.dumps(visible_snapshot, ensure_ascii=False), replacements)
+    )
     _write_json(output_dir / "transcript.json", redacted_transcript)
     _write_json(output_dir / "grader-report.json", redacted_reports)
     _write_json(output_dir / "trace-summary.json", redacted_trace)
+    _write_json(output_dir / "decision-record.json", redacted_decision_record)
+    _write_json(output_dir / "visible-snapshot.json", redacted_visible_snapshot)
     for index, output in enumerate(result.outputs, 1):
         (output_dir / f"turn-{index}.md").write_text(
             _redact_text(output, replacements).rstrip() + "\n",
@@ -469,7 +626,13 @@ def _record_artifacts(
         )
 
     artifacts = []
-    for name in ("transcript.json", "grader-report.json", "trace-summary.json"):
+    for name in (
+        "transcript.json",
+        "grader-report.json",
+        "trace-summary.json",
+        "decision-record.json",
+        "visible-snapshot.json",
+    ):
         media_type = "application/json"
         artifacts.append({"path": name, "media_type": media_type, "sha256": _sha256(output_dir / name)})
     artifacts.extend(
@@ -512,7 +675,7 @@ def _record_artifacts(
                 "level": "L4",
                 "status": "passed" if passed else "failed",
                 "command_argv": [runtime, "<same-session-four-turn-smoke>"],
-                "assertions": ["R-align、R-method、A、B 均由当前 v0.4.0 grader 评分"],
+                "assertions": ["R-align、R-method、A、B 均由当前 v0.4.1 grader 评分"],
                 "notes": "candidate evidence；人工审阅前不得提升 runtime-support.json",
             },
         ],
@@ -607,7 +770,7 @@ def main() -> int:
         if session_id is None:
             raise RuntimeError("runtime smoke 未建立 session")
         result = RuntimeResult(session_id, tuple(outputs), tuple(traces), tuple(commands))
-        reports = _grade_outputs(result.outputs)
+        reports, decision_record, visible_snapshot = _grade_outputs(result.outputs)
         _record_artifacts(
             output_dir,
             args.runtime,
@@ -616,6 +779,8 @@ def main() -> int:
             package_sha,
             result,
             reports,
+            decision_record,
+            visible_snapshot,
             recorded_at,
         )
     return 0 if all(report["passed"] for report in reports) else 1

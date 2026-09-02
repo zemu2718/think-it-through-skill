@@ -1,6 +1,6 @@
 # 行为评测 Rubric
 
-本文件保留原 20 分行为评测的历史角色。v0.4.0 当前十维核心用户体验评测见 [`ux-rubric.md`](ux-rubric.md)，新增能力体验见 [`enhancement-rubric.md`](enhancement-rubric.md)；三套评分互不覆盖、互不重解释，旧行为分数也不能证明当前原生交互、Gate、协作、跨宿主或终端布局。新体验未运行模型或真实用户评审时，必须标为 `未实测 / not_run`。
+本文件保留原 20 分行为评测的历史角色。v0.4.1 当前十维核心用户体验评测见 [`ux-rubric.md`](ux-rubric.md)，新增能力体验见 [`enhancement-rubric.md`](enhancement-rubric.md)；三套评分互不覆盖、互不重解释，旧行为分数也不能证明当前原生交互、Gate、协作、跨宿主或终端布局。新体验未运行模型或真实用户评审时，必须标为 `未实测 / not_run`。
 
 ## 评分方式
 

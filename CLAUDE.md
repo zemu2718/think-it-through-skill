@@ -4,15 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目定位
 
-本仓库发布纯指令型 Agent Skill“想清楚 · Think It Through”。v0.4.0 将其定义为重要行动前后的决策与证据协议：先把“表面任务 → 真实目的 → 决策问题”收敛为 R-align / R-method / A；项目、功能、自研或技术形态先降级为候选，并分开判断问题存在、问题强度、方案适配和替代生态；用户回答后才按需要路由有界 Evidence / Participation Gate；最终 B 交付一个综合判断、一个主现实证据闭环、可复制的决策快照和四项反馈。
+本仓库发布纯指令型 Agent Skill“想清楚 · Think It Through”。v0.4.1 将其定义为重要行动前后的决策与证据协议：先把“表面任务 → 真实目的 → 决策问题”收敛为 R-align / R-method / A；项目、功能、自研或技术形态先降级为候选，并分开判断问题存在、问题强度、方案适配和替代生态；用户回答后才按需要路由有界 Evidence / Participation Gate；最终 B 交付一个综合判断、一个主现实证据闭环、可复制的决策快照和四项反馈。
 
-文档职责必须保持单一：`README.md` 是 GitHub 默认展示的精简中文用户入口，`README.en.md` 是英文用户入口，只负责让普通用户看懂价值、判断是否适用并开始使用；`docs/installation.md` 与 `docs/installation.en.md` 承接详细安装和文件核验；`docs/compatibility-and-evidence.md` 与 `docs/compatibility-and-evidence.en.md` 解释公开兼容状态、冻结证据和提升边界，但不是第二份合同；`PRODUCT.md` 说明产品愿景、目标用户与原则；`REQUIREMENTS.md` 是唯一正式行为、安全与验收依据；`docs/product-architecture-v0.4.0.md` 只保留当前非规范性架构理由、历史取舍和验证路线，历史 `docs/product-architecture-v0.3.0.md` 保留；`CHANGELOG.md` 记录版本事实。不要在多个文件维护第二套正式合同。
+文档职责必须保持单一：`README.md` 是 GitHub 默认展示的精简中文用户入口，`README.en.md` 是英文用户入口，只负责让普通用户看懂价值、判断是否适用并开始使用；`docs/installation.md` 与 `docs/installation.en.md` 承接详细安装和文件核验；`docs/compatibility-and-evidence.md` 与 `docs/compatibility-and-evidence.en.md` 解释公开兼容状态、冻结证据和提升边界，但不是第二份合同；`PRODUCT.md` 说明产品愿景、目标用户与原则；`REQUIREMENTS.md` 是唯一正式行为、安全与验收依据；`docs/product-architecture-v0.4.0.md` 保留 v0.4.0 非规范性架构理由、历史取舍和验证路线，历史 `docs/product-architecture-v0.3.0.md` 保留；`CHANGELOG.md` 记录版本事实。不要在多个文件维护第二套正式合同。
 
 当前可靠调用方式是 `/think-it-through`。自动发现的冻结 v0.1 holdout 仅为 9/16（正例 1/8、负例 8/8），不要把自然语言自动加载或其他客户端兼容性描述为已经通过。
 
-README、品牌表达或视觉资产改动前先读 `.agents/brand-context.md`，但它只是 `REQUIREMENTS.md` 与 `PRODUCT.md` 的派生摘要，不是第二份合同。视觉资产由 `assets/manifest.json` 定义职责与变体；README Invocation Card 的深浅 PNG 是分别固定哈希的 canonical raster originals，不得随意重编码；Social Preview 只编辑 SVG 源。只有 manifest 声明了 generator 的派生 raster 才通过 `scripts/render_assets.py` 生成，不手改派生文件，也不把本地生成误写成 GitHub 已启用。
+README、品牌表达或视觉资产改动前先读 `.agents/brand-context.md`，但它只是 `REQUIREMENTS.md` 与 `PRODUCT.md` 的派生摘要，不是第二份合同。视觉资产由 `assets/manifest.json` 定义职责与变体；深色 README Invocation Card 是固定哈希的唯一 canonical 3D raster source，浅色卡片和 Social Preview PNG 通过 `scripts/render_assets.py` 从 manifest 声明的源确定性生成，不得手改或另存第二份主体。Social Preview 同时依赖其 SVG 布局源与深色 canonical 主体；本地生成不得误写成 GitHub 已启用。
 
-`docs/project-viability-falsification-proposal.md` 是非规范性设计输入，不是第二份合同；已实现语义只由 v0.4.0 `REQUIREMENTS.md` 和 `skills/think-it-through/` 当前源码定义。该机制不新增协议状态、intent、授权类型、receipt kind、DecisionRecord state、core schema 或方法卡。
+`docs/project-viability-falsification-proposal.md` 是非规范性设计输入，不是第二份合同；已实现语义只由 v0.4.1 `REQUIREMENTS.md` 和 `skills/think-it-through/` 当前源码定义。该机制不新增协议状态、intent、授权类型、receipt kind、DecisionRecord state、core schema 或方法卡。
 
 ## 常用命令
 
@@ -56,6 +56,14 @@ PYTHONPATH=scripts uv run --python 3.12 --with-requirements requirements-validat
   --r-mode align \
   --input /path/to/assistant-output.md \
   --interaction-json /path/to/interaction-evidence.json
+
+PYTHONPATH=scripts uv run --python 3.12 --with-requirements requirements-validation.txt \
+  python scripts/grade_contracts.py \
+  --stage B \
+  --input /path/to/assistant-output.md \
+  --interaction-json /path/to/interaction-evidence.json \
+  --decision-record-json /path/to/decision-record.json \
+  --visible-snapshot-json /path/to/visible-snapshot.json
 ```
 
 Gate 与记录仍通过必填的 `--input` 读取对应 JSON；Evidence / Participation 另需授权与回执：
@@ -81,7 +89,7 @@ PYTHONPATH=scripts uv run --python 3.12 --with-requirements requirements-validat
   --input /path/to/decision-record.json
 ```
 
-`HUMAN` 只需通过 `--input` 提供记录。`PROJECT_VIABILITY` 通过 `--input` 提供 grader-only sidecar，并可用 `--consent-json` 的 `{"consents": [...]}` 与现有 receipt bundle 校验证据链；它不是运行时状态或 DecisionRecord。`CHECKPOINT` 通过 `--input` 提供输出并要求 `--context-json`；上下文要求实际呈现检查点时还要提供 `--interaction-json`。以 `python scripts/grade_contracts.py --help`、实际 CLI parser 和测试为准，不在脚本外复制第二套参数语义。
+`HUMAN` 的 `draft_only` 只需通过 `--input` 提供记录；`authorized_send` 还必须同时提供 `--consent-json` 的 exact `{"consents": [...]}` 双授权 bundle 与 `--receipt-json` 回执 bundle。`PROJECT_VIABILITY` 通过 `--input` 提供 grader-only sidecar，并可用同样的 consent wrapper 与现有 receipt bundle 校验证据链；它不是运行时状态或 DecisionRecord。`CHECKPOINT` 通过 `--input` 提供输出并要求 `--context-json`；上下文要求实际呈现检查点时还要提供 `--interaction-json`。以 `python scripts/grade_contracts.py --help`、实际 CLI parser 和测试为准，不在脚本外复制第二套参数语义。
 
 构建新版本分发包时必须使用新的空目录；脚本会拒绝覆盖已有 archive 或 `unpacked/`：
 
@@ -149,7 +157,7 @@ README 文案修改以普通用户第一次阅读为视角，不逐句孤立修�
 
 公开文档校验优先锁定结构、必要语义、命令、链接和声明边界。除 canonical 品牌文案、可靠调用方式、安全边界及必须逐字一致的合同内容外，不绑定整句普通文案；mutation test 验证语义缺失或错误声明，而不是阻止自然润色。
 
-### 当前 v0.4.0 状态与交互合同
+### 当前 v0.4.1 状态与交互合同
 
 唯一状态语义：
 
@@ -225,7 +233,7 @@ DecisionRecord 默认：
 
 ### 当前评分器与同步范围
 
-`scripts/grade_contracts.py` 是 v0.4.0 当前评分器。其 `InteractionEvidence` 规范化字符串或结构化 option，并记录宿主状态、交互表面、实际调用、single / multi / none、宿主自由输入、原生问题正文和 `supplement_mode`。failed / rejected 记录已发生的 trace，surface 记录最终呈现。
+`scripts/grade_contracts.py` 是 v0.4.1 当前评分器。其 `InteractionEvidence` 规范化字符串或结构化 option，并记录宿主状态、交互表面、实际调用、single / multi / none、宿主自由输入、原生问题正文和 `supplement_mode`。failed / rejected 记录已发生的 trace，surface 记录最终呈现。
 
 `CLAUDE.md` 本身会进入 `validate_public_docs`，且 `scripts/validate_repo.py` 对其中若干维护边界做短语断言。压缩、改名或重构本文件时必须同步 validator 与 `scripts/test_public_docs.py`，并运行完整单测和仓库校验；不要为了通过断言保留已经错误的命令。
 
@@ -251,7 +259,7 @@ DecisionRecord 默认：
 
 不要用当前合同重新评分或改写 v0.1 快照：
 
-- `scripts/grade_contracts.py`：当前 v0.4.0 评分器；
+- `scripts/grade_contracts.py`：当前 v0.4.1 评分器；
 - `scripts/grade_contracts_v0_1.py`：冻结 legacy 评分器；
 - `scripts/grade_behavior_runs.py`：必须显式从 `grade_contracts_v0_1` 导入；
 - `scripts/test_legacy_behavior_grader.py`：可维护的保护测试，负责导入隔离、transcript 哈希和冻结评分重现；可适配 canonical benchmark 布局，但不得改变受保护语义；
@@ -266,12 +274,12 @@ DecisionRecord 默认：
 
 稳定源码、公开发布对象、兼容证据、内部评测状态与具体会话事实必须分层：
 
-- v0.4.0 是当前稳定源码版本、正式产品合同和最新真实公开 tag / Release / asset / 校验和；v0.2.0 与 v0.3.0 继续作为历史发布保留，历史事实不得改写；
+- v0.4.1 是当前发布候选源码与正式产品合同，尚未创建同名公开对象；v0.4.0 是最新真实公开 tag / Release / asset / 校验和，v0.2.0 与 v0.3.0 继续作为历史发布保留，历史事实不得改写；
 - 稳定源码准入由合同、schema、fixtures、grader、公开文档、确定性仓库校验、归档复验、固定格式检查和安装器 L1/L2 smoke 建立，不要求逐客户端真实验证先完成；
 - Git commit、tag、GitHub Release 和可下载 asset 只在对应对象真实存在时声明；稳定源码状态不得冒充这些公开对象；
 - 双语 README 保持普通用户入口，不复制安装手册、兼容矩阵或内部评测状态；双语兼容与证据说明可以解释稳定发布对象与已由实际 evidence 建立的兼容层级；PRODUCT、REQUIREMENTS 和当前架构说明按各自职责保留产品、正式合同与架构事实；运行时包不复制仓库级矩阵或内部评测状态；
 - 当前可靠入口仍用“Claude Code 显式 `/think-it-through` + 纯文本跨宿主基线 + 条件能力逐会话协商”表达；
-- `evals/` 继续按实际执行情况维护内部机器状态，不得把未运行项改成 `passed`；v0.4.0 stable source 与真实多轮状态 `not_run` 可以同时成立；
+- `evals/` 继续按实际执行情况维护内部机器状态，不得把未运行项改成 `passed`；v0.4.1 发布候选源码与真实多轮状态 `not_run` 可以同时成立；
 - 普通 CI 做合同、schema、L0 格式和 L1/L2 安装器检查，不调用模型 provider，也不自动修改兼容矩阵；
 - 用户 Issue 和安装观察属于发布后反馈线索，只有绑定准确 revision/runtime version、可复现、脱敏并经人工审阅的 evidence 才能改变矩阵；
 - Claude Code / Codex 真实 smoke 只由手动 workflow 或本地 harness 生成候选 artifact；实际 provider 调用需要独立 `capability_call` 授权，且不会自动提升 L3～L5；
@@ -279,4 +287,4 @@ DecisionRecord 默认：
 - 具体能力是否发生只由当前会话 capability observation、consent、工具 trace 与 receipt 建立；未调用、拒绝和失败不得写成完成；
 - 新增宿主原生兼容或真实体验声明前，必须建立对应版本化加载、能力、交互、授权、执行与降级证据。
 
-旧 v0.1 分数不能证明 v0.4.0 行为。
+旧 v0.1 分数不能证明 v0.4.1 行为。

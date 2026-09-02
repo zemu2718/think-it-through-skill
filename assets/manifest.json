@@ -7,15 +7,14 @@
       "variants": [
         {
           "locale": "neutral",
-          "theme": "light",
-          "source": "assets/readme-invocation-card-light.png",
-          "source_sha256": "7c2bb4df41236ccb60396952a18d28e4a071ab970f479be24d8790afcc809bfa"
-        },
-        {
-          "locale": "neutral",
           "theme": "dark",
           "source": "assets/readme-invocation-card-dark.png",
           "source_sha256": "33760ccbbf4011f663f1e998ac41f006f31a8888a22945c6e395976c7bda7ff4"
+        },
+        {
+          "locale": "neutral",
+          "theme": "light",
+          "output": "assets/readme-invocation-card-light.png"
         }
       ],
       "canvas": {
@@ -23,10 +22,24 @@
         "height": 600
       },
       "pixel_mode": "RGBA",
-      "max_bytes": 160000,
+      "max_source_bytes": 160000,
+      "max_output_bytes": 160000,
+      "composition": {
+        "subject_crop": [168, 78, 434, 448],
+        "subject_anchor": [168, 78],
+        "scale": 1,
+        "resampling": "none"
+      },
+      "generator": {
+        "script": "scripts/render_assets.py",
+        "renderer": "Pillow",
+        "renderer_version": "11.3.0",
+        "pixel_mode": "RGBA"
+      },
       "provenance": {
-        "selection": "user-selected light and dark canonical raster originals",
+        "selection": "user-selected dark canonical raster source",
         "source_material": "the repository's canonical Thinking Light 3D subject",
+        "geometry_basis": "the dark variant fixes the subject scale, position, base width, and pivot placement for every derived use",
         "reference_scope": "reverse-skill README first-image use and compact badge intent only; no copied composition or brand elements"
       }
     },
@@ -35,7 +48,7 @@
       "role": "social-preview",
       "variants": [
         {
-          "locale": "bilingual",
+          "locale": "en",
           "theme": "dark",
           "source": "assets/social-preview.svg",
           "output": "assets/social-preview.png"
@@ -46,22 +59,27 @@
         "height": 640
       },
       "required_ids": [
+        "social-frame",
         "wordmark",
-        "tagline",
-        "thinking-light",
-        "clarity-aperture",
-        "decision-thread",
-        "optional-gate",
-        "reassessment-loop"
+        "positioning",
+        "invocation",
+        "thinking-light-slot"
       ],
+      "composition": {
+        "canonical_asset": "readme-invocation-card",
+        "canonical_theme": "dark",
+        "subject_anchor": [914, 100],
+        "scale": 1,
+        "resampling": "none"
+      },
       "max_source_bytes": 49152,
       "max_output_bytes": 409600,
       "generator": {
         "script": "scripts/render_assets.py",
         "renderer": "resvg-py",
         "renderer_version": "0.5.0",
-        "decoder": "Pillow",
-        "decoder_version": "11.3.0",
+        "compositor": "Pillow",
+        "compositor_version": "11.3.0",
         "skip_system_fonts": true,
         "pixel_mode": "RGBA"
       }

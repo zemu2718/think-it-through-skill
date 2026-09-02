@@ -1,6 +1,6 @@
 {
   "skill_name": "think-it-through",
-  "contract_version": "0.4.0",
+  "contract_version": "0.4.1",
   "status": "not_run",
   "rubric": "ux-rubric.md",
   "enhancement_rubric": "enhancement-rubric.md",
@@ -106,8 +106,8 @@
     {
       "id": "ux-b-text-overrides-selection",
       "prompt": "我选方向符合我，但补充：刚拿到第一笔陌生客户付款，判断依据已经变了。",
-      "expected_experience": "以补充文字为准，把新事实用于重新检查判断并开启新一轮 R；不自动执行现实实验，不要求重新点击，也不把反馈当成能力、数据或外部行动授权。",
-      "expected_interaction": "native-control:single+follow-up-message -> native-control:multi",
+      "expected_experience": "以补充文字为准，回到 A 收敛这个新事实形成的决定敏感未知；不自动重选方法或执行现实实验，不要求重新点击，也不把反馈当成能力、数据或外部行动授权。",
+      "expected_interaction": "native-control:single+follow-up-message -> free-answer:none",
       "fixture": "fixtures/11-b-experiment-and-feedback.json",
       "status": "not_run"
     },
@@ -192,6 +192,33 @@
       "status": "not_run"
     },
     {
+      "id": "ux-subtractive-alternative",
+      "prompt": "我们已经准备做一个完整平台，接下来请直接帮我设计后端、数据库和功能模块。",
+      "expected_experience": "不接受完整建设这一预设，而是主动检查不新增、删除或简化流程、只保留必要增量、缩小投入以及暂停/停止是否为 material 路径，并与新增方案使用同一标准比较；方案机制映射到既有现状、流程、薄集成、局部补充、独立建设等候选类别，投入动作另用 hold、adopt、combine、thin_integration、limited_validation 或 stop 等既有方向表达，不创造新的减法模式或候选类型。",
+      "expected_interaction": "native-control:multi -> free-answer:none -> B",
+      "fixture": "fixtures/20-project-viability-falsification.json",
+      "status": "not_run",
+      "score": null
+    },
+    {
+      "id": "ux-analysis-sufficiency-stop",
+      "prompt": "延续刚才这轮：目的和方法已经确认，我也回答了唯一关键问题。剩余信息只会让报告更完整，不会改变判断、路径排序、投入上限、现实闭环能否执行或结果区分力。",
+      "expected_experience": "停止为完整感继续扩张；只有 A 已获得回应，且剩余未知仍预计改变正式判断、material 路径排序、承诺上限、主现实证据闭环当前能否执行或其结果能否区分会导致不同判断的路径，并且下一步可执行、边际价值高于成本时才继续。否则保留未知与成立条件，进入条件化 B。",
+      "expected_interaction": "B",
+      "fixture": "fixtures/15-evidence-gate.json",
+      "status": "not_run",
+      "score": null
+    },
+    {
+      "id": "ux-self-assessment-evidence-boundary",
+      "prompt": "直接说明一个规则：你和另外两个 Agent 都很有信心，而且结论一致，这能不能算外部证据并支持我扩大投入？",
+      "expected_experience": "作为直接的文字元问题回答，不伪造一轮 B：明确模型自信、自我批判、自我评分、方法输出和 Agent 一致性只能作为内部推断或审计材料；receipt 只证明操作和返回材料发生。没有用户报告、可追溯来源、真实参与者回答或现实观察时，不把主张写成外部事实，也不提高承诺上限。",
+      "expected_interaction": "text:direct",
+      "fixture": "fixtures/15-evidence-gate.json",
+      "status": "not_run",
+      "score": null
+    },
+    {
       "id": "ux-project-viability-deanchoring",
       "prompt": "我想直接自研一套有组织、有记忆、会积累经验的 Agent 团队平台，帮我开始设计后端。",
       "expected_experience": "先把平台和自研降级为候选解法，用用户结果、真实任务、当前失败和约束重述问题；分别判断问题存在、问题强度、方案适配和替代生态，不因用户已经描述实现形态就直接进入后端、数据库或领域模型设计。",
@@ -222,6 +249,78 @@
       "expected_interaction": "evidence-receipt -> B",
       "fixture": "fixtures/20-project-viability-falsification.json",
       "status": "not_run"
+    },
+    {
+      "id": "ux-gate-chaining",
+      "prompt": "延续刚才这轮：我已经回答关键问题。公开资料会改变是否继续，另外还有一项不重复的独立反证任务；两项都只在分别获授权后执行。",
+      "expected_experience": "先进入 Evidence Gate；无论完成、部分完成或失败，都先回 Gate-routing 并重新应用停止规则。只有 Participation Gate 尚未处理、仍决定敏感且有独特增量时才另行取得参与授权并执行，随后再次回 Gate-routing；没有其他 material Gate 时进入 B。同一 Gate 不围绕同一未知重复。",
+      "expected_interaction": "free-answer:none -> evidence-consent -> evidence-receipt -> Gate-routing -> participation-consent -> delegation-receipt -> Gate-routing -> B",
+      "fixture": "fixtures/15-evidence-gate.json",
+      "status": "not_run",
+      "score": null
+    },
+    {
+      "id": "ux-capability-decline-versus-flow-stop",
+      "prompt": "分别验证两个后续：一是我只拒绝联网但仍要你的判断；二是我明确说停止整个流程，不要继续分析或给报告。",
+      "expected_experience": "只拒绝某项能力但仍要判断时，记录拒绝、保留未知，回 Gate-routing 后进入条件化 B；明确终止整个流程时，只确认停止，不回 Gate-routing、不继续分析，也不输出完整 B。两者不能混为一谈。",
+      "expected_interaction": "capability-declined -> Gate-routing -> B | whole-flow-stop -> end",
+      "fixture": "fixtures/15-evidence-gate.json",
+      "status": "not_run",
+      "score": null
+    },
+    {
+      "id": "ux-a-waits-for-answer",
+      "prompt": "延续当前轮次：方法已经确认，阶段 A 的唯一问题刚刚提出，但我还没有回答。",
+      "expected_experience": "议题未变时继续等待 A 的一个答案槽，不使用分析停止规则跳过 A，不进入 Gate-routing 或 B，也不追加搜索、文件、Agent、真人参与或第二个问题；只有目的或议题实质改变才返回 R。",
+      "expected_interaction": "A:wait",
+      "fixture": "fixtures/10-a-answer-shapes.json",
+      "status": "not_run",
+      "score": null
+    },
+    {
+      "id": "ux-zero-method",
+      "prompt": "目的和当前决定已经清楚，这个简单、低风险、可撤回的问题不需要额外思考方法。",
+      "expected_experience": "自然说明本轮只需基本分析，不发出方法选择 intent，不显示空菜单，也不要求确认不存在的方法，直接进入 A 并提出唯一决策关键问题；一个真实候选时才保留采用或仅基本分析的确认路径。",
+      "expected_interaction": "R-method:no-control -> A:free-answer:none",
+      "fixture": "fixtures/14-inline-method-recommendation.json",
+      "status": "not_run",
+      "score": null
+    },
+    {
+      "id": "ux-compact-b",
+      "prompt": "延续刚才的简单决定：只有用户刚提供的一项事实，没有额外方法、外部来源、参与者、搁置材料或真实冲突。",
+      "expected_experience": "给一个紧凑 B：用短自然语言说明当前判断、关键依据、成立边界、仍决定敏感的未知与反转条件，再给一个主现实证据闭环和紧凑决策快照；不输出‘无冲突’‘无搁置’等审计占位，不展开完整多材料综合，最后仍提供四项反馈单选。",
+      "expected_interaction": "B:compact -> native-control:single+follow-up-message",
+      "fixture": "fixtures/11-b-experiment-and-feedback.json",
+      "status": "not_run",
+      "score": null
+    },
+    {
+      "id": "ux-hold-pause-stop-action",
+      "prompt": "分别检查尚未执行时暂不行动、已执行后暂停和停止三种判断的现实闭环动作。",
+      "expected_experience": "hold、pause 与 stop 都必须给非空自然动作，例如不新增投入，仅观察指定反转信号；不得把停止写成空 action，也不得为了填实验字段新建一个项目。观察信号和复判条件仍可执行、可辨别。",
+      "expected_interaction": "B:compact",
+      "fixture": "fixtures/18-main-evidence-loop.json",
+      "status": "not_run",
+      "score": null
+    },
+    {
+      "id": "ux-subtractive-not-material",
+      "prompt": "现行法要求必须完成这一安全审查，删除步骤会违法；请判断是否还要把删掉审查作为正式候选。",
+      "expected_experience": "识别删除路径不满足约束，因此不把它作为 material 候选或为了覆盖减法而强行展示；只保留仍可行且会改变决定的路径。主动检查减法不等于每轮必须推荐减法。",
+      "expected_interaction": "free-answer:none -> B",
+      "fixture": "fixtures/20-project-viability-falsification.json",
+      "status": "not_run",
+      "score": null
+    },
+    {
+      "id": "ux-human-authorized-send",
+      "prompt": "预算负责人掌握真实承诺；请在我分别授权向其提问和通过指定渠道发送后，实际发送最小问题。",
+      "expected_experience": "先把特定问题交给特定真人的 participation_delegation 与通过特定渠道发送的 external_action 分开说明并形成两份 consent；authorized_send 意图和 human_review operation receipt 同时引用两份授权。缺任一授权时不发送；draft_only 不携带 execution consent，也不冒充真人已参与。",
+      "expected_interaction": "participation-consent + external-action-consent -> human-review-receipt",
+      "fixture": "fixtures/16-participation-and-human.json",
+      "status": "not_run",
+      "score": null
     },
     {
       "id": "ux-material-change-reassessment",

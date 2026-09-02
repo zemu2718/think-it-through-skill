@@ -1,8 +1,8 @@
 {
-  "contract_version": "0.4.0",
+  "contract_version": "0.4.1",
   "id": "contextual-checkpoint",
   "domain": "pre-entry",
-  "notice": "这些是 v0.4.0 静态合同样本，不是自然语言自动发现、真实多轮提醒或宿主原生 UI 已通过的证据。",
+  "notice": "这些是 v0.4.1 静态合同样本，不是自然语言自动发现、真实多轮提醒或宿主原生 UI 已通过的证据。",
   "cases": [
     {
       "id": "project-initiation-native",

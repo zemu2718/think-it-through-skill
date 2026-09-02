@@ -17,8 +17,8 @@ from PIL import Image
 from render_assets import (
     ROOT,
     check_generated_assets,
+    check_readme_invocation_card,
     check_social_preview,
-    decoded_image,
     decoded_pixels,
     load_manifest,
     write_generated_assets,
@@ -27,28 +27,55 @@ from validate_repo import Validation, all_repo_files, validate_assets
 
 
 class AssetPipelineTests(unittest.TestCase):
-    def test_manifest_has_required_roles_variants_and_generator(self) -> None:
+    def test_manifest_has_single_canonical_subject_and_two_outputs(self) -> None:
         manifest = load_manifest()
         entries = {entry["id"]: entry for entry in manifest["assets"]}
         self.assertEqual({"readme-invocation-card", "social-preview"}, set(entries))
+
         invocation = entries["readme-invocation-card"]
         self.assertEqual("readme-opening-invocation-card", invocation["role"])
         self.assertEqual({"width": 600, "height": 600}, invocation["canvas"])
         self.assertEqual("RGBA", invocation["pixel_mode"])
-        self.assertEqual(160000, invocation["max_bytes"])
-        self.assertNotIn("generator", invocation)
+        self.assertEqual(160000, invocation["max_source_bytes"])
+        self.assertEqual(160000, invocation["max_output_bytes"])
+        variants = {item["theme"]: item for item in invocation["variants"]}
         self.assertEqual(
             {
-                ("neutral", "light", "7c2bb4df41236ccb60396952a18d28e4a071ab970f479be24d8790afcc809bfa"),
-                ("neutral", "dark", "33760ccbbf4011f663f1e998ac41f006f31a8888a22945c6e395976c7bda7ff4"),
+                "locale": "neutral",
+                "theme": "dark",
+                "source": "assets/readme-invocation-card-dark.png",
+                "source_sha256": "33760ccbbf4011f663f1e998ac41f006f31a8888a22945c6e395976c7bda7ff4",
             },
-            {(item["locale"], item["theme"], item["source_sha256"]) for item in invocation["variants"]},
+            variants["dark"],
         )
-        generator = entries["social-preview"]["generator"]
+        self.assertEqual(
+            {
+                "locale": "neutral",
+                "theme": "light",
+                "output": "assets/readme-invocation-card-light.png",
+            },
+            variants["light"],
+        )
+        self.assertEqual("Pillow", invocation["generator"]["renderer"])
+        self.assertEqual(1, invocation["composition"]["scale"])
+        self.assertEqual("none", invocation["composition"]["resampling"])
+
+        social = entries["social-preview"]
+        self.assertEqual(
+            {
+                "canonical_asset": "readme-invocation-card",
+                "canonical_theme": "dark",
+                "subject_anchor": [914, 100],
+                "scale": 1,
+                "resampling": "none",
+            },
+            social["composition"],
+        )
+        generator = social["generator"]
         self.assertEqual("resvg-py", generator["renderer"])
         self.assertEqual("0.5.0", generator["renderer_version"])
-        self.assertEqual("Pillow", generator["decoder"])
-        self.assertEqual("11.3.0", generator["decoder_version"])
+        self.assertEqual("Pillow", generator["compositor"])
+        self.assertEqual("11.3.0", generator["compositor_version"])
         self.assertTrue(generator["skip_system_fonts"])
         self.assertEqual("RGBA", generator["pixel_mode"])
 
@@ -69,31 +96,41 @@ class AssetPipelineTests(unittest.TestCase):
 
     def test_svg_security_and_structure_mutations_fail(self) -> None:
         mutations = (
-            ("assets/social-preview.svg", "</svg>", '<script>alert(1)</script></svg>', "不得包含脚本"),
-            ("assets/social-preview.svg", "</svg>", '<image href="https://example.com/a.png"/></svg>', "不得引用远程资源"),
-            ("assets/social-preview.svg", "</svg>", '<image href="data:image/png;base64,AA=="/></svg>', "不得包含 data URI raster"),
-            ("assets/social-preview.svg", "</svg>", '<path onclick="alert(1)"/></svg>', "不得包含事件处理器"),
-            ("assets/social-preview.svg", "</svg>", '<foreignObject/></svg>', "不得包含 foreignObject"),
-            ("assets/social-preview.svg", "</svg>", '<text>font</text></svg>', "Social Preview 不得包含 text"),
-            ("assets/social-preview.svg", 'id="optional-gate"', 'id="missing-gate"', "缺少稳定结构 ID"),
-            ("assets/social-preview.svg", "</svg>", '<linearGradient id="bad"/></svg>', "不得使用 gradient 或 filter"),
+            ("</svg>", '<script>alert(1)</script></svg>', "不得包含脚本"),
+            ("</svg>", '<image href="https://example.com/a.png"/></svg>', "不得引用远程资源"),
+            ("</svg>", '<image href="data:image/png;base64,AA=="/></svg>', "不得包含 data URI raster"),
+            ("</svg>", '<path onclick="alert(1)"/></svg>', "不得包含事件处理器"),
+            ("</svg>", "<foreignObject/></svg>", "不得包含 foreignObject"),
+            ("</svg>", "<text>font</text></svg>", "不得包含 text"),
+            ('id="thinking-light-slot"', 'id="missing-light-slot"', "缺少稳定结构 ID"),
+            ("</svg>", '<linearGradient id="bad"/></svg>', "不得使用 gradient 或 filter"),
         )
-        for relative, old, new, expected in mutations:
-            with self.subTest(relative=relative, expected=expected):
-                errors = self.validate_asset_mutation(relative, old, new).errors
+        for old, new, expected in mutations:
+            with self.subTest(expected=expected):
+                errors = self.validate_asset_mutation("assets/social-preview.svg", old, new).errors
                 self.assertTrue(any(expected in error for error in errors), errors)
 
-    def test_social_preview_positioning_metadata_mutations_fail(self) -> None:
+    def test_social_preview_metadata_mutations_fail(self) -> None:
         mutations = (
             (
-                "AI can get things done fast, but what's worth doing is still yours to decide",
-                "AI can finish work quickly",
+                'aria-label="Think It Through"',
+                'aria-label="Think Through"',
+                "wordmark 必须准确表达完整名称",
+            ),
+            (
+                "AI can get things done fast, but what's worth doing is still yours to decide.",
+                "AI can finish work quickly.",
                 "desc 必须包含完整 canonical 英文定位",
             ),
             (
-                'aria-label="AI gets things done fast. You decide what\'s worth doing."',
+                'aria-label="AI can get things done fast, but what\'s worth doing is still yours to decide."',
                 'aria-label="AI works quickly."',
-                "tagline 必须提供准确的定位 aria-label",
+                "positioning 必须提供准确的定位 aria-label",
+            ),
+            (
+                'aria-label="Claude Code command /think-it-through"',
+                'aria-label="Run the skill"',
+                "invocation 必须提供准确的调用 aria-label",
             ),
         )
         for old, new, expected in mutations:
@@ -101,18 +138,32 @@ class AssetPipelineTests(unittest.TestCase):
                 errors = self.validate_asset_mutation("assets/social-preview.svg", old, new).errors
                 self.assertTrue(any(expected in error for error in errors), errors)
 
-    def test_wordmark_and_tagline_require_actual_paths(self) -> None:
-        for element_id, expected in (("wordmark", "wordmark 必须包含实际 path"), ("tagline", "tagline 必须包含实际 path")):
+    def test_social_preview_required_groups_contain_paths(self) -> None:
+        groups = (
+            ("wordmark", "wordmark 必须包含实际 path"),
+            ("positioning", "positioning 必须包含实际布局 path"),
+            ("invocation", "invocation 必须包含实际布局 path"),
+        )
+        for element_id, expected in groups:
             with self.subTest(element_id=element_id), self.repository_copy() as root:
                 path = root / "assets" / "social-preview.svg"
                 text = path.read_text(encoding="utf-8")
                 start = text.index(f'<g id="{element_id}"')
                 content_start = text.index(">", start) + 1
                 end = text.index("</g>", content_start)
-                text = text[:content_start] + "" + text[end:]
-                path.write_text(text, encoding="utf-8")
+                path.write_text(text[:content_start] + text[end:], encoding="utf-8")
                 errors = self.validate_copy(root).errors
                 self.assertTrue(any(expected in error for error in errors), errors)
+
+    def test_legacy_social_structure_is_rejected(self) -> None:
+        for legacy_id in ("decision-thread", "optional-gate", "reassessment-loop", "tagline"):
+            with self.subTest(legacy_id=legacy_id):
+                errors = self.validate_asset_mutation(
+                    "assets/social-preview.svg",
+                    "</svg>",
+                    f'<g id="{legacy_id}"><path d="M0 0"/></g></svg>',
+                ).errors
+                self.assertTrue(any("不得恢复旧线框流程图或像素 tagline" in error for error in errors), errors)
 
     def test_unmanaged_legacy_asset_fails(self) -> None:
         with self.repository_copy() as root:
@@ -126,57 +177,80 @@ class AssetPipelineTests(unittest.TestCase):
     def test_tracked_generated_assets_are_current(self) -> None:
         self.assertEqual([], check_generated_assets())
 
-    def test_invocation_card_byte_change_is_rejected(self) -> None:
+    def test_canonical_dark_byte_change_is_rejected(self) -> None:
         with self.repository_copy() as root:
-            source = root / "assets" / "readme-invocation-card-light.png"
-            data = bytearray(source.read_bytes())
-            data[-1] ^= 0x01
-            source.write_bytes(data)
+            source = root / "assets" / "readme-invocation-card-dark.png"
+            source.write_bytes(source.read_bytes() + b"changed")
             errors = self.validate_copy(root).errors
-            self.assertTrue(any("Invocation Card light SHA-256 不匹配" in error for error in errors), errors)
+            self.assertTrue(any("Invocation Card dark SHA-256 不匹配" in error for error in errors), errors)
 
-    def test_invocation_card_dimension_or_mode_change_is_rejected(self) -> None:
-        for mode, size, expected in (("RGBA", (300, 300), "必须是 600×600"), ("RGB", (600, 600), "pixel mode 必须是 RGBA")):
-            with self.subTest(mode=mode, size=size), self.repository_copy() as root:
-                source = root / "assets" / "readme-invocation-card-light.png"
-                with Image.open(source) as image:
-                    image.load()
-                    changed = image.convert(mode).resize(size)
-                changed.save(source, format="PNG", optimize=True)
-                manifest_path = root / "assets" / "manifest.json"
-                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-                entry = next(item for item in manifest["assets"] if item["id"] == "readme-invocation-card")
-                variant = next(item for item in entry["variants"] if item["theme"] == "light")
-                variant["source_sha256"] = hashlib.sha256(source.read_bytes()).hexdigest()
-                manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
-                errors = self.validate_copy(root).errors
-                self.assertTrue(any(expected in error for error in errors), errors)
-
-    def test_invocation_card_without_transparency_is_rejected(self) -> None:
+    def test_dark_subject_change_makes_both_outputs_stale(self) -> None:
         with self.repository_copy() as root:
-            source = root / "assets" / "readme-invocation-card-light.png"
+            source = root / "assets" / "readme-invocation-card-dark.png"
             with Image.open(source) as image:
                 image.load()
                 changed = image.convert("RGBA")
-            changed.putalpha(255)
+            red, green, blue, alpha = changed.getpixel((300, 180))
+            changed.putpixel((300, 180), ((red + 64) % 256, green, blue, alpha))
             changed.save(source, format="PNG", optimize=True)
             manifest_path = root / "assets" / "manifest.json"
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-            entry = next(item for item in manifest["assets"] if item["id"] == "readme-invocation-card")
-            variant = next(item for item in entry["variants"] if item["theme"] == "light")
-            variant["source_sha256"] = hashlib.sha256(source.read_bytes()).hexdigest()
+            invocation = next(item for item in manifest["assets"] if item["id"] == "readme-invocation-card")
+            dark = next(item for item in invocation["variants"] if item["theme"] == "dark")
+            dark["source_sha256"] = hashlib.sha256(source.read_bytes()).hexdigest()
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            self.assertTrue(any("像素已过期" in error for error in check_readme_invocation_card(root)))
+            self.assertTrue(any("像素已过期" in error for error in check_social_preview(root)))
+
+    def test_light_output_pixel_change_is_stale(self) -> None:
+        with self.repository_copy() as root:
+            output = root / "assets" / "readme-invocation-card-light.png"
+            with Image.open(output) as image:
+                image.load()
+                changed = image.convert("RGBA")
+            changed.putpixel((300, 300), (255, 0, 255, 255))
+            changed.save(output, format="PNG", optimize=True)
+            self.assertTrue(any("像素已过期" in error for error in check_readme_invocation_card(root)))
+
+    def test_light_output_dimension_mode_or_alpha_change_is_rejected(self) -> None:
+        changes = (
+            ("RGBA", (300, 300), False, "必须是 600×600"),
+            ("RGB", (600, 600), False, "pixel mode 必须是 RGBA"),
+            ("RGBA", (600, 600), True, "必须同时包含透明和不透明像素"),
+        )
+        for mode, size, opaque, expected in changes:
+            with self.subTest(mode=mode, size=size, opaque=opaque), self.repository_copy() as root:
+                output = root / "assets" / "readme-invocation-card-light.png"
+                with Image.open(output) as image:
+                    image.load()
+                    changed = image.convert(mode).resize(size)
+                if opaque:
+                    changed.putalpha(255)
+                changed.save(output, format="PNG", optimize=True)
+                errors = self.validate_copy(root).errors
+                self.assertTrue(any(expected in error for error in errors), errors)
+
+    def test_composition_mutations_fail(self) -> None:
+        with self.repository_copy() as root:
+            manifest_path = root / "assets" / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            invocation = next(item for item in manifest["assets"] if item["id"] == "readme-invocation-card")
+            invocation["composition"]["scale"] = 0.9
+            social = next(item for item in manifest["assets"] if item["id"] == "social-preview")
+            social["composition"]["canonical_theme"] = "light"
             manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
             errors = self.validate_copy(root).errors
-            self.assertTrue(any("必须同时包含透明和不透明像素" in error for error in errors), errors)
+            self.assertTrue(any("固定复用 dark 主体" in error for error in errors), errors)
+            self.assertTrue(any("复用 dark canonical Thinking Light" in error for error in errors), errors)
 
     def test_svg_source_change_makes_png_stale(self) -> None:
         with self.repository_copy() as root:
             source = root / "assets" / "social-preview.svg"
             text = source.read_text(encoding="utf-8")
-            source.write_text(text.replace("#0B1117", "#0C1218", 1), encoding="utf-8")
+            source.write_text(text.replace("#090909", "#0A0A0A", 1), encoding="utf-8")
             self.assertTrue(any("像素已过期" in error for error in check_social_preview(root)))
 
-    def test_pixel_change_makes_png_stale(self) -> None:
+    def test_social_output_pixel_change_is_stale(self) -> None:
         with self.repository_copy() as root:
             output = root / "assets" / "social-preview.png"
             with Image.open(output) as image:
@@ -186,7 +260,7 @@ class AssetPipelineTests(unittest.TestCase):
             rgba.save(output, format="PNG", optimize=True)
             self.assertTrue(any("像素已过期" in error for error in check_social_preview(root)))
 
-    def test_dimension_change_is_rejected(self) -> None:
+    def test_social_output_dimension_change_is_rejected(self) -> None:
         with self.repository_copy() as root:
             output = root / "assets" / "social-preview.png"
             with Image.open(output) as image:
@@ -222,18 +296,21 @@ class AssetPipelineTests(unittest.TestCase):
 
     def test_generation_writes_expected_outputs_only(self) -> None:
         with self.repository_copy() as root:
+            output_names = {"readme-invocation-card-light.png", "social-preview.png"}
             before = {
                 path.relative_to(root): path.read_bytes()
                 for path in root.rglob("*")
-                if path.is_file() and path.name != "social-preview.png"
+                if path.is_file() and path.name not in output_names
             }
+            dark_before = (root / "assets" / "readme-invocation-card-dark.png").read_bytes()
             outputs = write_generated_assets(root)
             self.assertEqual(
-                {"assets/social-preview.png"},
+                {"assets/readme-invocation-card-light.png", "assets/social-preview.png"},
                 {path.relative_to(root).as_posix() for path in outputs},
             )
             after = {relative: (root / relative).read_bytes() for relative in before}
             self.assertEqual(before, after)
+            self.assertEqual(dark_before, (root / "assets" / "readme-invocation-card-dark.png").read_bytes())
             self.assertEqual([], check_generated_assets(root))
 
     def validate_asset_mutation(self, relative: str, old: str, new: str) -> Validation:

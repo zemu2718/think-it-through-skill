@@ -63,18 +63,26 @@ class PublicDocsTests(unittest.TestCase):
             ("README.md", "一份可回看的判断依据", "一份分析报告", "三项用户结果"),
             ("README.md", "## 默认安全", "## 默认安全与更多信息", "五段普通用户路径"),
             ("README.md", "一次能检验判断的小尝试", "一份分析报告", "三项用户结果"),
-            ("README.md", "还没开始，判断该推进还是先验证", "直接推进", "三项用户结果"),
-            ("README.md", "已经开始，判断该继续、调整、暂停还是停止", "开始后直接继续", "三项用户结果"),
-            ("README.en.md", "before you start", "in every case", "三项用户结果"),
-            ("README.en.md", "once underway", "after finishing", "三项用户结果"),
-            ("README.md", "| **结果回来后** |", "| **完成以后** |", "五个具体调用时机"),
-            ("README.md", "适合讨论的问题", "可以直接带来的议题", "自然表达"),
-            ("README.md", "不涉及关键选择", "没有待决用户选择", "自然说明"),
-            ("README.en.md", "choice in front of you", "surface request", "白话工作原理"),
-            ("README.md", "用合适的方式确认关键答案", "让答案来自正确的地方", "白话工作原理"),
-            ("README.md", "产品、功能或自研方向先作为候选解法", "产品方向就是问题定义", "白话工作原理"),
-            ("README.en.md", "strongest realistic alternative has not been reasonably checked or tried", "no alternative was found", "白话工作原理"),
-            ("README.md", "设计一个成本可控、随时可以停下的小测试", "执行完整验证项目", "白话工作原理"),
+            ("README.md", "只补关键能力", "直接全面开发", "三项用户结果"),
+            ("README.en.md", "fill only the critical gap", "build immediately", "三项用户结果"),
+            ("README.md", "| **结果或条件变化后** |", "| **完成以后** |", "五个具体调用时机"),
+            ("README.md", "真实需要", "实现细节", "白话工作原理"),
+            ("README.en.md", "That does not prove you need to build from scratch", "You should build it yourself", "白话工作原理"),
+            ("README.md", "成本可控、随时能停的小测试", "直接全面建设", "白话工作原理"),
+            (
+                "README.md",
+                "如果你正在判断是否自研产品、功能或技术系统",
+                "重大投入前",
+                "自研与现实替代路径限定在对应项目可行性议题",
+            ),
+            (
+                "README.en.md",
+                "If you are deciding whether to custom-build a product, feature, or technical system",
+                "Before a major commitment",
+                "自研与现实替代路径限定在对应项目可行性议题",
+            ),
+            ("README.md", "具备相应资质的专业人士", "相应的专业人士", "白话工作原理"),
+            ("README.md", "有没有现成或更轻的办法", "直接设计完整方案", "可复制使用示例"),
         )
         for relative, old, new, expected in mutations:
             with self.subTest(relative=relative, expected=expected):
@@ -145,6 +153,18 @@ class PublicDocsTests(unittest.TestCase):
                 "combine safety and maintenance links",
                 "README 用户路径",
             ),
+            (
+                ".agents/brand-context.md",
+                "state safety defaults during Skill use as concrete user choices",
+                "state safety defaults as global Agent guarantees",
+                "README 用户路径",
+            ),
+            (
+                "CHANGELOG.md",
+                "默认安全只描述 Skill 使用过程",
+                "默认安全适用于整个宿主",
+                "README 显示、文案或默认安全范围精修记录",
+            ),
         )
         for relative, old, new, expected in mutations:
             with self.subTest(relative=relative, expected=expected):
@@ -171,10 +191,41 @@ class PublicDocsTests(unittest.TestCase):
                 errors = self.validate_doc_mutation("CLAUDE.md", old, new).errors
                 self.assertTrue(any("双语 README 文案维护规则" in error for error in errors), errors)
 
+    def test_b_cli_requires_record_and_visible_snapshot(self) -> None:
+        mutations = (
+            (
+                "  --decision-record-json /path/to/decision-record.json \\\n  --visible-snapshot-json /path/to/visible-snapshot.json",
+                "  --visible-snapshot-json /path/to/visible-snapshot.json",
+            ),
+            (
+                "  --decision-record-json /path/to/decision-record.json \\\n  --visible-snapshot-json /path/to/visible-snapshot.json",
+                "  --decision-record-json /path/to/decision-record.json",
+            ),
+        )
+        for old, new in mutations:
+            with self.subTest(new=new):
+                errors = self.validate_doc_mutation("CLAUDE.md", old, new).errors
+                self.assertTrue(any("B CLI 快照参数" in error for error in errors), errors)
+
     def test_readme_method_map_fail(self) -> None:
         mutations = (
             ("README.md", "它每次都会先做基础分析", "基础分析可以选择", "每次先做基础分析"),
-            ("README.md", "真的有助于实现目标", "对齐真正目的与当前决定", "自然表达"),
+            ("README.md", "它可能推荐下面的方法", "它会自动加入下面的方法", "只会按需推荐"),
+            ("README.en.md", "it may recommend one or more of the methods below", "it automatically adds one or more of the methods below", "只会按需推荐"),
+            (
+                "README.md",
+                "它可能推荐下面的方法。",
+                "它可能推荐下面的方法，但会在推荐后自动使用。",
+                "不得在保留推荐说明的同时声称自动执行",
+            ),
+            (
+                "README.en.md",
+                "it may recommend one or more of the methods below.",
+                "it may recommend one or more of the methods below, but the Skill will automatically use them after recommending them.",
+                "不得在保留推荐说明的同时声称自动执行",
+            ),
+            ("README.md", "两种核心方法是：", "两种使用最频繁的核心方法是：", "中性分类说明两种核心方法"),
+            ("README.en.md", "The two core methods are:", "The two core methods used most often are:", "中性分类说明两种核心方法"),
             ("README.en.md", "Two-sided Steelman", "Compare both sides", "两种核心方法"),
             ("README.md", "用同一套标准", "用相近的证据标准", "自然表达"),
             ("README.md", "如何控制损失", "保护边界", "自然表达"),
@@ -184,7 +235,7 @@ class PublicDocsTests(unittest.TestCase):
             ("README.en.md", "only the approaches your current question needs", "every available framework", "方法按需推荐"),
             ("README.md", "使用前请你确认", "自动使用", "方法按需推荐"),
             ("README.en.md", "someone with relevant knowledge", "another person", "方法按需推荐"),
-            ("README.en.md", "explains why and asks for your consent first", "starts immediately", "能力征求同意"),
+            ("README.en.md", "explains why each is needed and asks for your consent separately", "starts immediately", "能力征求同意"),
         )
         for relative, old, new, expected in mutations:
             with self.subTest(relative=relative, expected=expected):
@@ -219,7 +270,7 @@ class PublicDocsTests(unittest.TestCase):
             ),
             (
                 "README.en.md",
-                "completing the installation does not mean the Skill is ready to use in your current tool.",
+                "having the files installed does not mean the Skill can run correctly in your current tool.",
                 "Installation proves runtime support.",
                 "文件安装与真实 runtime 验证",
             ),
@@ -244,6 +295,24 @@ class PublicDocsTests(unittest.TestCase):
             ("README.md", "```text\n/think-it-through\n```", "```text\n/wrong\n```", "可靠显式入口"),
             ("README.en.md", "docs/installation.en.md", "docs/missing.md", "详细安装或兼容说明链接"),
             ("README.md", "**不联网**", "**按需联网**", "五项默认安全语义"),
+            (
+                "README.md",
+                "使用这个 Skill 时，除非你明确同意某项具体操作，否则它默认：",
+                "使用这个 Skill 时，除非你明确同意某项具体操作，否则它默认不是：",
+                "行为极性",
+            ),
+            (
+                "README.md",
+                "使用这个 Skill 时",
+                "在所有情况下",
+                "准确限定 Skill 使用范围",
+            ),
+            (
+                "README.en.md",
+                "While you use this Skill, it does not do any of the following unless you explicitly approve that specific action:",
+                "While you use this Skill, it does every one of the following unless you explicitly approve that specific action:",
+                "行为极性",
+            ),
             ("README.md", "### 更多信息", "### 其他", "更多信息入口"),
             (
                 "README.md",
@@ -256,6 +325,13 @@ class PublicDocsTests(unittest.TestCase):
             with self.subTest(relative=relative, expected=expected):
                 errors = self.validate_doc_mutation(relative, old, new).errors
                 self.assertTrue(any(expected in error for error in errors), errors)
+
+        errors = self.validate_doc_mutation(
+            "README.md",
+            "## 默认安全\n\n使用这个 Skill 时",
+            "使用这个 Skill 时\n\n## 默认安全\n\n在所有情况下",
+        ).errors
+        self.assertTrue(any("准确限定 Skill 使用范围" in error for error in errors), errors)
 
     def test_technical_details_cannot_return_to_readme(self) -> None:
         for token in ("npx -y skills", "gh skill install", "git clone", "L0", "9/16", "approved evidence"):
@@ -272,7 +348,7 @@ class PublicDocsTests(unittest.TestCase):
             ("README.md", "[English](README.en.md)", "[English](README.md)", "中文 README 缺少英文切换"),
             ("README.en.md", "[简体中文](README.md)", "[简体中文](README.en.md)", "英文 README 缺少中文切换"),
             ("README.md", "assets/readme-invocation-card-dark.png", "assets/social-preview.png", "README Invocation Card"),
-            ("README.en.md", 'width="140"', 'width="1200"', "紧凑显示宽度"),
+            ("README.en.md", 'width="200"', 'width="1200"', "紧凑显示宽度"),
             (
                 "README.md",
                 'alt="想清楚调用卡片：思考之光围绕清晰开口排列，下方显示 Claude Code 命令 /think-it-through。"',
@@ -347,31 +423,56 @@ class PublicDocsTests(unittest.TestCase):
                 errors = self.validate_doc_mutation(relative, old, new).errors
                 self.assertTrue(any(expected in error for error in errors), errors)
 
+    def test_unreleased_release_facts_fail(self) -> None:
+        mutations = (
+            (
+                "同一次 B 用户可见输出中确定性重建 DecisionRecord 与可见决策快照",
+                "从静态 fixture 加载 DecisionRecord 与可见决策快照",
+                "关键合同、授权、证据链或 runtime smoke 记录",
+            ),
+            (
+                "Python 3.12 完整单元测试 220 项通过",
+                "Python 3.12 完整单元测试 219 项通过",
+                "发布前验证事实或未运行边界",
+            ),
+            (
+                "未运行 Claude Code / Codex provider smoke",
+                "Claude Code / Codex provider smoke 已通过",
+                "发布前验证事实或未运行边界",
+            ),
+        )
+        for old, new, expected in mutations:
+            with self.subTest(old=old):
+                errors = self.validate_doc_mutation(
+                    "CHANGELOG.md", old, new
+                ).errors
+                self.assertTrue(any(expected in error for error in errors), errors)
+
     def test_current_and_published_version_boundaries_fail(self) -> None:
         mutations = (
             (
                 ".agents/brand-context.md",
-                "v0.4.0 is the current stable source and formal product contract",
-                "v0.3.0 is the current stable source and formal product contract",
+                "v0.4.1 is the current release-candidate source and formal product contract, with no same-version public objects yet",
+                "v0.4.1 is the current stable source, formal product contract, and latest published release",
                 "稳定源码或证据边界",
             ),
             (
                 ".agents/brand-context.md",
-                "v0.4.0 is the current stable source and formal product contract on `main` and the latest published immutable Git tag",
-                "v0.3.0 is the current stable source and formal product contract on `main` and the latest published immutable Git tag",
+                "v0.4.0 remains the latest published immutable Git tag, GitHub Release, downloadable `think-it-through.skill`, and `SHA256SUMS`",
+                "v0.4.1 remains the latest published immutable Git tag, GitHub Release, downloadable `think-it-through.skill`, and `SHA256SUMS`",
                 "稳定源码或证据边界",
             ),
             (
                 "docs/product-architecture-v0.4.0.md",
                 "不新增 Veto Gate 或协议状态",
                 "新增 Veto Gate 作为固定阶段",
-                "当前架构文档缺少项目可行性或发布边界",
+                "架构基线缺少项目可行性或发布边界",
             ),
             (
                 "CHANGELOG.md",
-                "将 v0.4.0 设为当前稳定源码、正式产品合同和最新真实公开发布",
-                "将 v0.3.0 设为当前稳定源码、正式产品合同和最新真实公开发布",
-                "当前源码、最新公开发布与历史发布的分层说明",
+                "v0.4.0 继续作为最新真实公开发布，v0.4.1 的 tag、Release 与 asset 仅在实际创建后声明",
+                "v0.4.1 已成为最新真实公开发布",
+                "发布候选、最新公开发布与历史发布的分层说明",
             ),
         )
         for relative, old, new, expected in mutations:
