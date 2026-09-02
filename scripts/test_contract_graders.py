@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""用合规和违规样本验证 v0.3.0 机械合同评分器。"""
+"""用合规和违规样本验证 v0.4.0 机械合同评分器。"""
 
 from __future__ import annotations
 
@@ -21,6 +21,7 @@ from grade_contracts import (
     grade_evidence_gate,
     grade_human_review,
     grade_participation_gate,
+    grade_project_viability,
     grade_r,
     parse_interaction_evidence,
     resolve_b_feedback_route,
@@ -1746,6 +1747,7 @@ If payment appears, reassess whether to proceed; if refusals persist, stop new i
                 "purpose": "回答会改变是否继续投入的关键问题",
                 "operations": ["只读公开检索" if consent_type == "capability_call" else "委派独立分析任务"],
                 "resources": ["公开网页" if consent_type == "capability_call" else "已列明的独立任务"],
+                "tasks": ["中国市场", "2026 年"] if consent_type == "capability_call" else ["两个不重复的独立任务", "核验市场来源", "独立反证审计"],
                 "data_boundary": ["只使用本轮明确提供的最小上下文"],
                 "excluded": ["私有文件", "外部行动"],
             },
@@ -1757,7 +1759,7 @@ If payment appears, reassess whether to proceed; if refusals persist, stop new i
     @staticmethod
     def evidence_receipt(status: str = "completed") -> dict[str, object]:
         return {
-            "contract_version": "0.3.0",
+            "contract_version": "0.4.0",
             "capabilities": [
                 {
                     "name": "search.public_web",
@@ -1776,6 +1778,7 @@ If payment appears, reassess whether to proceed; if refusals persist, stop new i
                     "provider": "test-search",
                     "scope": ["中国市场", "2026 年"],
                     "consent_ids": ["consent-capability_call"],
+                    "conflicts_and_gaps": ["地区执行细则仍有差异"],
                     "sources": (
                         [
                             {
@@ -1845,10 +1848,43 @@ If payment appears, reassess whether to proceed; if refusals persist, stop new i
         )
         self.assert_has_failure(checks, "Evidence Gate 失败或拒绝后保留未知并给出降级")
 
+    def test_evidence_gate_rejects_empty_sources_for_completed_research(self) -> None:
+        receipt = self.evidence_receipt()
+        receipt["operations"][0]["sources"] = []
+        checks = grade_evidence_gate(
+            self.valid_evidence_record(),
+            self.capability_consent(),
+            receipt,
+        )
+        self.assert_has_failure(checks, "Evidence Gate 记录支持、反对、冲突、日期和判断影响")
+
+    def test_evidence_gate_rejects_provider_consent_scope_or_nonterminal_mismatch(self) -> None:
+        cases = {
+            "provider": lambda receipt: receipt["operations"][0].update(provider="other-provider"),
+            "consent": lambda receipt: receipt["operations"][0].update(consent_ids=["other-consent"]),
+            "scope": lambda receipt: receipt["operations"][0].update(scope=["未授权范围"]),
+            "status": lambda receipt: receipt["operations"][0].update(status="started"),
+            "private": lambda receipt: receipt["operations"][0].update(private_data_accessed=True),
+            "external": lambda receipt: receipt["operations"][0].update(external_action_executed=True),
+        }
+        for name, mutate in cases.items():
+            with self.subTest(name=name):
+                receipt = self.evidence_receipt()
+                mutate(receipt)
+                checks = grade_evidence_gate(
+                    self.valid_evidence_record(),
+                    self.capability_consent(),
+                    receipt,
+                )
+                self.assert_has_failure(
+                    checks,
+                    "Evidence Gate 真实调用具有授权关联、同一 provider、终态研究回执且不越权",
+                )
+
     @staticmethod
     def participation_receipt() -> dict[str, object]:
         return {
-            "contract_version": "0.3.0",
+            "contract_version": "0.4.0",
             "capabilities": [
                 {
                     "name": "agents.subagent",
@@ -1861,7 +1897,7 @@ If payment appears, reassess whether to proceed; if refusals persist, stop new i
                 {
                     "receipt_id": "receipt-delegation",
                     "kind": "delegation",
-                    "status": "completed",
+                    "status": "partial",
                     "provider": "test-host",
                     "scope": ["两个不重复的独立任务"],
                     "consent_ids": ["consent-participation_delegation"],
@@ -1922,6 +1958,24 @@ If payment appears, reassess whether to proceed; if refusals persist, stop new i
             )
         )
 
+    def test_participation_accepts_multiple_ready_agent_capabilities_for_same_provider(self) -> None:
+        receipt = self.participation_receipt()
+        receipt["capabilities"].append(
+            {
+                "name": "agents.parallel",
+                "availability": "available",
+                "readiness": "ready",
+                "provider": "test-host",
+            }
+        )
+        self.assert_all_pass(
+            grade_participation_gate(
+                self.valid_participation_record(),
+                self.capability_consent("participation_delegation"),
+                receipt,
+            )
+        )
+
     def test_participation_gate_rejects_count_over_limit(self) -> None:
         record = {**self.valid_participation_record(), "user_total_limit": 2}
         checks = grade_participation_gate(
@@ -1953,7 +2007,52 @@ If payment appears, reassess whether to proceed; if refusals persist, stop new i
             self.capability_consent("participation_delegation"),
             receipt,
         )
-        self.assert_has_failure(checks, "Participation Gate 协作回执数量关系真实一致")
+        self.assert_has_failure(
+            checks,
+            "Participation Gate 协作回执的授权、provider、终态、任务、数量和降级真实一致",
+        )
+
+    def test_participation_rejects_payload_extra_key(self) -> None:
+        record = self.valid_participation_record()
+        record["agent_payloads"][0]["main_judgment"] = "主 Agent 偏好自研"
+        checks = grade_participation_gate(
+            record,
+            self.capability_consent("participation_delegation"),
+            self.participation_receipt(),
+        )
+        self.assert_has_failure(
+            checks,
+            "Participation Gate 额外 Agent 不递归委派且只收最小上下文",
+        )
+
+    def test_participation_rejects_receipt_link_provider_scope_status_tasks_or_fallback(self) -> None:
+        cases = {
+            "provider": lambda receipt: receipt["operations"][0].update(provider="other-provider"),
+            "consent": lambda receipt: receipt["operations"][0].update(consent_ids=["other-consent"]),
+            "scope": lambda receipt: receipt["operations"][0].update(scope=["未授权任务"]),
+            "consent-tasks": lambda _receipt: None,
+            "status": lambda receipt: receipt["operations"][0].update(status="completed"),
+            "tasks": lambda receipt: receipt["operations"][0].update(completed_tasks=["未知任务"]),
+            "fallback": lambda receipt: receipt["operations"][0].update(fallback=""),
+            "private": lambda receipt: receipt["operations"][0].update(private_data_accessed=True),
+            "external": lambda receipt: receipt["operations"][0].update(external_action_executed=True),
+        }
+        for name, mutate in cases.items():
+            with self.subTest(name=name):
+                receipt = self.participation_receipt()
+                mutate(receipt)
+                consent = self.capability_consent("participation_delegation")
+                if name == "consent-tasks":
+                    consent["scope"]["tasks"] = ["两个不重复的独立任务"]
+                checks = grade_participation_gate(
+                    self.valid_participation_record(),
+                    consent,
+                    receipt,
+                )
+                self.assert_has_failure(
+                    checks,
+                    "Participation Gate 协作回执的授权、provider、终态、任务、数量和降级真实一致",
+                )
 
     def test_human_review_defaults_to_forwardable_draft(self) -> None:
         record = {
@@ -1971,9 +2070,349 @@ If payment appears, reassess whether to proceed; if refusals persist, stop new i
         self.assert_has_failure(checks, "真人参与默认只生成材料，不自动发送或联系")
 
     @staticmethod
+    def project_capability_consent(
+        consent_id: str,
+        operation: str,
+        task: str,
+    ) -> dict[str, object]:
+        return {
+            "consent_id": consent_id,
+            "consent_type": "capability_call",
+            "status": "granted",
+            "scope": {
+                "purpose": "核验项目可行性证据",
+                "operations": [operation],
+                "resources": ["公开资料"],
+                "tasks": [task],
+                "data_boundary": ["仅使用公开资料"],
+                "excluded": ["私有数据", "外部行动"],
+            },
+            "valid_for": "this_action",
+            "requested_by": "main_agent",
+            "granted_by": "user",
+        }
+
+    @staticmethod
+    def project_delegation_consent() -> dict[str, object]:
+        return {
+            "consent_id": "consent-adversarial",
+            "consent_type": "participation_delegation",
+            "status": "granted",
+            "scope": {
+                "purpose": "独立挑战自研必要性",
+                "operations": ["委派独立反方"],
+                "resources": ["已确认事实"],
+                "tasks": ["独立反方任务"],
+                "data_boundary": ["最小上下文"],
+                "excluded": ["主判断", "完整 transcript", "外部行动"],
+            },
+            "valid_for": "this_action",
+            "requested_by": "main_agent",
+            "granted_by": "user",
+        }
+
+    @classmethod
+    def valid_project_viability_bundle(
+        cls,
+    ) -> tuple[dict[str, object], dict[str, object], dict[str, object]]:
+        categories = [
+            "status_quo",
+            "manual_or_process",
+            "direct_competitor",
+            "adjacent_category",
+            "non_isomorphic_product_or_service",
+            "platform_native",
+            "active_open_source_or_commercial",
+            "tool_combination",
+            "plugin_script_or_thin_integration",
+            "local_supplement",
+            "independent_build",
+        ]
+        candidate_sources = {
+            "direct_competitor": ["source-outcome"],
+            "platform_native": ["source-solution"],
+            "active_open_source_or_commercial": ["source-solution"],
+            "independent_build": ["source-solution"],
+        }
+        candidates = []
+        for index, category in enumerate(categories):
+            covered = category in candidate_sources or category == "independent_build"
+            candidates.append(
+                {
+                    "id": "candidate-platform" if category == "platform_native" else f"candidate-{index}",
+                    "name": "平台原生能力" if category == "platform_native" else f"候选路径 {index}",
+                    "category": category,
+                    "coverage_status": "covered" if covered else "not_applicable",
+                    "material": covered,
+                    "reason": "" if covered else "当前决定下没有独特增量",
+                    "source_ids": candidate_sources.get(category, []),
+                    "verification_dimensions": [
+                        {
+                            "dimension": "现实边界",
+                            "status": "verified" if covered else "not_applicable",
+                            "reason": "" if covered else "该路径不适用本核验维度",
+                            "source_ids": candidate_sources.get(category, []),
+                        }
+                    ],
+                }
+            )
+
+        evidence_items = [
+            {"id": "e-problem", "state": "supports", "claim": "问题存在", "source_ids": ["source-outcome"]},
+            {"id": "e-strength", "state": "supports", "claim": "问题强度足够", "source_ids": ["source-outcome"]},
+            {"id": "e-fit", "state": "supports", "claim": "候选方案适配", "source_ids": ["source-solution"]},
+            {"id": "e-alternatives", "state": "supports", "claim": "替代生态已核验", "source_ids": ["source-solution"]},
+            {"id": "e-trial", "state": "opposes", "claim": "最强替代不能解决核心任务", "source_ids": ["source-trial"]},
+            {"id": "e-adversarial", "state": "supports", "claim": "独立反方未发现更轻路径", "source_ids": []},
+        ]
+        payload = {
+            "assigned_question": "独立挑战正式自研必要性",
+            "claims": ["最强替代仍有核心缺口"],
+            "evidence_and_sources": ["试用回执显示核心任务失败"],
+            "assumptions": ["任务与成功标准保持不变"],
+            "uncertainties": ["未来版本可能改善"],
+            "conflicts": ["公开介绍与试用结果不同"],
+            "what_would_reverse_this": ["替代方案完成核心任务"],
+        }
+        record = {
+            "contract_version": "0.4.0",
+            "decision_context": {
+                "decision": "采用现实替代还是正式自研",
+                "commitment_type": "重大且难撤回的产品建设",
+                "material_change": False,
+                "prior_conclusion_status": "none",
+            },
+            "user_outcome": "让小团队拥有可积累经验的协作记忆",
+            "focal_solution": {"description": "建设独立记忆平台", "status": "candidate"},
+            "validation_layers": {
+                "problem_existence": {"status": "supported", "evidence_item_ids": ["e-problem"]},
+                "problem_strength": {"status": "supported", "evidence_item_ids": ["e-strength"]},
+                "solution_fit": {"status": "supported", "evidence_item_ids": ["e-fit"]},
+                "alternative_ecosystem": {"status": "supported", "evidence_item_ids": ["e-alternatives"]},
+            },
+            "search_passes": [
+                {
+                    "type": "outcome_problem_first",
+                    "status": "completed",
+                    "query_boundaries": ["outcome-search"],
+                    "consent_id": "consent-search-outcome",
+                    "receipt_id": "receipt-search-outcome",
+                    "source_ids": ["source-outcome"],
+                },
+                {
+                    "type": "solution_implementation_second",
+                    "status": "completed",
+                    "query_boundaries": ["solution-search"],
+                    "consent_id": "consent-search-solution",
+                    "receipt_id": "receipt-search-solution",
+                    "source_ids": ["source-solution"],
+                },
+            ],
+            "sources": [
+                {"id": "source-outcome", "receipt_id": "receipt-search-outcome", "locator": "https://example.com/outcome"},
+                {"id": "source-solution", "receipt_id": "receipt-search-solution", "locator": "https://example.com/solution"},
+                {"id": "source-trial", "receipt_id": "receipt-trial", "locator": "trial://local/result"},
+            ],
+            "candidates": candidates,
+            "strongest_alternative_id": "candidate-platform",
+            "alternative_trial": {
+                "status": "receipt_backed",
+                "candidate_id": "candidate-platform",
+                "real_tasks": ["真实任务 A"],
+                "success_criteria": ["保留上下文并正确召回"],
+                "result": "does_not_solve",
+                "consent_ids": ["consent-trial"],
+                "receipt_ids": ["receipt-trial"],
+                "evidence_item_ids": ["e-trial"],
+                "reason": "",
+            },
+            "adversarial_review": {
+                "required": True,
+                "status": "completed",
+                "consent_id": "consent-adversarial",
+                "receipt_id": "receipt-adversarial",
+                "payload": payload,
+                "evidence_item_ids": ["e-adversarial"],
+                "reason": "",
+            },
+            "evidence_items": evidence_items,
+            "commitment": {
+                "direction": "independent_build",
+                "chosen_rank": 3,
+                "rationale": "完整证据链仍显示核心缺口",
+                "evidence_item_ids": ["e-trial", "e-adversarial"],
+                "upgrade_conditions": ["仅围绕已证明缺口收缩范围"],
+            },
+            "no_go_conditions": [
+                {"id": "no-go-1", "condition": "替代方案满足核心任务时停止自研", "evidence_item_ids": ["e-trial"]}
+            ],
+            "reassessment_triggers": [
+                {"id": "recheck-1", "condition": "替代生态实质变化后重新核验", "evidence_item_ids": ["e-alternatives"]}
+            ],
+        }
+        consents = {
+            "consents": [
+                cls.project_capability_consent("consent-search-outcome", "公开搜索", "outcome-search"),
+                cls.project_capability_consent("consent-search-solution", "公开搜索", "solution-search"),
+                cls.project_capability_consent("consent-trial", "本地试用", "trial-run"),
+                cls.project_delegation_consent(),
+            ]
+        }
+        operations = [
+            {
+                "receipt_id": "receipt-search-outcome",
+                "kind": "research",
+                "status": "completed",
+                "provider": "test-search",
+                "scope": ["outcome-search"],
+                "consent_ids": ["consent-search-outcome"],
+                "sources": [{"title": "结果资料", "locator": "https://example.com/outcome", "retrieved_at": "2026-09-02T00:00:00Z"}],
+                "private_data_accessed": False,
+                "external_action_executed": False,
+                "fallback": "",
+            },
+            {
+                "receipt_id": "receipt-search-solution",
+                "kind": "research",
+                "status": "completed",
+                "provider": "test-search",
+                "scope": ["solution-search"],
+                "consent_ids": ["consent-search-solution"],
+                "sources": [{"title": "方案资料", "locator": "https://example.com/solution", "retrieved_at": "2026-09-02T00:00:00Z"}],
+                "private_data_accessed": False,
+                "external_action_executed": False,
+                "fallback": "",
+            },
+            {
+                "receipt_id": "receipt-trial",
+                "kind": "tool_call",
+                "status": "completed",
+                "provider": "test-tools",
+                "scope": ["trial-run"],
+                "consent_ids": ["consent-trial"],
+                "sources": [{"title": "本地试用结果", "locator": "trial://local/result", "retrieved_at": "2026-09-02T00:00:00Z"}],
+                "private_data_accessed": False,
+                "external_action_executed": False,
+                "fallback": "",
+            },
+            {
+                "receipt_id": "receipt-adversarial",
+                "kind": "delegation",
+                "status": "completed",
+                "provider": "test-host",
+                "scope": ["独立反方任务"],
+                "consent_ids": ["consent-adversarial"],
+                "agent_counts": {"main": 1, "planned_additional": 1, "started_additional": 1, "completed_additional": 1, "failed_additional": 0, "actual_total": 2},
+                "completed_tasks": ["独立反方任务"],
+                "failed_tasks": [],
+                "private_data_accessed": False,
+                "external_action_executed": False,
+                "fallback": "",
+            },
+        ]
+        receipt = {
+            "contract_version": "0.4.0",
+            "capabilities": [
+                {"name": "search.public_web", "availability": "available", "readiness": "ready", "provider": "test-search"},
+                {"name": "tools.read", "availability": "available", "readiness": "ready", "provider": "test-tools"},
+                {"name": "agents.subagent", "availability": "available", "readiness": "ready", "provider": "test-host"},
+            ],
+            "operations": operations,
+        }
+        return record, consents, receipt
+
+    def test_valid_project_viability(self) -> None:
+        record, consents, receipt = self.valid_project_viability_bundle()
+        self.assert_all_pass(grade_project_viability(record, consents, receipt))
+
+    def test_fixture_20_valid_project_viability_executes_current_grader(self) -> None:
+        fixture_path = (
+            Path(__file__).resolve().parents[1]
+            / "skills"
+            / "think-it-through"
+            / "evals"
+            / "fixtures"
+            / "20-project-viability-falsification.json"
+        )
+        fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+        positive = fixture["positive"]
+        self.assertEqual("0.4.0", fixture["contract_version"])
+        self.assert_all_pass(
+            grade_project_viability(
+                positive["record"],
+                positive["consent_bundle"],
+                positive["receipt_bundle"],
+            )
+        )
+
+    def test_project_viability_commitment_ceiling_levels(self) -> None:
+        record, consents, receipt = self.valid_project_viability_bundle()
+        record["validation_layers"]["problem_existence"]["status"] = "unsupported"
+        record["commitment"].update(direction="stop", chosen_rank=0)
+        self.assert_all_pass(grade_project_viability(record, consents, receipt))
+
+        record, consents, receipt = self.valid_project_viability_bundle()
+        record["validation_layers"]["alternative_ecosystem"]["status"] = "unknown"
+        record["commitment"].update(direction="limited_validation", chosen_rank=1)
+        self.assert_all_pass(grade_project_viability(record, consents, receipt))
+
+        record, consents, receipt = self.valid_project_viability_bundle()
+        record["alternative_trial"]["result"] = "solves_core"
+        record["commitment"].update(direction="adopt", chosen_rank=2)
+        self.assert_all_pass(grade_project_viability(record, consents, receipt))
+
+    def test_project_viability_accepts_honest_failed_search_at_limited_ceiling(self) -> None:
+        record, consents, receipt = self.valid_project_viability_bundle()
+        search = record["search_passes"][1]
+        search.update(status="failed", source_ids=[])
+        operation = receipt["operations"][1]
+        operation.update(status="failed", sources=[], fallback="保留替代生态未知并只做有限验证")
+        record["sources"] = [source for source in record["sources"] if source["id"] != "source-solution"]
+        for item in record["evidence_items"]:
+            if "source-solution" in item["source_ids"]:
+                item["source_ids"] = []
+        for candidate in record["candidates"]:
+            if "source-solution" in candidate["source_ids"]:
+                candidate.update(coverage_status="unknown", reason="搜索失败，保留未知", source_ids=[])
+                for dimension in candidate["verification_dimensions"]:
+                    dimension.update(status="unknown", reason="搜索失败，保留未知", source_ids=[])
+        record["validation_layers"]["alternative_ecosystem"]["status"] = "unknown"
+        record["commitment"].update(direction="limited_validation", chosen_rank=1)
+        self.assert_all_pass(grade_project_viability(record, consents, receipt))
+
+    def test_project_viability_rejects_single_variable_mutations(self) -> None:
+        mutations = {
+            "top-level-extra": lambda record, _consents, _receipt: record.update(extra="not-allowed"),
+            "focal-not-candidate": lambda record, _consents, _receipt: record["focal_solution"].update(status="accepted_solution"),
+            "merged-layer": lambda record, _consents, _receipt: record["validation_layers"].pop("alternative_ecosystem"),
+            "search-order": lambda record, _consents, _receipt: record["search_passes"].reverse(),
+            "missing-category": lambda record, _consents, _receipt: record["candidates"].pop(),
+            "empty-sources": lambda _record, _consents, receipt: receipt["operations"][0].update(sources=[]),
+            "dangling-source": lambda record, _consents, _receipt: record["evidence_items"][0].update(source_ids=["missing-source"]),
+            "strongest-mismatch": lambda record, _consents, _receipt: record.update(strongest_alternative_id="candidate-10"),
+            "trial-not-performed-build": lambda record, _consents, _receipt: record["alternative_trial"].update(status="not_performed", result="unknown", consent_ids=[], receipt_ids=[], reason="未执行"),
+            "provider-mismatch": lambda _record, _consents, receipt: receipt["operations"][0].update(provider="other-provider"),
+            "scope-mismatch": lambda _record, _consents, receipt: receipt["operations"][0].update(scope=["unauthorized"]),
+            "receipt-status-without-fallback": lambda _record, _consents, receipt: receipt["operations"][0].update(status="failed"),
+            "payload-extra": lambda record, _consents, _receipt: record["adversarial_review"]["payload"].update(main_judgment="自研"),
+            "payload-empty-question": lambda record, _consents, _receipt: record["adversarial_review"]["payload"].update(assigned_question=""),
+            "payload-invalid-field": lambda record, _consents, _receipt: record["adversarial_review"]["payload"].update(claims="不是列表"),
+            "adversarial-failed-without-trace": lambda record, _consents, _receipt: record["adversarial_review"].update(status="failed", payload=None, reason="失败"),
+            "chosen-over-ceiling": lambda record, _consents, _receipt: record["validation_layers"]["alternative_ecosystem"].update(status="unknown"),
+            "dangling-no-go": lambda record, _consents, _receipt: record["no_go_conditions"][0].update(evidence_item_ids=["missing"]),
+            "dangling-reassessment": lambda record, _consents, _receipt: record["reassessment_triggers"][0].update(evidence_item_ids=["missing"]),
+        }
+        for name, mutate in mutations.items():
+            with self.subTest(name=name):
+                record, consents, receipt = self.valid_project_viability_bundle()
+                mutate(record, consents, receipt)
+                checks = grade_project_viability(record, consents, receipt)
+                self.assertTrue(any(not check.passed and check.severe for check in checks))
+
+    @staticmethod
     def valid_decision_record() -> dict[str, object]:
         return {
-            "contract_version": "0.3.0",
+            "contract_version": "0.4.0",
             "topic": "是否继续开发当前产品",
             "true_objectives": ["验证陌生客户是否愿意付费"],
             "decision": "继续开发还是先验证付费意愿",

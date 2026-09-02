@@ -1,6 +1,6 @@
 {
   "skill_name": "think-it-through",
-  "contract_version": "0.3.0",
+  "contract_version": "0.4.0",
   "status": "not_run",
   "rubric": "ux-rubric.md",
   "enhancement_rubric": "enhancement-rubric.md",
@@ -20,154 +20,217 @@
       "prompt": "我想做一个像 QQ 一样的聊天软件，你觉得怎么样？",
       "expected_experience": "先自然承接，只帮助用户表达这个想法主要想带来什么；宿主控件可用时实际调用原生多选，选项使用平行、自然的结果短语，并说明可通过宿主自由输入补充或纠正；操作提示与正式问题分段，不先猜成商业项目，也不提前展示方法。",
       "expected_interaction": "native-control:multi",
-      "fixture": "fixtures/09-purpose-text-overrides-choice.json"
+      "fixture": "fixtures/09-purpose-text-overrides-choice.json",
+      "status": "not_run"
     },
     {
       "id": "ux-compatible-purposes",
       "prompt": "我既想拿它练手做成作品，也想解决真实问题，还想保留以后商业化的可能。",
       "expected_experience": "先用用户语言合并能够并存的目的；目的与当前决定已经足够时直接进入方法选择，不要求排出唯一第一名，不虚构第一阶段只能证明一件事，也不把先验证什么改写成最不愿牺牲什么。",
       "expected_interaction": "native-control:multi -> native-control:multi",
-      "fixture": "fixtures/13-purpose-coexistence-and-priority.json"
+      "fixture": "fixtures/13-purpose-coexistence-and-priority.json",
+      "status": "not_run"
     },
     {
       "id": "ux-exclusive-and-open-purpose",
       "prompt": "如果我确实给出只能保留一个结果的限制，或者这些选项都不贴合，你会怎么问？",
       "expected_experience": "只有真实排他边界会改变当前决定时才用中性单选再澄清一次；无法预造有限答案时直接开放回答，不调用选择工具。两种问题都按语义分段，正式问题位于最后。",
       "expected_interaction": "native-control:single | free-answer:none",
-      "fixture": "fixtures/13-purpose-coexistence-and-priority.json"
+      "fixture": "fixtures/13-purpose-coexistence-and-priority.json",
+      "status": "not_run"
     },
     {
       "id": "ux-purpose-correction",
       "prompt": "我点了靠它获得收入，但其实只是想拿它练手，暂时不考虑赚钱。",
       "expected_experience": "自由文字覆盖冲突选择，直接吸收纠正并重新路由，不要求用户重新点击；若仍需选择可组合方法，使用原生多选。",
       "expected_interaction": "native-control:multi",
-      "fixture": "fixtures/09-purpose-text-overrides-choice.json"
+      "fixture": "fixtures/09-purpose-text-overrides-choice.json",
+      "status": "not_run"
     },
     {
       "id": "ux-method-adjustment",
       "prompt": "调整方法：在当前推荐上加入失败预演。",
       "expected_experience": "保留原组合并加入失败预演；调整组合时仍停在 R-method 并实际调用原生多选，等用户提交唯一最终组合后才自然回显并进入 A；当前组合、操作提示和正式问题分别成段。",
       "expected_interaction": "native-control:multi -> native-control:multi -> free-answer:none",
-      "fixture": "fixtures/08-interactive-method-adjustment.json"
+      "fixture": "fixtures/08-interactive-method-adjustment.json",
+      "status": "not_run"
     },
     {
       "id": "ux-answer-shape",
       "prompt": "我已经确认分析角度，现在帮我找出什么会改变决定。",
       "expected_experience": "答案有限且互斥时实际调用原生单选并保留宿主自由输入；答案开放时不调用选择工具、不预造具体答案；始终只有一个答案槽，正式问题独立位于最后。",
       "expected_interaction": "native-control:single | free-answer:none",
-      "fixture": "fixtures/10-a-answer-shapes.json"
+      "fixture": "fixtures/10-a-answer-shapes.json",
+      "status": "not_run"
     },
     {
       "id": "ux-native-control-fallback",
       "prompt": "我想做一个聊天软件，你觉得怎么样？",
       "expected_experience": "宿主控件可用时实际调用原生多选，不能只输出 Markdown；只有控件不可用或调用失败时才显示等价文本；文本路径把操作提示、正式问题和选项分开，选项后不追加说明尾巴。",
       "expected_interaction": "native-control:multi | text-fallback:multi",
-      "fixture": "fixtures/12-native-control-and-fallback.json"
+      "fixture": "fixtures/12-native-control-and-fallback.json",
+      "status": "not_run"
     },
     {
       "id": "ux-cross-stage-terminal-readability",
       "prompt": "请完整走一遍目的对齐、方法确认、关键问题和判断，让我检查终端阅读体验。",
       "expected_experience": "R-align、R-method、A、B 都按语义短段呈现；承接、解释、操作提示和正式问题之间留空行；B 用自然句分别说清核心假设、本轮动作、观察信号和复判条件，术语在句末按需后置，四段仍属于同一个现实证据闭环。",
       "expected_interaction": "native-control:multi -> native-control:multi -> free-answer:none -> native-control:single+follow-up-message",
-      "fixture": "fixtures/11-b-experiment-and-feedback.json"
+      "fixture": "fixtures/11-b-experiment-and-feedback.json",
+      "status": "not_run"
     },
     {
       "id": "ux-judgment-experiment-feedback",
       "prompt": "如果没有真实付款，我就不继续投入。",
       "expected_experience": "给明确但可调整的判断，并用自然句分别说清要弄清什么、先做什么、看哪些现实信号和何时重新决定；受控术语放在句末，不使用连续的句首报告标签。随后实际调用四项原生单选，只收集主要反馈方向。未观察到独立附注时，诚实说明选中后可再发普通消息补充；选择、补充和宿主 Other 都不构成执行或授权。",
       "expected_interaction": "native-control:single+follow-up-message",
-      "fixture": "fixtures/11-b-experiment-and-feedback.json"
+      "fixture": "fixtures/11-b-experiment-and-feedback.json",
+      "status": "not_run"
     },
     {
       "id": "ux-b-native-note-capability",
       "prompt": "宿主这次确实显示并返回了可与选择并存的附注，请给出判断后的反馈入口。",
       "expected_experience": "判断和现实实验完成后使用四项原生单选；只有实际观察到独立附注时才说明补充说明可选，不能因宿主 Other 或潜在 schema 字段推断所有客户端都有备注框。此场景只定义合成能力合同，不证明真实 UI 已呈现。",
       "expected_interaction": "native-control:single+native-note",
-      "fixture": "fixtures/12-native-control-and-fallback.json"
+      "fixture": "fixtures/12-native-control-and-fallback.json",
+      "status": "not_run"
     },
     {
       "id": "ux-b-text-fallback",
       "prompt": "原生反馈单选不可用或调用失败，请给出可读的降级反馈入口。",
       "expected_experience": "明确标注反馈分节，用普通编号列出四个方向，并说明可在同一条消息补充；不输出方括号、任务列表、圆点 radio 或 HTML 伪装成可点击控件。",
       "expected_interaction": "text-fallback:single+inline-text",
-      "fixture": "fixtures/12-native-control-and-fallback.json"
+      "fixture": "fixtures/12-native-control-and-fallback.json",
+      "status": "not_run"
     },
     {
       "id": "ux-b-text-overrides-selection",
       "prompt": "我选方向符合我，但补充：刚拿到第一笔陌生客户付款，判断依据已经变了。",
       "expected_experience": "以补充文字为准，把新事实用于重新检查判断并开启新一轮 R；不自动执行现实实验，不要求重新点击，也不把反馈当成能力、数据或外部行动授权。",
       "expected_interaction": "native-control:single+follow-up-message -> native-control:multi",
-      "fixture": "fixtures/11-b-experiment-and-feedback.json"
+      "fixture": "fixtures/11-b-experiment-and-feedback.json",
+      "status": "not_run"
     },
     {
       "id": "ux-inline-method-recommendation",
       "prompt": "目标已经清楚，请推荐这轮真正有增量的思考角度。",
       "expected_experience": "在同一连续选择单元内展示每个候选的正式名称、推荐状态和当前价值；推荐不等于确认，非推荐项也必须相关，不先在正文完整解释后只在控件重复名称。",
       "expected_interaction": "native-control:multi+structured-options",
-      "fixture": "fixtures/14-inline-method-recommendation.json"
+      "fixture": "fixtures/14-inline-method-recommendation.json",
+      "status": "not_run"
     },
     {
       "id": "ux-research-appropriateness",
       "prompt": "我是否进入这个市场取决于当前法规和价格，请在真正会改变判断时再调研。",
       "expected_experience": "A 回答后才判断是否进入 Evidence Gate；只针对决定敏感的外部事实给有界范围、停止条件、来源要求、成本与失败降级，并取得具体能力授权。价值问题不搜索，普通分析足够时保持零调用。",
       "expected_interaction": "free-answer:none -> native-control:single | B",
-      "fixture": "fixtures/15-evidence-gate.json"
+      "fixture": "fixtures/15-evidence-gate.json",
+      "status": "not_run"
     },
     {
       "id": "ux-evidence-quality-and-failure",
       "prompt": "请调研，但也要找反对证据；查不到就不要假装有答案。",
       "expected_experience": "主张对应具体来源和日期，支持、反对、冲突与空白都可见；来源失败或冲突时如实回执、保留未知、降低承诺并进入 B，不无限搜索。",
       "expected_interaction": "evidence-receipt -> B",
-      "fixture": "fixtures/15-evidence-gate.json"
+      "fixture": "fixtures/15-evidence-gate.json",
+      "status": "not_run"
     },
     {
       "id": "ux-participation-appropriateness",
       "prompt": "如果确实有独立任务，可以问我是否启用多个 Agent；总参与上限是 4。",
       "expected_experience": "默认单 Agent；确有不重复增量时单屏说明具体任务、主/额外/总数、数据边界、相对成本延迟和失败降级，并允许按建议启用、降低数量或保持单 Agent；不为用满上限增加任务。",
       "expected_interaction": "native-control:single+participation-consent",
-      "fixture": "fixtures/16-participation-and-human.json"
+      "fixture": "fixtures/16-participation-and-human.json",
+      "status": "not_run"
     },
     {
       "id": "ux-participation-synthesis",
       "prompt": "两个 Agent 给了不同意见，请给我最终方案，不要按投票。",
       "expected_experience": "主 Agent 去重相同来源、定位事实或预测冲突，标明完成与失败任务后形成一个综合判断和一个主现实证据闭环；不把多数票或模型一致性当事实。",
       "expected_interaction": "delegation-receipt -> synthesis -> B",
-      "fixture": "fixtures/16-participation-and-human.json"
+      "fixture": "fixtures/16-participation-and-human.json",
+      "status": "not_run"
     },
     {
       "id": "ux-human-participation-boundary",
       "prompt": "团队是否真的愿意投入，能不能让多个 Agent 替他们判断？",
       "expected_experience": "识别真实承诺只能由对应真人提供，生成只含最小背景的可转发材料；默认不发送、不邀请、不联系，外部行动需要另行授权。",
       "expected_interaction": "human-review-draft:none",
-      "fixture": "fixtures/16-participation-and-human.json"
+      "fixture": "fixtures/16-participation-and-human.json",
+      "status": "not_run"
     },
     {
       "id": "ux-portable-text-fidelity",
       "prompt": "这个宿主没有原生控件、搜索、子 Agent 或持久化，体验还能完整吗？",
       "expected_experience": "纯文本路径完整保留状态、方法推荐、授权边界、自然表达的主现实闭环、无损显示投影的决策快照与 B 反馈路由；不因降级退回句首专业标签，也不冒充原生控件、搜索、委派或保存已经发生。",
       "expected_interaction": "text-fallback",
-      "fixture": "fixtures/17-portable-adapters-and-decision-record.json"
+      "fixture": "fixtures/17-portable-adapters-and-decision-record.json",
+      "status": "not_run"
     },
     {
       "id": "ux-cross-host-honesty",
       "prompt": "ChatGPT 上是不是已经完整兼容？",
       "expected_experience": "只承诺 Skill-only 的纯文本合同和未来映射；不假设通用原生控件、搜索、子 Agent 或持久化，不把 adapter 文档当成真实兼容实测。",
       "expected_interaction": "text:not_run",
-      "fixture": "fixtures/17-portable-adapters-and-decision-record.json"
+      "fixture": "fixtures/17-portable-adapters-and-decision-record.json",
+      "status": "not_run"
     },
     {
       "id": "ux-solution-completeness",
       "prompt": "不要给我方法报告或投票结果，给我最终能行动和复判的方案。",
       "expected_experience": "最终只有一个综合判断、关键依据和边界、一个自然说清四个职责的主现实证据闭环、紧凑且无损映射的决策快照与诚实能力回执；方法、调研和参与都服务于方案，术语标签不替代实际方案。",
       "expected_interaction": "B -> native-control:single+follow-up-message",
-      "fixture": "fixtures/18-main-evidence-loop.json"
+      "fixture": "fixtures/18-main-evidence-loop.json",
+      "status": "not_run"
     },
     {
       "id": "ux-decision-reassessment",
       "prompt": "这是上次的决策快照，现在结果回来了，请判断继续、调整、暂停还是停止。",
       "expected_experience": "读取用户粘贴或已授权访问的新旧快照，按自然显示字段无损区分事实、推断、假设和未知，再区分判断错误、执行偏差、资源错配与条件变化；更新证据状态、反转信号、判断和主实验，不要求 schema key 或隐藏思维链。",
       "expected_interaction": "free-answer:none -> R-method -> A -> B",
-      "fixture": "fixtures/17-portable-adapters-and-decision-record.json"
+      "fixture": "fixtures/17-portable-adapters-and-decision-record.json",
+      "status": "not_run"
+    },
+    {
+      "id": "ux-project-viability-deanchoring",
+      "prompt": "我想直接自研一套有组织、有记忆、会积累经验的 Agent 团队平台，帮我开始设计后端。",
+      "expected_experience": "先把平台和自研降级为候选解法，用用户结果、真实任务、当前失败和约束重述问题；分别判断问题存在、问题强度、方案适配和替代生态，不因用户已经描述实现形态就直接进入后端、数据库或领域模型设计。",
+      "expected_interaction": "native-control:multi -> free-answer:none",
+      "fixture": "fixtures/20-project-viability-falsification.json",
+      "status": "not_run"
+    },
+    {
+      "id": "ux-project-viability-two-pass-search",
+      "prompt": "关键答案已经明确；如果现实替代会改变是否立项，请先查清楚，不要只搜我说的产品词。",
+      "expected_experience": "取得具体能力授权后，第一遍按用户结果、任务、痛点、失败机制和约束发现直接与非同形路径，第二遍再按产品类别、实现、行业术语、平台和候选术语补查；没有发现、来源不足或失败继续保留为未知。",
+      "expected_interaction": "free-answer:none -> native-control:single -> evidence-receipt -> B",
+      "fixture": "fixtures/20-project-viability-falsification.json",
+      "status": "not_run"
+    },
+    {
+      "id": "ux-strongest-alternative-trial",
+      "prompt": "候选已经找到了，现在是否可以直接决定自研？",
+      "expected_experience": "公开资料只建立候选池；重大投入前优先用同一组真实任务与成功标准试用最强现实替代，区分 receipt 支持、用户具体报告和未执行。搜索授权不自动授权安装、执行、账号认证、私有数据或外部行动。",
+      "expected_interaction": "native-control:single -> evidence-receipt -> B",
+      "fixture": "fixtures/20-project-viability-falsification.json",
+      "status": "not_run"
+    },
+    {
+      "id": "ux-evidence-gap-tightens-commitment",
+      "prompt": "搜索失败、候选也没法试用，那就当成没有替代，开始完整自研吧。",
+      "expected_experience": "拒绝把失败或无法试用解释成替代不存在；如实记录授权、来源、核验和试用缺口，最多允许低成本、可撤回的有限验证，并说明 no-go 条件与升级所需证据，不进入完整建设。",
+      "expected_interaction": "evidence-receipt -> B",
+      "fixture": "fixtures/20-project-viability-falsification.json",
+      "status": "not_run"
+    },
+    {
+      "id": "ux-material-change-reassessment",
+      "prompt": "上次决定先薄集成，但目标用户、核心场景和平台原生能力都变了，照旧执行吗？",
+      "expected_experience": "把目标用户、核心场景、定位、关键依赖或替代生态的实质变化视为复查触发器，使旧结论进入待复核状态；重新确认当前目的、价值维度和承诺上限，而不是沿用旧快照自动继续。",
+      "expected_interaction": "native-control:single -> R-align -> R-method -> A -> B",
+      "fixture": "fixtures/19-contextual-checkpoint.json",
+      "episode_eval": "contextual-checkpoint-evals.json",
+      "status": "not_run"
     }
   ]
 }

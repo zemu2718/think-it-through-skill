@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.3.0",
+  "contract_version": "0.4.0",
   "id": "participation-and-human",
   "domain": "participation-routing",
   "cases": [
@@ -93,7 +93,8 @@
           ],
           "tasks": [
             "核验市场来源",
-            "独立尝试推翻当前判断"
+            "独立尝试推翻当前判断",
+            "两项不重复任务"
           ],
           "data_boundary": [
             "每个 Agent 只获得各自任务所需最小上下文"
@@ -108,7 +109,7 @@
         "granted_by": "user"
       },
       "receipt": {
-        "contract_version": "0.3.0",
+        "contract_version": "0.4.0",
         "capabilities": [
           {
             "name": "agents.subagent",

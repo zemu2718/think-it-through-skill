@@ -4,6 +4,8 @@
 
 本文档只说明如何安装和核验文件，不是第二份行为、安全或兼容性合同。行为与安全以 [`REQUIREMENTS.md`](../REQUIREMENTS.md) 和 [`SECURITY.md`](../SECURITY.md) 为准；runtime 状态见[兼容性与证据说明](compatibility-and-evidence.md)及机器事实源。
 
+当前 `main` 上的稳定源码合同和最新真实公开发布均为 v0.4.0。下面的固定 tag、下载归档和校验和共同标识这一不可变发布；runtime 兼容状态仍按实际证据单独声明。
+
 ## 推荐方式
 
 打开你正在使用的 Agent（Claude Code、Codex、Cursor、OpenClaw、Hermes Agent、CodeBuddy、WorkBuddy、Gemini CLI、OpenCode 等），告诉它：
@@ -22,14 +24,14 @@ Agent 会根据当前宿主的能力、权限和 Skill 目录约定尝试完成�
 
 ```bash
 npx -y skills@1.5.23 add \
-  https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill
+  https://github.com/zemu2718/think-it-through-skill/releases/download/v0.4.0/think-it-through.skill
 ```
 
 如果要把复制式、用户级安装写入该安装器版本认识的全部目标：
 
 ```bash
 npx -y skills@1.5.23 add \
-  https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill \
+  https://github.com/zemu2718/think-it-through-skill/releases/download/v0.4.0/think-it-through.skill \
   --agent '*' \
   --global \
   --copy \
@@ -45,7 +47,7 @@ npx -y skills@1.5.23 add \
 ```bash
 gh skill install \
   zemu2718/think-it-through-skill \
-  think-it-through@v0.3.0 \
+  think-it-through@v0.4.0 \
   --agent claude-code \
   --scope user
 ```
@@ -57,7 +59,7 @@ gh skill install \
 如果两个安装器都不支持你的宿主，请按该宿主的 Agent Skills 目录约定复制 Skill。Claude Code 的命令如下：
 
 ```bash
-git clone --depth 1 --branch v0.3.0 https://github.com/zemu2718/think-it-through-skill.git
+git clone --depth 1 --branch v0.4.0 https://github.com/zemu2718/think-it-through-skill.git
 cd think-it-through-skill
 git rev-parse HEAD
 test ! -e ~/.claude/skills/think-it-through
@@ -75,7 +77,7 @@ cp -R skills/think-it-through ~/.claude/skills/
 /think-it-through
 ```
 
-安装前可以使用 Release 同时发布的 [`SHA256SUMS`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/SHA256SUMS) 核对下载归档；手动安装时用 `git rev-parse HEAD` 记录准确源码 revision。
+安装前可以使用 Release 同时发布的 [`SHA256SUMS`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.4.0/SHA256SUMS) 核对下载归档；手动安装时用 `git rev-parse HEAD` 记录准确源码 revision。
 
 ## 安装能证明什么
 

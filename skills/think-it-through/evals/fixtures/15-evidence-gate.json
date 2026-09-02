@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.3.0",
+  "contract_version": "0.4.0",
   "id": "evidence-gate",
   "domain": "evidence-routing",
   "cases": [
@@ -56,6 +56,11 @@
           "resources": [
             "官方法规网页"
           ],
+          "tasks": [
+            "中国市场",
+            "2026 年",
+            "当前交付模式"
+          ],
           "data_boundary": [
             "只使用公开信息"
           ],
@@ -69,7 +74,7 @@
         "granted_by": "user"
       },
       "receipt": {
-        "contract_version": "0.3.0",
+        "contract_version": "0.4.0",
         "capabilities": [
           {
             "name": "search.public_web",
@@ -90,7 +95,8 @@
             "provider": "public-search",
             "scope": [
               "中国市场",
-              "2026 年"
+              "2026 年",
+              "当前交付模式"
             ],
             "consent_ids": [
               "consent-research-1"

@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.3.0",
+  "contract_version": "0.4.0",
   "id": "product-misalignment",
   "domain": "business-product",
   "already_executed": false,

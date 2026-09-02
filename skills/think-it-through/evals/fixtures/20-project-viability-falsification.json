@@ -1,0 +1,759 @@
+{
+  "contract_version": "0.4.0",
+  "id": "project-viability-falsification",
+  "domain": "project-viability",
+  "positive": {
+    "record": {
+      "contract_version": "0.4.0",
+      "decision_context": {
+        "decision": "采用现实替代还是正式自研",
+        "commitment_type": "重大且难撤回的产品建设",
+        "material_change": false,
+        "prior_conclusion_status": "none"
+      },
+      "user_outcome": "让小团队拥有可积累经验的协作记忆",
+      "focal_solution": {
+        "description": "建设独立记忆平台",
+        "status": "candidate"
+      },
+      "validation_layers": {
+        "problem_existence": {
+          "status": "supported",
+          "evidence_item_ids": [
+            "e-problem"
+          ]
+        },
+        "problem_strength": {
+          "status": "supported",
+          "evidence_item_ids": [
+            "e-strength"
+          ]
+        },
+        "solution_fit": {
+          "status": "supported",
+          "evidence_item_ids": [
+            "e-fit"
+          ]
+        },
+        "alternative_ecosystem": {
+          "status": "supported",
+          "evidence_item_ids": [
+            "e-alternatives"
+          ]
+        }
+      },
+      "search_passes": [
+        {
+          "type": "outcome_problem_first",
+          "status": "completed",
+          "query_boundaries": [
+            "outcome-search"
+          ],
+          "consent_id": "consent-search-outcome",
+          "receipt_id": "receipt-search-outcome",
+          "source_ids": [
+            "source-outcome"
+          ]
+        },
+        {
+          "type": "solution_implementation_second",
+          "status": "completed",
+          "query_boundaries": [
+            "solution-search"
+          ],
+          "consent_id": "consent-search-solution",
+          "receipt_id": "receipt-search-solution",
+          "source_ids": [
+            "source-solution"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "id": "source-outcome",
+          "receipt_id": "receipt-search-outcome",
+          "locator": "https://example.com/outcome"
+        },
+        {
+          "id": "source-solution",
+          "receipt_id": "receipt-search-solution",
+          "locator": "https://example.com/solution"
+        },
+        {
+          "id": "source-trial",
+          "receipt_id": "receipt-trial",
+          "locator": "trial://local/result"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "candidate-0",
+          "name": "候选路径 0",
+          "category": "status_quo",
+          "coverage_status": "not_applicable",
+          "material": false,
+          "reason": "当前决定下没有独特增量",
+          "source_ids": [],
+          "verification_dimensions": [
+            {
+              "dimension": "现实边界",
+              "status": "not_applicable",
+              "reason": "该路径不适用本核验维度",
+              "source_ids": []
+            }
+          ]
+        },
+        {
+          "id": "candidate-1",
+          "name": "候选路径 1",
+          "category": "manual_or_process",
+          "coverage_status": "not_applicable",
+          "material": false,
+          "reason": "当前决定下没有独特增量",
+          "source_ids": [],
+          "verification_dimensions": [
+            {
+              "dimension": "现实边界",
+              "status": "not_applicable",
+              "reason": "该路径不适用本核验维度",
+              "source_ids": []
+            }
+          ]
+        },
+        {
+          "id": "candidate-2",
+          "name": "候选路径 2",
+          "category": "direct_competitor",
+          "coverage_status": "covered",
+          "material": true,
+          "reason": "",
+          "source_ids": [
+            "source-outcome"
+          ],
+          "verification_dimensions": [
+            {
+              "dimension": "现实边界",
+              "status": "verified",
+              "reason": "",
+              "source_ids": [
+                "source-outcome"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "candidate-3",
+          "name": "候选路径 3",
+          "category": "adjacent_category",
+          "coverage_status": "not_applicable",
+          "material": false,
+          "reason": "当前决定下没有独特增量",
+          "source_ids": [],
+          "verification_dimensions": [
+            {
+              "dimension": "现实边界",
+              "status": "not_applicable",
+              "reason": "该路径不适用本核验维度",
+              "source_ids": []
+            }
+          ]
+        },
+        {
+          "id": "candidate-4",
+          "name": "候选路径 4",
+          "category": "non_isomorphic_product_or_service",
+          "coverage_status": "not_applicable",
+          "material": false,
+          "reason": "当前决定下没有独特增量",
+          "source_ids": [],
+          "verification_dimensions": [
+            {
+              "dimension": "现实边界",
+              "status": "not_applicable",
+              "reason": "该路径不适用本核验维度",
+              "source_ids": []
+            }
+          ]
+        },
+        {
+          "id": "candidate-platform",
+          "name": "平台原生能力",
+          "category": "platform_native",
+          "coverage_status": "covered",
+          "material": true,
+          "reason": "",
+          "source_ids": [
+            "source-solution"
+          ],
+          "verification_dimensions": [
+            {
+              "dimension": "现实边界",
+              "status": "verified",
+              "reason": "",
+              "source_ids": [
+                "source-solution"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "candidate-6",
+          "name": "候选路径 6",
+          "category": "active_open_source_or_commercial",
+          "coverage_status": "covered",
+          "material": true,
+          "reason": "",
+          "source_ids": [
+            "source-solution"
+          ],
+          "verification_dimensions": [
+            {
+              "dimension": "现实边界",
+              "status": "verified",
+              "reason": "",
+              "source_ids": [
+                "source-solution"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "candidate-7",
+          "name": "候选路径 7",
+          "category": "tool_combination",
+          "coverage_status": "not_applicable",
+          "material": false,
+          "reason": "当前决定下没有独特增量",
+          "source_ids": [],
+          "verification_dimensions": [
+            {
+              "dimension": "现实边界",
+              "status": "not_applicable",
+              "reason": "该路径不适用本核验维度",
+              "source_ids": []
+            }
+          ]
+        },
+        {
+          "id": "candidate-8",
+          "name": "候选路径 8",
+          "category": "plugin_script_or_thin_integration",
+          "coverage_status": "not_applicable",
+          "material": false,
+          "reason": "当前决定下没有独特增量",
+          "source_ids": [],
+          "verification_dimensions": [
+            {
+              "dimension": "现实边界",
+              "status": "not_applicable",
+              "reason": "该路径不适用本核验维度",
+              "source_ids": []
+            }
+          ]
+        },
+        {
+          "id": "candidate-9",
+          "name": "候选路径 9",
+          "category": "local_supplement",
+          "coverage_status": "not_applicable",
+          "material": false,
+          "reason": "当前决定下没有独特增量",
+          "source_ids": [],
+          "verification_dimensions": [
+            {
+              "dimension": "现实边界",
+              "status": "not_applicable",
+              "reason": "该路径不适用本核验维度",
+              "source_ids": []
+            }
+          ]
+        },
+        {
+          "id": "candidate-10",
+          "name": "候选路径 10",
+          "category": "independent_build",
+          "coverage_status": "covered",
+          "material": true,
+          "reason": "",
+          "source_ids": [
+            "source-solution"
+          ],
+          "verification_dimensions": [
+            {
+              "dimension": "现实边界",
+              "status": "verified",
+              "reason": "",
+              "source_ids": [
+                "source-solution"
+              ]
+            }
+          ]
+        }
+      ],
+      "strongest_alternative_id": "candidate-platform",
+      "alternative_trial": {
+        "status": "receipt_backed",
+        "candidate_id": "candidate-platform",
+        "real_tasks": [
+          "真实任务 A"
+        ],
+        "success_criteria": [
+          "保留上下文并正确召回"
+        ],
+        "result": "does_not_solve",
+        "consent_ids": [
+          "consent-trial"
+        ],
+        "receipt_ids": [
+          "receipt-trial"
+        ],
+        "evidence_item_ids": [
+          "e-trial"
+        ],
+        "reason": ""
+      },
+      "adversarial_review": {
+        "required": true,
+        "status": "completed",
+        "consent_id": "consent-adversarial",
+        "receipt_id": "receipt-adversarial",
+        "payload": {
+          "assigned_question": "独立挑战正式自研必要性",
+          "claims": [
+            "最强替代仍有核心缺口"
+          ],
+          "evidence_and_sources": [
+            "试用回执显示核心任务失败"
+          ],
+          "assumptions": [
+            "任务与成功标准保持不变"
+          ],
+          "uncertainties": [
+            "未来版本可能改善"
+          ],
+          "conflicts": [
+            "公开介绍与试用结果不同"
+          ],
+          "what_would_reverse_this": [
+            "替代方案完成核心任务"
+          ]
+        },
+        "evidence_item_ids": [
+          "e-adversarial"
+        ],
+        "reason": ""
+      },
+      "evidence_items": [
+        {
+          "id": "e-problem",
+          "state": "supports",
+          "claim": "问题存在",
+          "source_ids": [
+            "source-outcome"
+          ]
+        },
+        {
+          "id": "e-strength",
+          "state": "supports",
+          "claim": "问题强度足够",
+          "source_ids": [
+            "source-outcome"
+          ]
+        },
+        {
+          "id": "e-fit",
+          "state": "supports",
+          "claim": "候选方案适配",
+          "source_ids": [
+            "source-solution"
+          ]
+        },
+        {
+          "id": "e-alternatives",
+          "state": "supports",
+          "claim": "替代生态已核验",
+          "source_ids": [
+            "source-solution"
+          ]
+        },
+        {
+          "id": "e-trial",
+          "state": "opposes",
+          "claim": "最强替代不能解决核心任务",
+          "source_ids": [
+            "source-trial"
+          ]
+        },
+        {
+          "id": "e-adversarial",
+          "state": "supports",
+          "claim": "独立反方未发现更轻路径",
+          "source_ids": []
+        }
+      ],
+      "commitment": {
+        "direction": "independent_build",
+        "chosen_rank": 3,
+        "rationale": "完整证据链仍显示核心缺口",
+        "evidence_item_ids": [
+          "e-trial",
+          "e-adversarial"
+        ],
+        "upgrade_conditions": [
+          "仅围绕已证明缺口收缩范围"
+        ]
+      },
+      "no_go_conditions": [
+        {
+          "id": "no-go-1",
+          "condition": "替代方案满足核心任务时停止自研",
+          "evidence_item_ids": [
+            "e-trial"
+          ]
+        }
+      ],
+      "reassessment_triggers": [
+        {
+          "id": "recheck-1",
+          "condition": "替代生态实质变化后重新核验",
+          "evidence_item_ids": [
+            "e-alternatives"
+          ]
+        }
+      ]
+    },
+    "consent_bundle": {
+      "consents": [
+        {
+          "consent_id": "consent-search-outcome",
+          "consent_type": "capability_call",
+          "status": "granted",
+          "scope": {
+            "purpose": "核验项目可行性证据",
+            "operations": [
+              "公开搜索"
+            ],
+            "resources": [
+              "公开资料"
+            ],
+            "tasks": [
+              "outcome-search"
+            ],
+            "data_boundary": [
+              "仅使用公开资料"
+            ],
+            "excluded": [
+              "私有数据",
+              "外部行动"
+            ]
+          },
+          "valid_for": "this_action",
+          "requested_by": "main_agent",
+          "granted_by": "user"
+        },
+        {
+          "consent_id": "consent-search-solution",
+          "consent_type": "capability_call",
+          "status": "granted",
+          "scope": {
+            "purpose": "核验项目可行性证据",
+            "operations": [
+              "公开搜索"
+            ],
+            "resources": [
+              "公开资料"
+            ],
+            "tasks": [
+              "solution-search"
+            ],
+            "data_boundary": [
+              "仅使用公开资料"
+            ],
+            "excluded": [
+              "私有数据",
+              "外部行动"
+            ]
+          },
+          "valid_for": "this_action",
+          "requested_by": "main_agent",
+          "granted_by": "user"
+        },
+        {
+          "consent_id": "consent-trial",
+          "consent_type": "capability_call",
+          "status": "granted",
+          "scope": {
+            "purpose": "核验项目可行性证据",
+            "operations": [
+              "本地试用"
+            ],
+            "resources": [
+              "公开资料"
+            ],
+            "tasks": [
+              "trial-run"
+            ],
+            "data_boundary": [
+              "仅使用公开资料"
+            ],
+            "excluded": [
+              "私有数据",
+              "外部行动"
+            ]
+          },
+          "valid_for": "this_action",
+          "requested_by": "main_agent",
+          "granted_by": "user"
+        },
+        {
+          "consent_id": "consent-adversarial",
+          "consent_type": "participation_delegation",
+          "status": "granted",
+          "scope": {
+            "purpose": "独立挑战自研必要性",
+            "operations": [
+              "委派独立反方"
+            ],
+            "resources": [
+              "已确认事实"
+            ],
+            "tasks": [
+              "独立反方任务"
+            ],
+            "data_boundary": [
+              "最小上下文"
+            ],
+            "excluded": [
+              "主判断",
+              "完整 transcript",
+              "外部行动"
+            ]
+          },
+          "valid_for": "this_action",
+          "requested_by": "main_agent",
+          "granted_by": "user"
+        }
+      ]
+    },
+    "receipt_bundle": {
+      "contract_version": "0.4.0",
+      "capabilities": [
+        {
+          "name": "search.public_web",
+          "availability": "available",
+          "readiness": "ready",
+          "provider": "test-search"
+        },
+        {
+          "name": "tools.read",
+          "availability": "available",
+          "readiness": "ready",
+          "provider": "test-tools"
+        },
+        {
+          "name": "agents.subagent",
+          "availability": "available",
+          "readiness": "ready",
+          "provider": "test-host"
+        }
+      ],
+      "operations": [
+        {
+          "receipt_id": "receipt-search-outcome",
+          "kind": "research",
+          "status": "completed",
+          "provider": "test-search",
+          "scope": [
+            "outcome-search"
+          ],
+          "consent_ids": [
+            "consent-search-outcome"
+          ],
+          "sources": [
+            {
+              "title": "结果资料",
+              "locator": "https://example.com/outcome",
+              "retrieved_at": "2026-09-02T00:00:00Z"
+            }
+          ],
+          "private_data_accessed": false,
+          "external_action_executed": false,
+          "fallback": ""
+        },
+        {
+          "receipt_id": "receipt-search-solution",
+          "kind": "research",
+          "status": "completed",
+          "provider": "test-search",
+          "scope": [
+            "solution-search"
+          ],
+          "consent_ids": [
+            "consent-search-solution"
+          ],
+          "sources": [
+            {
+              "title": "方案资料",
+              "locator": "https://example.com/solution",
+              "retrieved_at": "2026-09-02T00:00:00Z"
+            }
+          ],
+          "private_data_accessed": false,
+          "external_action_executed": false,
+          "fallback": ""
+        },
+        {
+          "receipt_id": "receipt-trial",
+          "kind": "tool_call",
+          "status": "completed",
+          "provider": "test-tools",
+          "scope": [
+            "trial-run"
+          ],
+          "consent_ids": [
+            "consent-trial"
+          ],
+          "sources": [
+            {
+              "title": "本地试用结果",
+              "locator": "trial://local/result",
+              "retrieved_at": "2026-09-02T00:00:00Z"
+            }
+          ],
+          "private_data_accessed": false,
+          "external_action_executed": false,
+          "fallback": ""
+        },
+        {
+          "receipt_id": "receipt-adversarial",
+          "kind": "delegation",
+          "status": "completed",
+          "provider": "test-host",
+          "scope": [
+            "独立反方任务"
+          ],
+          "consent_ids": [
+            "consent-adversarial"
+          ],
+          "agent_counts": {
+            "main": 1,
+            "planned_additional": 1,
+            "started_additional": 1,
+            "completed_additional": 1,
+            "failed_additional": 0,
+            "actual_total": 2
+          },
+          "completed_tasks": [
+            "独立反方任务"
+          ],
+          "failed_tasks": [],
+          "private_data_accessed": false,
+          "external_action_executed": false,
+          "fallback": ""
+        }
+      ]
+    },
+    "must_pass": true
+  },
+  "mutations": [
+    {
+      "id": "focal-solution-not-candidate",
+      "target": "record.focal_solution.status",
+      "replacement": "accepted_solution"
+    },
+    {
+      "id": "validation-layer-merged-or-missing",
+      "target": "record.validation_layers.alternative_ecosystem",
+      "operation": "delete"
+    },
+    {
+      "id": "search-pass-order-reversed",
+      "target": "record.search_passes",
+      "operation": "reverse"
+    },
+    {
+      "id": "material-category-missing",
+      "target": "record.candidates[-1]",
+      "operation": "delete"
+    },
+    {
+      "id": "completed-search-empty-sources",
+      "target": "receipt_bundle.operations[0].sources",
+      "replacement": []
+    },
+    {
+      "id": "dangling-evidence-source",
+      "target": "record.evidence_items[0].source_ids",
+      "replacement": [
+        "missing-source"
+      ]
+    },
+    {
+      "id": "strongest-alternative-mismatch",
+      "target": "record.strongest_alternative_id",
+      "replacement": "candidate-10"
+    },
+    {
+      "id": "trial-not-performed-but-build",
+      "target": "record.alternative_trial",
+      "patch": {
+        "status": "not_performed",
+        "result": "unknown",
+        "consent_ids": [],
+        "receipt_ids": [],
+        "reason": "未执行"
+      }
+    },
+    {
+      "id": "search-provider-mismatch",
+      "target": "receipt_bundle.operations[0].provider",
+      "replacement": "other-provider"
+    },
+    {
+      "id": "search-scope-mismatch",
+      "target": "receipt_bundle.operations[0].scope",
+      "replacement": [
+        "unauthorized"
+      ]
+    },
+    {
+      "id": "search-failed-without-fallback-but-claimed-complete",
+      "target": "receipt_bundle.operations[0].status",
+      "replacement": "failed"
+    },
+    {
+      "id": "adversarial-payload-extra-key",
+      "target": "record.adversarial_review.payload.main_judgment",
+      "replacement": "自研"
+    },
+    {
+      "id": "adversarial-failed-without-trace-but-build",
+      "target": "record.adversarial_review",
+      "patch": {
+        "status": "failed",
+        "payload": null,
+        "reason": "失败"
+      }
+    },
+    {
+      "id": "chosen-rank-over-ceiling",
+      "target": "record.validation_layers.alternative_ecosystem.status",
+      "replacement": "unknown"
+    },
+    {
+      "id": "dangling-no-go-reference",
+      "target": "record.no_go_conditions[0].evidence_item_ids",
+      "replacement": [
+        "missing"
+      ]
+    },
+    {
+      "id": "dangling-reassessment-reference",
+      "target": "record.reassessment_triggers[0].evidence_item_ids",
+      "replacement": [
+        "missing"
+      ]
+    }
+  ],
+  "evidence_boundary": "本 fixture 只证明 v0.4.0 sidecar 的确定性合同，不证明真实搜索、来源可信、候选最强、现实试用、Agent 独立性或 runtime 兼容。"
+}

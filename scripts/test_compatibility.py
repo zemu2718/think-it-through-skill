@@ -248,7 +248,7 @@ class CompatibilityTests(unittest.TestCase):
             "schema_version": "1",
             "evidence_id": "format-test",
             "kind": kind,
-            "skill": {"id": "think-it-through", "version": "0.3.0"},
+            "skill": {"id": "think-it-through", "version": "0.4.0"},
             "source_commit": "0" * 40,
             "package_sha256": None,
             "tool": {"name": "skills-ref", "version": "fixed"},

@@ -7,15 +7,15 @@ This file is a concise derivative of `REQUIREMENTS.md` and `PRODUCT.md`, not a s
 - **Name**: 想清楚 · Think It Through
 - **Category**: Decision-and-evidence Agent Skill for consequential commitments
 - **Description**: Turns an important request into the decision underneath it, one answer that could change it, and a next step reality can test.
-- **Stage**: v0.3.0 is the current stable source and formal product contract, published as an immutable Git tag, GitHub Release, downloadable `think-it-through.skill`, and `SHA256SUMS`; maintained development continues on `main`
+- **Stage**: v0.4.0 is the current stable source and formal product contract on `main` and the latest published immutable Git tag, GitHub Release, downloadable `think-it-through.skill`, and `SHA256SUMS`. v0.3.0 remains a historical release. Publication does not promote any unrun runtime compatibility level.
 - **Website**: https://github.com/zemu2718/think-it-through-skill
 
 ## Messaging
 
-- **Chinese Positioning**: AI 能把事情做得很快，但不能替你决定什么值得做。
-- **English Positioning**: AI can get things done fast, but it can't decide for you what's worth doing.
-- **Chinese Value Statement**: 重要投入前，先把真正要做的决定想清楚，再行动。
-- **English Value Statement**: Before an important commitment, think through the decision you really need to make—then act.
+- **Chinese Positioning**: AI 能把事情做得很快，但什么值得做，仍由你决定。
+- **English Positioning**: AI can get things done fast, but what's worth doing is still yours to decide.
+- **Chinese Value Statement**: 开始或继续投入前，想清楚再决定。
+- **English Value Statement**: Before you start or commit more, think it through—then decide.
 
 ## Audience
 
@@ -25,7 +25,7 @@ This file is a concise derivative of `REQUIREMENTS.md` and `PRODUCT.md`, not a s
 
 ## Positioning
 
-- **Differentiation**: A decision-and-evidence protocol, not a generic brainstorming framework, project manager, mandatory research workflow, or multi-Agent debate. It defaults to zero external calls and one main Agent, escalates only when decision value and authorization are present, and ends with one judgment, one primary real-world evidence loop, and a reassessable snapshot.
+- **Differentiation**: A decision-and-evidence protocol, not a generic brainstorming framework, project manager, mandatory research workflow, or multi-Agent debate. It treats a proposed product, feature, or custom build as a candidate solution, checks realistic alternatives before major commitment, defaults to zero external calls and one main Agent, and limits commitment when evidence is incomplete. It ends with one judgment, one primary real-world evidence loop, and a reassessable snapshot.
 - **Alternatives**: Immediate AI execution, generic prompt/framework libraries, project-management tools, research or multi-Agent orchestration products
 - **Market Position**: Focused decision layer for resource-constrained users making consequential commitments, distributed as an MIT-licensed Agent Skill
 
@@ -49,15 +49,15 @@ This file is a concise derivative of `REQUIREMENTS.md` and `PRODUCT.md`, not a s
 - **Dashed optional Gate**: Evidence or participation only when needed and authorized; always visually secondary.
 - **Returning loop**: Real-world results reopen the decision.
 - **Accessibility**: Meaning must also be carried by shape, line style, weight, position, and labels; color is never the only signal.
-- **Asset roles**: README Banner is the opening brand experience; Brand Mark provides compact recognition; Social Preview carries brand plus positioning into sharing contexts. README copy explains user outcomes, fit, the plain-language workflow, and the restrained method map without duplicating the full formal protocol.
-- **Visual standard**: Premium through restraint—deep ink, warm neutral space, graphite, disciplined dark teal, rare amber, clear hierarchy, and only meaning-bearing geometry. Natural 3D material shading and one contact shadow are acceptable in the canonical Banner; decorative gradients, glow, glass effects, stacked shadows, generic AI workflows, robots, neural networks, pseudo interfaces, and node clouds are not.
-- **README disclosure boundary**: Keep the README outcome-first and use only three compact, verifiable status badges: MIT License, the latest published Release, and the `main` branch validation workflow. Do not use badges to claim runtime compatibility, standards conformance, adoption, downloads, coverage, or model behavior. The opening names the product category plainly and displays the canonical 2:1 Banner at a restrained width without changing the source or derived files. The README should move from user outcomes and fit to the plain-language workflow, methods that appear only when useful, one cross-host repository-URL installation request, the reliable Claude Code invocation near installation, grouped detail links, and plain-language safety defaults. Installation is explicitly separated from real-runtime validation. Detailed commands, release verification, compatibility levels, frozen scores, and evidence governance belong in the linked guides.
+- **Asset roles**: README Invocation Card is the compact opening brand and invocation experience; Social Preview carries brand plus positioning into sharing contexts. README copy explains user outcomes, fit, the plain-language workflow, and the restrained method map without duplicating the full formal protocol.
+- **Visual standard**: Premium through restraint—deep ink, warm neutral space, graphite, disciplined dark teal, rare amber, clear hierarchy, and only meaning-bearing geometry. Natural 3D material shading and one contact shadow are acceptable in the canonical README Invocation Card; decorative gradients, glow, glass effects, stacked shadows, generic AI workflows, robots, neural networks, pseudo interfaces, and node clouds are not.
+- **README disclosure boundary**: Keep the README outcome-first and use only three compact, verifiable status badges: MIT License, the latest published Release, and the `main` branch validation workflow. Do not use badges to claim runtime compatibility, standards conformance, adoption, downloads, coverage, or model behavior. The opening stays focused on the user-facing position and displays the canonical 1:1 README Invocation Card at a compact width. The card may contain one visual `/think-it-through` invocation, but the opening must not add a second text command or call-to-action outside the card; the installation section remains the copyable Claude Code start step. The README should move from user outcomes and fit to a plain-language workflow, explain formal method names in everyday terms, present the cross-host repository-URL request and concise Skills CLI GitHub-source command as parallel installation paths, then the Claude Code invocation as the user-facing start step, separate the compact safety section from detail links grouped under installation and compatibility, boundaries, and improvement, and state safety defaults as concrete user choices. Avoid exposing internal protocol language where a reader-centered phrase carries the same meaning. Installation is explicitly separated from successful real-runtime execution. Pinned commands, release verification, compatibility levels, frozen scores, and evidence governance belong in the linked guides.
 
 ## Evidence and Claim Boundaries
 
 - The simplest installation request is to give the repository URL to the Agent the user already uses; whether that Agent can complete installation depends on its capabilities, permissions, and Skill-directory convention, and does not establish runtime compatibility.
 - Current reliable invocation is explicit `/think-it-through` in Claude Code.
-- The loaded-Skill contextual checkpoint is part of the v0.3.0 formal contract; real multi-turn behavior and natural-language discovery remain `not_run`.
+- The loaded-Skill contextual checkpoint and project-viability protections are part of the v0.4.0 formal contract; real multi-turn behavior, natural-language discovery, external search, alternative trials, and independent-Agent behavior remain `not_run`.
 - Frozen v0.1 discovery evidence remains 9/16 overall, with 1/8 positives and 8/8 negatives.
 - Static contracts, schemas, fixtures, graders, diagrams, local installation, and installer mappings do not prove runtime loading, model behavior, native UI, or compatibility.
 - Locally generated README or Social Preview images do not prove that GitHub repository settings use them.
@@ -68,9 +68,9 @@ This file is a concise derivative of `REQUIREMENTS.md` and `PRODUCT.md`, not a s
 The README journey is:
 
 ```text
-5 seconds: identify the decision-and-evidence Agent Skill, its position, and user outcomes
+5 seconds: identify the decision-and-evidence Agent Skill, its position, user outcomes, and reliable Claude Code invocation
 → 20–30 seconds: judge when it is useful and when the full flow is unnecessary
-→ 45–60 seconds: understand the plain-language workflow and why methods appear only when useful
-→ 2 minutes: make the cross-host repository-URL installation request, then use the documented reliable invocation in Claude Code
-→ then: review plain-language safety defaults and grouped links; open detailed installation, compatibility, or evidence guidance only when needed
+→ 45–60 seconds: understand the workflow and optional methods without needing internal protocol vocabulary
+→ 2 minutes: choose the repository-URL request or concise Skills CLI install, then use the documented reliable invocation in Claude Code
+→ then: review concrete safety choices and grouped links; open detailed installation, compatibility, or evidence guidance only when needed
 ```

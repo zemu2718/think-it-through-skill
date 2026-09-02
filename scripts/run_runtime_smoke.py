@@ -22,7 +22,7 @@ from typing import Any
 from build_distribution import ROOT, SKILL_DIR, build_archive, load_manifest
 from grade_contracts import InteractionEvidence, grade
 
-CONTRACT_VERSION = "0.3.0"
+CONTRACT_VERSION = "0.4.0"
 AUTHORIZATION_PHRASE = "I_AUTHORIZE_PROVIDER_CALLS"
 OUTPUT_ROOT = ROOT / "dist" / "runtime-smoke"
 FEEDBACK_OPTIONS = (
@@ -512,7 +512,7 @@ def _record_artifacts(
                 "level": "L4",
                 "status": "passed" if passed else "failed",
                 "command_argv": [runtime, "<same-session-four-turn-smoke>"],
-                "assertions": ["R-align、R-method、A、B 均由当前 v0.3.0 grader 评分"],
+                "assertions": ["R-align、R-method、A、B 均由当前 v0.4.0 grader 评分"],
                 "notes": "candidate evidence；人工审阅前不得提升 runtime-support.json",
             },
         ],

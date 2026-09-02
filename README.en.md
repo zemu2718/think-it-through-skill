@@ -3,112 +3,120 @@
 [简体中文](README.md)
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/readme-banner-dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="assets/readme-banner-light.png">
-  <img src="assets/readme-banner-light.png" alt="Layered observation frames align around a clear opening, with a small pivot that keeps the judgment open to revision." width="960">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme-invocation-card-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="assets/readme-invocation-card-light.png">
+  <img src="assets/readme-invocation-card-light.png" alt="Think It Through invocation card: the Thinking Light surrounds a clear opening above the Claude Code command /think-it-through." width="320">
 </picture>
 
 # Think It Through · 想清楚
 
-**AI can get things done fast, but it can't decide for you what's worth doing.**
+**AI can get things done fast, but what's worth doing is still yours to decide.**
 
-Before an important commitment, think through the decision you really need to make—then act.
+Before you start or commit more, think it through—then decide.
 
 [![MIT License](https://img.shields.io/github/license/zemu2718/think-it-through-skill?style=flat-square)](LICENSE) [![Latest Release](https://img.shields.io/github/v/release/zemu2718/think-it-through-skill?style=flat-square&label=release)](https://github.com/zemu2718/think-it-through-skill/releases/latest) [![Validate](https://github.com/zemu2718/think-it-through-skill/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/zemu2718/think-it-through-skill/actions/workflows/validate.yml?query=branch%3Amain)
 
-[When to use it](#when-to-use-it) · [How it works](#how-it-works) · [Install](#install-and-use) · [Safe by default](#safe-by-default-and-more)
+[When to use it](#when-to-use-it) · [How it works](#how-it-works) · [Install](#install-and-use) · [Safe by default](#safe-by-default)
 
 </div>
 
 ## What you get
 
-- **One integrated judgment:** whether to move forward, validate first, or—if the work is already underway—continue, adjust, pause, or stop, with the conditions under which that judgment holds.
-- **One reality test:** what to do next, what to observe, and what result would change the judgment.
-- **One decision snapshot:** the objective, facts, inferences, assumptions, unknowns, commitment boundary, and reassessment conditions.
+- **A clear direction:** before you start, whether to move forward or validate first; once underway, whether to continue, adjust, pause, or stop.
+- **A small real-world test:** what to try first, what to watch for, and whether the result supports the current direction.
+- **A rationale you can revisit:** what you were deciding, why this direction made sense, what remains unknown, and what should make you change course.
 
 ## When to use it
 
 **A simple rule:** pause before an important commitment—and reassess after real results arrive instead of automatically continuing.
 
-| Decision moment | Bring this kind of issue |
+| Decision moment | Questions you can bring |
 | --- | --- |
 | **Before starting** | Is this project worth doing, and what should be validated before full development? |
-| **Before choosing a path** | Which option better serves the real objective, and what unknown could change the ranking? |
+| **Before choosing a path** | Which option is more likely to achieve the real goal, and what information could change the choice? |
 | **Before committing resources** | Should we develop, hire, buy, launch, promote, partner, or make a harder-to-reverse promise? |
-| **Before doubling down** | Does the evidence justify more time, budget, scope, or reputation risk? |
+| **Before doubling down** | Does the evidence justify investing more time or budget, expanding the scope, or taking on more reputational risk? |
 | **After results arrive** | Given what happened, should we continue, adjust, pause, or stop? |
 
-Skip the full flow for factual lookup, clear low-risk execution after a decision is made, pure creation, or technical review and research with no unresolved user choice. In emergencies, take immediate protective action first. It does not replace licensed medical, legal, investment, or other professional judgment.
+You do not need the full process for factual lookup, low-risk execution after a decision is made, pure creation, or technical review and research that involves no key choice from you.
+
+In an emergency, take protective action first. Consult an appropriate qualified professional for medical, legal, investment, and other specialized matters.
 
 ## How it works
 
-### The flow
-
-1. **Clarify what you really need to decide.** Start from the surface request, separate the immediate action from the outcome you want to achieve or protect, and narrow the issue to the current decision.
-2. **Find the one unknown that could change the direction.** Separate facts, inferences, assumptions, and unknowns, then ask one question whose answer could change the ranking, course, or commitment boundary.
-3. **Get the answer from the right place.** You answer questions of values, limits, and risk tolerance. Public facts are researched only when they could change the judgment. Commitments, customer behavior, and professional responsibility go to the relevant person or real-world result.
-4. **Let reality revise the judgment.** Form an integrated judgment with conditions and reversal signals, design one reality test that is as reversible as practical, and reassess when results arrive.
+1. **Clarify the choice in front of you.** Start with what you want to do and the outcome you want to achieve or protect. Treat a proposed product, feature, or custom build as one candidate solution—not as proof that the underlying problem is settled.
+2. **Find the information most likely to change that choice.** Separate facts, guesses, assumptions, and unknowns, then ask one question that could change your direction or how much you commit.
+3. **Confirm key answers in the right way.** You decide your goals, limits, and risk tolerance. Confirm other people's commitments with the people making them, test customer demand by real behavior, and consult a qualified professional on specialized matters. Before a major commitment, start from real tasks and desired outcomes, check existing products, platform capabilities, tool combinations, and process changes, then verify the strongest realistic paths.
+4. **Reassess using real results.** Explain when the current judgment applies and what would change it, then design one small, low-cost test that can be stopped if needed. Reassess when the result comes back. If the strongest realistic alternative has not been reasonably checked or tried, limit the next step to validation rather than a full build.
 
 ### Methods it may use
 
-**Every session starts with basic analysis.** It aligns the real objective with the current decision, separates what is known from what is inferred or still untested, and identifies the unknown most likely to change the judgment.
+**It always starts with basic analysis.** It checks whether the choice in front of you actually helps achieve your goal, separates facts, guesses, assumptions, and unknowns, and finds the question most likely to change the judgment.
 
-Two core methods may be added when useful:
+When useful, it can also draw on two core methods:
 
-- **Two-sided Steelman:** apply comparable evidence standards to the current direction and its strongest alternative, rather than collecting support for an existing preference.
-- **Pre-mortem:** assume the current path has failed, then work backward to the likely failure mechanisms, early signals, and protective boundaries.
+- **Two-sided Steelman:** compare the current direction and its strongest alternative using the same standards, rather than looking only for reasons to support your existing view.
+- **Pre-mortem:** assume the path eventually failed, then work backward to likely causes, the earliest warning signs, and ways to limit the damage.
 
 <details>
-<summary><strong>Explore the seven specialist methods</strong></summary>
+<summary><strong>See seven additional methods</strong></summary>
 
-- **Object Calibration:** separate users, payers, affected people, and cost bearers to clarify whose problem is being solved.
-- **System Bottleneck:** when several problems constrain one another, distinguish surface symptoms from the constraint shaping the whole system.
-- **Stage Fit:** determine whether external conditions have changed and whether a strategy that worked before still fits now.
-- **Resource Leverage:** when time, money, or capability is limited, find the highest-leverage place to concentrate resources and set a commitment boundary.
-- **Boundary Contracts:** make responsibilities, contributions, decision rights, commitments, and exit conditions explicit and testable.
-- **Communication Fit:** once the judgment is clear, fit the message, evidence, channel, and feedback path to the audience and objective.
-- **Evidence Loop:** compare the original objective and assumptions with actual results, then decide whether to continue, adjust, pause, or stop.
+- **Object Calibration:** clarify who uses it, who pays, who is affected, and who bears the consequences so you know whose problem you are solving.
+- **System Bottleneck:** when several problems affect one another, separate surface symptoms from the key issue holding back the whole system.
+- **Stage Fit:** check whether outside conditions have changed and whether an approach that worked before still fits now.
+- **Resource Leverage:** when time, money, or capability is limited, decide where resources matter most and how far you are willing to commit.
+- **Boundary Contracts:** make responsibilities, contributions, decision rights, commitments, and exit conditions clear, including how you will know whether each was met.
+- **Communication Fit:** once the judgment is clear, decide whom to address, what evidence to use, which channel fits, and how to collect feedback.
+- **Evidence Loop:** compare the original goal and assumptions with what actually happened, then decide whether to continue, adjust, pause, or stop.
 
 </details>
 
-You do not need to learn or choose these methods in advance. It recommends only the thinking approaches your current question needs and asks you to confirm before using them.
+You do not need to learn or choose these methods in advance. It recommends only the approaches your current question needs and asks you to confirm before using them.
 
-If research or input from another agent or person could help, it explains why and asks for your consent first.
+If research or input from another Agent or someone with relevant knowledge could help, it explains why and asks for your consent first.
 
 ## Install and use
 
-Send this message to the Agent you already use:
+**Install:** Send this message to the Agent you already use:
 
 ```text
 Install this Skill for me: https://github.com/zemu2718/think-it-through-skill
 ```
 
-This is a one-message installation request for different hosts. The current Agent will try to install the Skill according to its capabilities, permissions, and Skill-directory convention. If it cannot finish, see the [installation guide](docs/installation.en.md); host status and evidence boundaries are in the [compatibility notes](docs/compatibility-and-evidence.en.md). Installation only means the files reached a target directory; it does not establish real-runtime validation.
+Or run this command in your terminal:
 
-The currently documented reliable invocation is in Claude Code. After installing there, invoke it explicitly:
+```bash
+npx skills add zemu2718/think-it-through-skill
+```
+
+Whichever route you choose, completing the installation does not mean the Skill is ready to use in your current tool. If you run into trouble, see the [installation guide](docs/installation.en.md) and [compatibility notes](docs/compatibility-and-evidence.en.md).
+
+**Get started:** If you use Claude Code, enter this after installation:
 
 ```text
 /think-it-through
 ```
 
-Then describe the real choice, the action you are considering, and any constraint you already know.
+Then describe an idea you have, a choice you are facing, or something you are unsure about.
 
-## Safe by default and more
+## Safe by default
 
-Without separate, specific authorization, the Skill defaults to:
+Unless you explicitly approve a specific action, it does not:
 
-- **no network access**;
-- **no private-data access**;
-- **one current main agent**;
-- **no file or remote persistence**;
-- **no external action** such as sending, publishing, purchasing, deleting, or contacting someone.
+- **access the network**;
+- **access private data**;
+- **involve additional Agents**;
+- **write files or save anything remotely**;
+- **take external action**, such as sending, publishing, purchasing, deleting, or contacting someone.
 
-When one of these capabilities is needed, it explains the action and asks for consent first; consent for one capability does not expand to another.
+If it needs any of these actions, it explains what it wants to do and asks first. Agreeing to one action does not mean you agree to any other action.
 
-- **Get started:** [installation](docs/installation.en.md) · [compatibility and evidence](docs/compatibility-and-evidence.en.md)
+### Learn more
+
+- **Installation and compatibility:** [installation](docs/installation.en.md) · [compatibility and evidence](docs/compatibility-and-evidence.en.md)
 - **Understand the boundaries:** [product](PRODUCT.md) **[Chinese]** · [normative contract](REQUIREMENTS.md) **[Chinese]** · [security](SECURITY.md)
 - **Help improve it:** [contributing](CONTRIBUTING.md) · [report an issue](https://github.com/zemu2718/think-it-through-skill/issues/new?template=install-or-runtime-feedback.yml)
 
-If Think It Through has been useful, a Star makes it easier to find again.
+If Think It Through helps, consider giving the project a Star.
 
 Think It Through is released under the [MIT License](LICENSE). See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) and the [third-party audit](docs/third-party-audit.md) for adapted sources.

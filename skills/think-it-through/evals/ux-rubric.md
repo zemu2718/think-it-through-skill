@@ -1,8 +1,8 @@
-# v0.3.0 用户体验 Rubric
+# v0.4.0 用户体验 Rubric
 
 ## 适用边界
 
-本 Rubric 只评估 v0.3.0 的十维核心对话体验，不覆盖、不改写，也不重新解释 `rubric.md` 的 20 分行为评分。调研、参与、跨宿主和解决方案增强体验另见 [`enhancement-rubric.md`](enhancement-rubric.md)，不能通过增加新维度稀释本 Rubric 的 20 分含义。旧 v0.1 transcript、评分和 benchmark 仍只证明当时的行为合同。
+本 Rubric 只评估 v0.4.0 的十维核心对话体验，不覆盖、不改写，也不重新解释 `rubric.md` 的 20 分行为评分。调研、参与、跨宿主和解决方案增强体验另见 [`enhancement-rubric.md`](enhancement-rubric.md)，不能通过增加新维度稀释本 Rubric 的 20 分含义。旧 v0.1 transcript、评分和 benchmark 仍只证明当时的行为合同。
 
 没有新的模型运行或真实用户评审时，结果必须记录为 `未实测 / not_run`，不能拿规范示例、机械测试或作者自检代替实测结论。真实运行还必须保留宿主能力和原生工具调用证据；普通 Markdown、线框示意或静态文案不能证明控件已实际调用。
 
@@ -33,7 +33,7 @@
 
 ## 通过与报告
 
-UX 评分不单独替代行为门槛。正式宣称 v0.3.0 体验通过，需要：
+UX 评分不单独替代行为门槛。正式宣称 v0.4.0 体验通过，需要：
 
 1. 新版本模型运行先通过对应机械和行为合同；
 2. 十个维度均有 transcript 或真实用户反馈证据；
@@ -44,24 +44,24 @@ UX 评分不单独替代行为门槛。正式宣称 v0.3.0 体验通过，需要
 在完成这些步骤前，仓库状态只能写：
 
 ```text
-v0.3.0 静态合同：按实际验证结果记录
-v0.3.0 上下文检查点真实多轮行为：未实测 / not_run
-v0.3.0 自然语言自动发现 / 加载：未实测 / not_run（冻结 v0.1 holdout 仍为 9/16）
-v0.3.0 真实模型多轮行为：未实测 / not_run
-v0.3.0 方法 option UI：未实测 / not_run
-v0.3.0 Evidence Gate：未实测 / not_run
-v0.3.0 原生反馈单选 UI：未实测 / not_run
-v0.3.0 独立附注呈现：未实测 / not_run
-v0.3.0 多 Agent：未实测 / not_run
-v0.3.0 ChatGPT / 其他宿主：未实测 / not_run
-v0.3.0 真实用户体验：未实测 / not_run
+v0.4.0 静态合同：按实际验证结果记录
+v0.4.0 上下文检查点真实多轮行为：未实测 / not_run
+v0.4.0 自然语言自动发现 / 加载：未实测 / not_run（冻结 v0.1 holdout 仍为 9/16）
+v0.4.0 真实模型多轮行为：未实测 / not_run
+v0.4.0 方法 option UI：未实测 / not_run
+v0.4.0 Evidence Gate：未实测 / not_run
+v0.4.0 原生反馈单选 UI：未实测 / not_run
+v0.4.0 独立附注呈现：未实测 / not_run
+v0.4.0 多 Agent：未实测 / not_run
+v0.4.0 ChatGPT / 其他宿主：未实测 / not_run
+v0.4.0 真实用户体验：未实测 / not_run
 ```
 
 ## 评审记录格式
 
 ```json
 {
-  "contract_version": "0.3.0",
+  "contract_version": "0.4.0",
   "status": "not_run",
   "dimensions": [
     {

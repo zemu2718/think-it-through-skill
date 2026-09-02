@@ -6,10 +6,27 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .coverage
+.coverage.*
+.venv/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.hypothesis/
+htmlcov/
+coverage.xml
+
+# 本地环境变量与凭据
+.env
+.env.*
+!.env.example
 
 # Skill Creator 运行产物
 skills/think-it-through-workspace/
 review/
+
+# 本地临时输出（仅限仓库根目录）
+/output/
+/tmp/
 
 # 分发产物
 dist/

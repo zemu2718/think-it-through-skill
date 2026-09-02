@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/zemu2718/think-it-through-skill/schemas/v0.3.0/receipts.schema.json",
-  "title": "Think It Through v0.3.0 Capability and Execution Receipt Bundle",
+  "$id": "https://github.com/zemu2718/think-it-through-skill/schemas/v0.4.0/receipts.schema.json",
+  "title": "Think It Through v0.4.0 Capability and Execution Receipt Bundle",
   "type": "object",
   "required": ["contract_version", "capabilities", "operations"],
   "properties": {
-    "contract_version": {"const": "0.3.0"},
+    "contract_version": {"const": "0.4.0"},
     "capabilities": {
       "type": "array",
       "items": {"$ref": "#/$defs/capability"}

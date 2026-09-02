@@ -21,25 +21,22 @@ Shape, weight, line style, position, and labels carry meaning alongside color. N
 
 | Role | Editable or canonical source | Output |
 | --- | --- | --- |
-| README Banner | `readme-banner-source.png` | `readme-banner-light.png`, `readme-banner-dark.png` |
-| Brand Mark | `brand-mark-light.svg`, `brand-mark-dark.svg` | the same SVG files |
+| README Invocation Card | `readme-invocation-card-light.png`, `readme-invocation-card-dark.png` | the same canonical PNG files |
 | Social Preview | `social-preview.svg` | `social-preview.png` |
 
-The README Banner is the opening brand experience. The Brand Mark carries recognition in compact contexts such as avatars and icons. Social Preview is a restrained sharing card, not an installation or compatibility matrix. Product inputs in the READMEs are localized text, not managed visual assets.
+The README Invocation Card is the compact opening brand and invocation experience. Social Preview is a restrained sharing card, not an installation or compatibility matrix. Product inputs in the READMEs are localized text, not managed visual assets.
 
 All top-level SVG and PNG files under `assets/` must be declared by the manifest. Do not keep a second canonical copy under `output/` or reference exploration files from public documentation.
 
-## README Banner provenance and generation
+## README Invocation Card provenance
 
-`readme-banner-source.png` is the unchanged 1774×887 RGB canonical source selected by the project owner from an original imagegen exploration. Its SHA-256 is pinned in the manifest. The Darwin Skill README was referenced only for first-image use and canvas intent; no composition, mark, or brand element was copied. The selected image's actual composition is 2:1, so the maintained outputs remain 2:1 rather than being stretched or cropped to an earlier prompt ratio.
+`readme-invocation-card-light.png` and `readme-invocation-card-dark.png` are independently hash-pinned 600×600 RGBA canonical raster originals selected by the project owner. They preserve the repository's Thinking Light subject, place the reliable Claude Code invocation `/think-it-through` inside a compact terminal card, and keep the area outside the rounded card transparent. The reverse-skill README was referenced only for first-image use and compact badge intent; no composition or brand element was copied.
 
-The dark output is an aspect-preserving LANCZOS resize to 1200×600. The light output comes from the same source through a fixed, region-aware theme transform: only low-luminance, low-chroma background connected to the canvas edges is replaced with warm neutral space; the central aperture, subject material, restrained teal, rare amber, and a single contact shadow remain. This is not global inversion or a second generated source.
-
-The canonical source is not a generated output and must not be re-encoded casually. If it is intentionally replaced, update its dimensions, mode, SHA-256, provenance, budgets, derived outputs, tests, and documentation together.
+Neither variant is generated from the other, and neither is an output of `scripts/render_assets.py`. Do not re-encode or hand-optimize these files casually. If either is intentionally replaced, update its SHA-256, dimensions, pixel mode, provenance, byte budget, both READMEs, tests, and validation rules together.
 
 ## Generated raster workflow
 
-`readme-banner-light.png`, `readme-banner-dark.png`, and `social-preview.png` are derived files. Do not hand-edit any of them. Edit the canonical Banner source or `social-preview.svg`, then regenerate all declared outputs in the pinned Python 3.12 environment:
+`social-preview.png` is the manifest-declared derived file. Do not hand-edit it. Edit `social-preview.svg`, then regenerate the declared output in the pinned Python 3.12 environment:
 
 ```bash
 uv run --python 3.12 --with-requirements requirements-validation.txt \
@@ -53,15 +50,15 @@ uv run --python 3.12 --with-requirements requirements-validation.txt \
   python scripts/render_assets.py --check
 ```
 
-The Social Preview source uses original SVG paths for the wordmark and tagline, not `<text>`, external fonts, remote resources, or embedded raster images. `resvg-py` renders it with system fonts disabled. Pillow completely decodes each generated PNG, then compares dimensions and decoded pixel hashes. Different PNG compression is accepted when decoded pixels are identical. Source and output byte limits are defined in the manifest.
+The Social Preview source uses original SVG paths for the wordmark and tagline, not `<text>`, external fonts, remote resources, or embedded raster images. `resvg-py` renders it with system fonts disabled. Pillow completely decodes the generated PNG, then compares dimensions and decoded pixel hashes. Different PNG compression is accepted when decoded pixels are identical. Source and output byte limits are defined in the manifest. The generator neither writes nor freshness-checks the canonical README Invocation Card variants.
 
 Locally generated PNGs prove only that repository outputs are fresh. Uploading Social Preview to GitHub repository settings is a separate external action, and local generation must not be described as if that action had occurred.
 
 ## Accessibility and negative standards
 
-All SVGs include `title` and `desc`. Brand Mark light/dark variants share geometry. The optional Gate is dashed and secondary; the reassessment loop has a distinct returning shape. README images use localized, meaningful alt text.
+All SVGs include `title` and `desc`. The optional Gate is dashed and secondary; the reassessment loop has a distinct returning shape. README images use localized, meaningful alt text.
 
-The visual character is premium through restraint: deep ink, warm neutral space, graphite, disciplined teal, rare amber, clear hierarchy, and only meaning-bearing geometry. Natural continuous shading, grooves, and one contact shadow in the 3D Banner express physical form; they are not decorative effects.
+The visual character is premium through restraint: deep ink, warm neutral space, graphite, disciplined teal, rare amber, clear hierarchy, and only meaning-bearing geometry. Natural continuous shading, grooves, and one contact shadow in the README Invocation Card express physical form; they are not decorative effects.
 
 Reject an asset if it:
 

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/zemu2718/think-it-through-skill/schemas/v0.3.0/intents.schema.json",
-  "title": "Think It Through v0.3.0 Core Intent",
+  "$id": "https://github.com/zemu2718/think-it-through-skill/schemas/v0.4.0/intents.schema.json",
+  "title": "Think It Through v0.4.0 Core Intent",
   "type": "object",
   "required": ["kind", "stage", "body"],
   "properties": {

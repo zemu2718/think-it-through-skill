@@ -7,7 +7,7 @@
 ## 加载与引用
 
 - Skill 根目录名与 frontmatter `name` 均为 `think-it-through`；
-- 宿主加载 `SKILL.md` 后，按需读取其中引用的 `core/`、`policies/`、`adapters/` 和 `references/`；
+- 宿主加载 `SKILL.md` 后，按需读取其中引用的 `core/`、`policies/`、`adapters/` 和 `references/`，包括项目可行性议题使用的 `references/project-viability.md`；
 - 相对路径始终从 Skill 根目录解析，不能依赖仓库根目录、当前工作目录或用户主目录；
 - `evals/`、兼容证据和历史 benchmark 不属于运行时包，也不是执行协议所需输入。
 
@@ -28,7 +28,7 @@
 
 ## 能力协商
 
-runtime 名称、官方功能说明、安装目录存在或 Adapter 文件存在，都不能把能力直接标为 `available / ready`。每个会话仍逐项观察并记录：
+runtime 名称、官方功能说明、安装目录、Skill 文件或 Adapter 文件存在，都不能把搜索、安装/执行、账号认证、真实试用、额外 Agent 或其他能力直接标为 `available / ready`。每个会话仍逐项观察并记录：
 
 - 原生自由输入、单选和多选；
 - 公开搜索、私有数据和文件读写；

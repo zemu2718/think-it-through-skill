@@ -4,6 +4,8 @@
 
 This document explains how to install and verify files. It is not a second behavior, safety, or compatibility contract. See [`REQUIREMENTS.md`](../REQUIREMENTS.md) and [`SECURITY.md`](../SECURITY.md) for behavior and safety; see [Compatibility and evidence](compatibility-and-evidence.en.md) and the linked machine sources for runtime status.
 
+The current stable source contract on `main` and the latest real public release are both v0.4.0. The pinned tag, archive, and checksum below jointly identify this immutable release; runtime compatibility remains a separate evidence-backed claim.
+
 ## Recommended
 
 Open the Agent you already use—Claude Code, Codex, Cursor, OpenClaw, Hermes Agent, CodeBuddy, WorkBuddy, Gemini CLI, OpenCode, or another—and tell it:
@@ -22,14 +24,14 @@ The published `.skill` is a ZIP-compatible archive containing only the manifest-
 
 ```bash
 npx -y skills@1.5.23 add \
-  https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill
+  https://github.com/zemu2718/think-it-through-skill/releases/download/v0.4.0/think-it-through.skill
 ```
 
 To install a copied, user-level package for every target known to that installer version:
 
 ```bash
 npx -y skills@1.5.23 add \
-  https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/think-it-through.skill \
+  https://github.com/zemu2718/think-it-through-skill/releases/download/v0.4.0/think-it-through.skill \
   --agent '*' \
   --global \
   --copy \
@@ -45,7 +47,7 @@ With [GitHub CLI 2.98.0 or later](https://cli.github.com/), install it for Claud
 ```bash
 gh skill install \
   zemu2718/think-it-through-skill \
-  think-it-through@v0.3.0 \
+  think-it-through@v0.4.0 \
   --agent claude-code \
   --scope user
 ```
@@ -57,7 +59,7 @@ If the top-level Skill directory did not exist when your current Claude Code ses
 If neither installer supports your host, copy the Skill directory according to that host's Agent Skills convention. For Claude Code:
 
 ```bash
-git clone --depth 1 --branch v0.3.0 https://github.com/zemu2718/think-it-through-skill.git
+git clone --depth 1 --branch v0.4.0 https://github.com/zemu2718/think-it-through-skill.git
 cd think-it-through-skill
 git rev-parse HEAD
 test ! -e ~/.claude/skills/think-it-through
@@ -75,7 +77,7 @@ The reliable entry is explicit invocation in Claude Code:
 /think-it-through
 ```
 
-Before installation, verify the archive with the published [`SHA256SUMS`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.3.0/SHA256SUMS). For a manual installation, use `git rev-parse HEAD` to record the exact source revision.
+Before installation, verify the archive with the published [`SHA256SUMS`](https://github.com/zemu2718/think-it-through-skill/releases/download/v0.4.0/SHA256SUMS). For a manual installation, use `git rev-parse HEAD` to record the exact source revision.
 
 ## What installation establishes
 

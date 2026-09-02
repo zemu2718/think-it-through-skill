@@ -63,8 +63,8 @@ body:
     id: skill-revision
     attributes:
       label: Skill version and source commit
-      description: Include v0.3.0 and the full output of git rev-parse HEAD.
-      placeholder: "v0.3.0 — 40-character commit SHA"
+      description: Include the exact object you used—published v0.3.0 or current v0.4.0 source—and the full output of git rev-parse HEAD.
+      placeholder: "v0.3.0 release or v0.4.0 source — 40-character commit SHA"
     validations:
       required: true
 

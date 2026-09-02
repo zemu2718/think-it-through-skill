@@ -2,7 +2,7 @@
 
 本文件只服务 R-method 的最小推荐。真实目的不足以支撑明确决策问题时先留在 R-align，不展示方法。基本分析始终执行、不可取消、不计入候选数量。可选方法的价值在于改变判断，不是增加框架感。
 
-调研、多 Agent、真人参与、持久化和宿主适配不进入方法注册表；它们分别由 Evidence / Participation Policy 和 Adapter 路由。
+调研、多 Agent、真人参与、持久化和宿主适配不进入方法注册表；它们分别由 Evidence / Participation Policy 和 Adapter 路由。项目可行性、build-vs-buy、现实替代发现/核验/试用和独立反方同样不是方法卡，不新增第八张专项卡；其基础分析见 [项目可行性与现实替代](project-viability.md)。
 
 ## 进入路由前
 

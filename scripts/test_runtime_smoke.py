@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest import mock
 
 from run_runtime_smoke import (
+    CONTRACT_VERSION,
     FEEDBACK_OPTIONS,
     SYSTEM_PROMPT,
     TURN_PROMPTS,
@@ -23,6 +24,9 @@ from run_runtime_smoke import (
 
 
 class RuntimeSmokeTests(unittest.TestCase):
+    def test_runtime_smoke_uses_current_contract_version(self) -> None:
+        self.assertEqual("0.4.0", CONTRACT_VERSION)
+
     def test_interaction_evidence_matches_headless_text_surface(self) -> None:
         r_interaction = _interaction("R", "method")
         self.assertEqual("unavailable", r_interaction.host_control_status)

@@ -1,6 +1,6 @@
 # 交互与表达
 
-本文件规定 v0.3.0 用户能感受到的对话方式。内部状态、方法路由、Evidence / Participation Gate、证据状态和 Adapter 不要求用户先理解。
+本文件规定 v0.4.0 用户能感受到的对话方式。内部状态、方法路由、Evidence / Participation Gate、证据状态和 Adapter 不要求用户先理解。
 
 ## 稳定身份
 

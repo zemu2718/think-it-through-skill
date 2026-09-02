@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""对“想清楚”v0.3.0 的阶段输出与 Gate 记录执行确定性合同检查。"""
+"""对“想清楚”v0.4.0 的阶段输出与 Gate 记录执行确定性合同检查。"""
 
 from __future__ import annotations
 
@@ -154,6 +154,143 @@ OPERATION_STATUSES = {
     "cancelled",
     "unavailable",
 }
+TERMINAL_OPERATION_STATUSES = {
+    "completed",
+    "partial",
+    "failed",
+    "declined",
+    "cancelled",
+    "unavailable",
+}
+AGENT_PAYLOAD_KEYS = {
+    "assigned_question",
+    "claims",
+    "evidence_and_sources",
+    "assumptions",
+    "uncertainties",
+    "conflicts",
+    "what_would_reverse_this",
+}
+PROJECT_VIABILITY_KEYS = {
+    "contract_version",
+    "decision_context",
+    "user_outcome",
+    "focal_solution",
+    "validation_layers",
+    "search_passes",
+    "sources",
+    "candidates",
+    "strongest_alternative_id",
+    "alternative_trial",
+    "adversarial_review",
+    "evidence_items",
+    "commitment",
+    "no_go_conditions",
+    "reassessment_triggers",
+}
+PROJECT_VALIDATION_LAYERS = (
+    "problem_existence",
+    "problem_strength",
+    "solution_fit",
+    "alternative_ecosystem",
+)
+PROJECT_SEARCH_PASS_TYPES = (
+    "outcome_problem_first",
+    "solution_implementation_second",
+)
+PROJECT_SEARCH_STATUSES = {
+    "completed",
+    "partial",
+    "not_authorized",
+    "failed",
+    "not_performed",
+    "unavailable",
+}
+PROJECT_CANDIDATE_CATEGORIES = {
+    "status_quo",
+    "manual_or_process",
+    "direct_competitor",
+    "adjacent_category",
+    "non_isomorphic_product_or_service",
+    "platform_native",
+    "active_open_source_or_commercial",
+    "tool_combination",
+    "plugin_script_or_thin_integration",
+    "local_supplement",
+    "independent_build",
+}
+PROJECT_COVERAGE_STATUSES = {"covered", "not_applicable", "unknown"}
+PROJECT_VERIFICATION_STATUSES = {"verified", "not_applicable", "unknown"}
+PROJECT_TRIAL_STATUSES = {"receipt_backed", "user_reported", "not_performed"}
+PROJECT_ADVERSARIAL_STATUSES = {"not_needed", "completed", "not_performed", "failed"}
+PROJECT_EVIDENCE_STATES = {"supports", "opposes", "conflicts", "unknown"}
+PROJECT_COMMITMENT_DIRECTIONS = {
+    "pause": 0,
+    "stop": 0,
+    "limited_validation": 1,
+    "adopt": 2,
+    "combine": 2,
+    "thin_integration": 2,
+    "independent_build": 3,
+}
+PROJECT_DECISION_CONTEXT_KEYS = {
+    "decision",
+    "commitment_type",
+    "material_change",
+    "prior_conclusion_status",
+}
+PROJECT_FOCAL_SOLUTION_KEYS = {"description", "status"}
+PROJECT_LAYER_KEYS = {"status", "evidence_item_ids"}
+PROJECT_SEARCH_PASS_KEYS = {
+    "type",
+    "status",
+    "query_boundaries",
+    "consent_id",
+    "receipt_id",
+    "source_ids",
+}
+PROJECT_SOURCE_KEYS = {"id", "receipt_id", "locator"}
+PROJECT_CANDIDATE_KEYS = {
+    "id",
+    "name",
+    "category",
+    "coverage_status",
+    "material",
+    "reason",
+    "source_ids",
+    "verification_dimensions",
+}
+PROJECT_VERIFICATION_KEYS = {"dimension", "status", "reason", "source_ids"}
+PROJECT_TRIAL_KEYS = {
+    "status",
+    "candidate_id",
+    "real_tasks",
+    "success_criteria",
+    "result",
+    "consent_ids",
+    "receipt_ids",
+    "evidence_item_ids",
+    "reason",
+}
+PROJECT_TRIAL_RESULTS = {"solves_core", "partially_solves", "does_not_solve", "unknown"}
+PROJECT_ADVERSARIAL_KEYS = {
+    "required",
+    "status",
+    "consent_id",
+    "receipt_id",
+    "payload",
+    "evidence_item_ids",
+    "reason",
+}
+PROJECT_EVIDENCE_ITEM_KEYS = {"id", "state", "claim", "source_ids"}
+PROJECT_COMMITMENT_KEYS = {
+    "direction",
+    "chosen_rank",
+    "rationale",
+    "evidence_item_ids",
+    "upgrade_conditions",
+}
+PROJECT_CONDITION_KEYS = {"id", "condition", "evidence_item_ids"}
 DECISION_STATES = {
     "hold",
     "small_test",
@@ -1936,6 +2073,103 @@ def _required_keys(data: object, required: set[str]) -> bool:
     return isinstance(data, dict) and required <= set(data)
 
 
+def _exact_keys(data: object, expected: set[str]) -> bool:
+    return isinstance(data, dict) and set(data) == expected
+
+
+def _unique_string_list(value: object, *, min_items: int = 0) -> bool:
+    return _string_list(value, min_items=min_items, unique=True)
+
+
+def _consent_scope_tokens(consent: dict[str, object] | None) -> set[str]:
+    if consent is None:
+        return set()
+    scope = consent.get("scope")
+    if not isinstance(scope, dict):
+        return set()
+    tokens: set[str] = set()
+    for key in ("operations", "resources", "tasks", "data_boundary"):
+        values = scope.get(key, [])
+        if isinstance(values, list):
+            tokens.update(value for value in values if _nonempty_string(value))
+    return tokens
+
+
+def _operation_consent_and_scope_valid(
+    operation: dict[str, object] | None,
+    consent: dict[str, object] | None,
+) -> tuple[bool, dict[str, object]]:
+    consent_id = consent.get("consent_id") if consent else None
+    consent_ids = operation.get("consent_ids") if operation else None
+    operation_scope = operation.get("scope") if operation else None
+    authorized_tokens = _consent_scope_tokens(consent)
+    consent_linked = bool(
+        _nonempty_string(consent_id)
+        and _unique_string_list(consent_ids, min_items=1)
+        and consent_id in consent_ids
+    )
+    scope_valid = bool(
+        _unique_string_list(operation_scope, min_items=1)
+        and set(operation_scope) <= authorized_tokens
+    )
+    return consent_linked and scope_valid, {
+        "consent_id": consent_id,
+        "consent_ids": consent_ids,
+        "operation_scope": operation_scope,
+        "authorized_tokens": sorted(authorized_tokens),
+    }
+
+
+def _operation_provider_valid(
+    operation: dict[str, object] | None,
+    receipt_bundle: dict[str, object] | None,
+    record_provider: object,
+    capability_names: set[str],
+) -> tuple[bool, dict[str, object]]:
+    operation_provider = operation.get("provider") if operation else None
+    capabilities = receipt_bundle.get("capabilities") if receipt_bundle else None
+    matching = []
+    if isinstance(capabilities, list):
+        matching = [
+            capability
+            for capability in capabilities
+            if isinstance(capability, dict)
+            and capability.get("name") in capability_names
+            and capability.get("provider") == operation_provider
+            and capability.get("availability") == "available"
+            and capability.get("readiness") == "ready"
+        ]
+    valid = bool(
+        _nonempty_string(record_provider)
+        and record_provider == operation_provider
+        and matching
+    )
+    return valid, {
+        "record_provider": record_provider,
+        "operation_provider": operation_provider,
+        "matching_capabilities": len(matching),
+    }
+
+
+def _operation_privilege_flags_valid(operation: dict[str, object] | None) -> bool:
+    return bool(
+        operation
+        and operation.get("private_data_accessed") is False
+        and operation.get("external_action_executed") is False
+    )
+
+
+def _agent_payload_valid(payload: object) -> bool:
+    return bool(
+        _exact_keys(payload, AGENT_PAYLOAD_KEYS)
+        and _nonempty_string(payload.get("assigned_question"))
+        and all(
+            _string_list(payload.get(field))
+            for field in AGENT_PAYLOAD_KEYS - {"assigned_question"}
+        )
+    )
+
+
 def _consent_contract(
     consent: dict[str, object] | None,
     expected_type: str,
@@ -2042,14 +2276,34 @@ def grade_evidence_gate(
     consent_valid, consent_evidence = _consent_contract(consent, "capability_call")
     operation = _find_operation(receipt_bundle, "research")
     operation_status = operation.get("status") if operation else None
+    consent_scope_valid, consent_scope_evidence = _operation_consent_and_scope_valid(
+        operation,
+        consent,
+    )
+    provider_valid, provider_evidence = _operation_provider_valid(
+        operation,
+        receipt_bundle,
+        capability.get("provider") if isinstance(capability, dict) else None,
+        {"search.public_web", "search.private_corpus", "tools.read"},
+    )
     operation_valid = bool(
         operation
-        and operation_status in OPERATION_STATUSES
+        and operation_status in TERMINAL_OPERATION_STATUSES
         and _nonempty_string(operation.get("receipt_id"))
         and _nonempty_string(operation.get("provider"))
-        and _string_list(operation.get("scope"), min_items=1)
-        and isinstance(operation.get("private_data_accessed"), bool)
-        and isinstance(operation.get("external_action_executed"), bool)
+        and _unique_string_list(operation.get("scope"), min_items=1)
+        and _unique_string_list(operation.get("consent_ids"), min_items=1)
+        and _operation_privilege_flags_valid(operation)
+        and consent_scope_valid
+        and provider_valid
+    )
+    operation_matches_record = bool(
+        operation
+        and operation.get("scope") == scope
+        and (
+            operation_status not in {"completed", "partial"}
+            or operation.get("conflicts_and_gaps", []) == conflicts
+        )
     )
     capability_called = bool(record.get("capability_called"))
     route_allowed = bool(
@@ -2066,6 +2320,7 @@ def grade_evidence_gate(
         or (
             operation_status in {"completed", "partial"}
             and isinstance(sources, list)
+            and len(sources) > 0
             and all(
                 _required_keys(source, {"title", "locator", "retrieved_at"})
                 and _nonempty_string(source.get("title"))
@@ -2106,9 +2361,15 @@ def grade_evidence_gate(
             severe=True,
         ),
         _check(
-            "Evidence Gate 真实调用具有研究回执且状态诚实",
-            (not capability_called and not operation) or (capability_called and operation_valid),
-            f"capability_called={capability_called}；operation_status={operation_status!r}；operation_valid={operation_valid}",
+            "Evidence Gate 真实调用具有授权关联、同一 provider、终态研究回执且不越权",
+            (not capability_called and not operation) or (
+                capability_called and operation_valid and operation_matches_record
+            ),
+            (
+                f"capability_called={capability_called}；operation_status={operation_status!r}；"
+                f"operation_valid={operation_valid}；operation_matches_record={operation_matches_record}；"
+                f"consent_scope={consent_scope_evidence}；provider={provider_evidence}"
+            ),
             severe=True,
         ),
         _check(
@@ -2216,38 +2477,106 @@ def grade_participation_gate(
     payloads_valid = bool(
         isinstance(task_payloads, list)
         and len(task_payloads) == planned_additional
-        and all(
-            _required_keys(
-                payload,
-                {
-                    "assigned_question",
-                    "claims",
-                    "evidence_and_sources",
-                    "assumptions",
-                    "uncertainties",
-                    "conflicts",
-                    "what_would_reverse_this",
-                },
-            )
-            and _nonempty_string(payload.get("assigned_question"))
-            and all(
-                _string_list(payload.get(field))
-                for field in (
-                    "claims",
-                    "evidence_and_sources",
-                    "assumptions",
-                    "uncertainties",
-                    "conflicts",
-                    "what_would_reverse_this",
-                )
-            )
-            for payload in task_payloads
-        )
+        and all(_agent_payload_valid(payload) for payload in task_payloads)
     )
     data_boundaries = record.get("data_boundaries")
     excluded_data = record.get("excluded_data")
     options = record.get("consent_options")
     no_vote = record.get("aggregation") == "synthesis_not_vote"
+    operation_status = operation.get("status") if operation else None
+    operation_provider = operation.get("provider") if operation else None
+    capabilities = receipt_bundle.get("capabilities") if receipt_bundle else None
+    provider_valid = bool(
+        _nonempty_string(operation_provider)
+        and isinstance(capabilities, list)
+        and any(
+            isinstance(capability, dict)
+            and capability.get("name") in {"agents.subagent", "agents.parallel"}
+            and capability.get("provider") == operation_provider
+            and capability.get("availability") == "available"
+            and capability.get("readiness") == "ready"
+            for capability in capabilities
+        )
+    )
+    consent_scope_valid, consent_scope_evidence = _operation_consent_and_scope_valid(
+        operation,
+        consent,
+    )
+    receipt_tasks_valid = False
+    task_evidence: dict[str, object] = {"reason": "缺少 delegation operation"}
+    if operation:
+        completed_tasks = operation.get("completed_tasks")
+        failed_tasks = operation.get("failed_tasks")
+        counts = operation.get("agent_counts")
+        task_lists_valid = bool(
+            _unique_string_list(completed_tasks)
+            and _unique_string_list(failed_tasks)
+            and not (set(completed_tasks) & set(failed_tasks))
+            and set(completed_tasks) | set(failed_tasks) <= set(tasks or [])
+        )
+        terminal_counts_match = bool(
+            isinstance(counts, dict)
+            and len(completed_tasks) == counts.get("completed_additional")
+            and len(failed_tasks) == counts.get("failed_additional")
+            and len(completed_tasks) + len(failed_tasks) == counts.get("started_additional")
+        )
+        started = counts.get("started_additional") if isinstance(counts, dict) else None
+        planned = counts.get("planned_additional") if isinstance(counts, dict) else None
+        status_matches = bool(
+            operation_status in TERMINAL_OPERATION_STATUSES
+            and (
+                (
+                    operation_status == "completed"
+                    and started == planned == planned_additional
+                    and not failed_tasks
+                    and len(completed_tasks) == planned_additional
+                )
+                or (
+                    operation_status == "partial"
+                    and isinstance(started, int)
+                    and started > 0
+                    and (started < planned_additional or bool(failed_tasks))
+                )
+                or (
+                    operation_status == "failed"
+                    and not completed_tasks
+                    and (started == 0 or bool(failed_tasks))
+                )
+                or (
+                    operation_status in {"declined", "cancelled", "unavailable"}
+                    and started == 0
+                    and not completed_tasks
+                    and not failed_tasks
+                )
+            )
+        )
+        fallback_required = operation_status != "completed"
+        receipt_tasks_valid = bool(
+            task_lists_valid
+            and terminal_counts_match
+            and status_matches
+            and (not fallback_required or _nonempty_string(operation.get("fallback")))
+        )
+        task_evidence = {
+            "status": operation_status,
+            "completed_tasks": completed_tasks,
+            "failed_tasks": failed_tasks,
+            "terminal_counts_match": terminal_counts_match,
+            "fallback": operation.get("fallback"),
+        }
+    operation_valid = bool(
+        operation
+        and operation.get("kind") == "delegation"
+        and operation_status in TERMINAL_OPERATION_STATUSES
+        and _nonempty_string(operation.get("receipt_id"))
+        and provider_valid
+        and consent_scope_valid
+        and receipt_tasks_valid
+        and _operation_privilege_flags_valid(operation)
+        and isinstance(consent, dict)
+        and isinstance(consent.get("scope"), dict)
+        and set(tasks or []) <= set(consent["scope"].get("tasks", []))
+    )
     return [
         _check(
             "Participation Gate 只为不重复的独立增量任务升级",
@@ -2290,9 +2619,13 @@ def grade_participation_gate(
             severe=True,
         ),
         _check(
-            "Participation Gate 协作回执数量关系真实一致",
-            counts_valid and count_matches_plan,
-            f"counts={counts_evidence}；count_matches_plan={count_matches_plan}",
+            "Participation Gate 协作回执的授权、provider、终态、任务、数量和降级真实一致",
+            counts_valid and count_matches_plan and operation_valid,
+            (
+                f"counts={counts_evidence}；count_matches_plan={count_matches_plan}；"
+                f"consent_scope={consent_scope_evidence}；operation_provider={operation_provider!r}；"
+                f"provider_valid={provider_valid}；tasks={task_evidence}"
+            ),
             severe=True,
         ),
         _check(
@@ -2302,13 +2635,648 @@ def grade_participation_gate(
             severe=True,
         ),
         _check(
-            "Participation Gate 回执区分私有数据与外部行动",
-            bool(
-                operation
-                and isinstance(operation.get("private_data_accessed"), bool)
-                and isinstance(operation.get("external_action_executed"), bool)
-            ),
+            "Participation Gate 回执不把委派授权继承为私有数据或外部行动",
+            _operation_privilege_flags_valid(operation),
             f"private_data={operation.get('private_data_accessed') if operation else None!r}；external_action={operation.get('external_action_executed') if operation else None!r}",
+            severe=True,
+        ),
+    ]
+
+
+def _consent_bundle_by_id(
+    consent_bundle: dict[str, object] | None,
+) -> tuple[bool, dict[str, dict[str, object]], dict[str, object]]:
+    if not _exact_keys(consent_bundle, {"consents"}):
+        return False, {}, {"reason": "consent bundle 顶层必须只有 consents"}
+    consents = consent_bundle.get("consents")
+    if not isinstance(consents, list):
+        return False, {}, {"reason": "consents 必须是数组"}
+    by_id: dict[str, dict[str, object]] = {}
+    valid = True
+    for consent in consents:
+        if not isinstance(consent, dict):
+            valid = False
+            continue
+        consent_id = consent.get("consent_id")
+        expected_type = consent.get("consent_type")
+        if not _nonempty_string(consent_id) or consent_id in by_id or expected_type not in CONSENT_TYPES:
+            valid = False
+            continue
+        contract_valid, _ = _consent_contract(consent, expected_type)
+        valid = valid and contract_valid
+        by_id[consent_id] = consent
+    return valid, by_id, {"count": len(consents), "ids": sorted(by_id)}
+
+
+def _operations_by_receipt_id(
+    receipt_bundle: dict[str, object] | None,
+) -> tuple[bool, dict[str, dict[str, object]], dict[str, object]]:
+    operations = receipt_bundle.get("operations") if receipt_bundle else None
+    if not isinstance(operations, list):
+        return False, {}, {"reason": "缺少 operations 数组"}
+    by_id: dict[str, dict[str, object]] = {}
+    valid = True
+    for operation in operations:
+        if not isinstance(operation, dict):
+            valid = False
+            continue
+        receipt_id = operation.get("receipt_id")
+        if not _nonempty_string(receipt_id) or receipt_id in by_id:
+            valid = False
+            continue
+        by_id[receipt_id] = operation
+    return valid, by_id, {"count": len(operations), "ids": sorted(by_id)}
+
+
+def _ids_unique(items: object) -> tuple[bool, dict[str, dict[str, object]]]:
+    if not isinstance(items, list):
+        return False, {}
+    by_id: dict[str, dict[str, object]] = {}
+    for item in items:
+        if not isinstance(item, dict):
+            return False, {}
+        item_id = item.get("id")
+        if not _nonempty_string(item_id) or item_id in by_id:
+            return False, {}
+        by_id[item_id] = item
+    return True, by_id
+
+
+def _refs_exist(value: object, valid_ids: set[str]) -> bool:
+    return _unique_string_list(value) and set(value) <= valid_ids
+
+
+def _source_link_valid(
+    source: dict[str, object],
+    operations: dict[str, dict[str, object]],
+) -> bool:
+    if not _exact_keys(source, PROJECT_SOURCE_KEYS):
+        return False
+    operation = operations.get(source.get("receipt_id"))
+    locator = source.get("locator")
+    if not operation or operation.get("status") not in {"completed", "partial"} or not _nonempty_string(locator):
+        return False
+    sources = operation.get("sources")
+    return bool(
+        isinstance(sources, list)
+        and any(isinstance(item, dict) and item.get("locator") == locator for item in sources)
+    )
+
+
+def _project_operation_link_valid(
+    *,
+    receipt_id: object,
+    consent_id: object,
+    expected_kind: str,
+    consent_type: str,
+    consents: dict[str, dict[str, object]],
+    operations: dict[str, dict[str, object]],
+    receipt_bundle: dict[str, object] | None,
+    allowed_statuses: set[str],
+) -> bool:
+    if not _nonempty_string(receipt_id) or not _nonempty_string(consent_id):
+        return False
+    consent = consents.get(consent_id)
+    operation = operations.get(receipt_id)
+    if consent is None or operation is None:
+        return False
+    consent_valid, _ = _consent_contract(consent, consent_type)
+    scope_valid, _ = _operation_consent_and_scope_valid(operation, consent)
+    capability_names = {
+        "research": {"search.public_web", "search.private_corpus", "tools.read"},
+        "delegation": {"agents.subagent", "agents.parallel"},
+        "tool_call": {"tools.read", "tools.write"},
+    }.get(expected_kind, set())
+    capabilities = receipt_bundle.get("capabilities") if receipt_bundle else None
+    provider_matches = [
+        capability
+        for capability in capabilities
+        if isinstance(capability, dict)
+        and capability.get("name") in capability_names
+        and capability.get("provider") == operation.get("provider")
+        and capability.get("availability") == "available"
+        and capability.get("readiness") == "ready"
+    ] if isinstance(capabilities, list) else []
+    return bool(
+        consent_valid
+        and operation.get("kind") == expected_kind
+        and operation.get("status") in allowed_statuses
+        and scope_valid
+        and _operation_privilege_flags_valid(operation)
+        and bool(provider_matches)
+    )
+
+
+def _project_ceiling(
+    layers: dict[str, object],
+    search_passes: object,
+    candidates: object,
+    alternative_trial: object,
+    adversarial_review: object,
+) -> tuple[int, list[str]]:
+    reasons: list[str] = []
+    problem_existence = layers.get("problem_existence")
+    problem_strength = layers.get("problem_strength")
+    if isinstance(problem_existence, dict) and problem_existence.get("status") == "unsupported":
+        return 0, ["证据不支持问题存在"]
+    if isinstance(problem_strength, dict) and problem_strength.get("status") == "unsupported":
+        return 0, ["证据不支持问题强度达到投入门槛"]
+
+    layer_statuses = [
+        layer.get("status") if isinstance(layer, dict) else None
+        for layer in layers.values()
+    ]
+    search_complete = bool(
+        isinstance(search_passes, list)
+        and len(search_passes) == 2
+        and all(isinstance(item, dict) and item.get("status") == "completed" for item in search_passes)
+    )
+    candidate_coverage_complete = bool(
+        isinstance(candidates, list)
+        and candidates
+        and all(
+            isinstance(candidate, dict)
+            and (
+                candidate.get("coverage_status") == "covered"
+                or (
+                    candidate.get("coverage_status") == "not_applicable"
+                    and _nonempty_string(candidate.get("reason"))
+                )
+                or (candidate.get("material") is False and candidate.get("coverage_status") == "unknown")
+            )
+            and isinstance(candidate.get("verification_dimensions"), list)
+            and bool(candidate.get("verification_dimensions"))
+            and all(
+                isinstance(dimension, dict)
+                and (
+                    dimension.get("status") == "verified"
+                    or (
+                        dimension.get("status") == "not_applicable"
+                        and _nonempty_string(dimension.get("reason"))
+                    )
+                    or (candidate.get("material") is False and dimension.get("status") == "unknown")
+                )
+                for dimension in candidate.get("verification_dimensions", [])
+            )
+            for candidate in candidates
+        )
+    )
+    trial_status = alternative_trial.get("status") if isinstance(alternative_trial, dict) else None
+    trial_result = alternative_trial.get("result") if isinstance(alternative_trial, dict) else None
+    adversarial_required = bool(
+        isinstance(adversarial_review, dict) and adversarial_review.get("required") is True
+    )
+    adversarial_complete = bool(
+        isinstance(adversarial_review, dict)
+        and (
+            adversarial_review.get("required") is False
+            or adversarial_review.get("status") == "completed"
+        )
+    )
+    if any(status != "supported" for status in layer_statuses):
+        reasons.append("四个价值维度仍有未知、冲突或不支持")
+    if not search_complete:
+        reasons.append("两遍搜索未完整完成")
+    if not candidate_coverage_complete:
+        reasons.append("material 候选覆盖或核验不完整")
+    if trial_status == "not_performed" or trial_result == "unknown":
+        reasons.append("最强替代未试用或结果未知")
+    if adversarial_required and not adversarial_complete:
+        reasons.append("必要反方未完成")
+    if reasons:
+        return 1, reasons
+    if trial_result in {"solves_core", "partially_solves"}:
+        return 2, ["现实替代经同任务试用可用"]
+    if trial_status in {"receipt_backed", "user_reported"} and trial_result == "does_not_solve":
+        return 3, ["完整证据链支持进入正式自研比较"]
+    return 1, ["试用证据不足以升级承诺"]
+
+
+def grade_project_viability(
+    record: dict[str, object],
+    consent_bundle: dict[str, object] | None,
+    receipt_bundle: dict[str, object] | None,
+) -> list[Check]:
+    top_level_valid = _exact_keys(record, PROJECT_VIABILITY_KEYS)
+    contract_version_valid = record.get("contract_version") == "0.4.0"
+    consent_bundle_valid, consents, consent_evidence = _consent_bundle_by_id(consent_bundle)
+    operation_bundle_valid, operations, operation_evidence = _operations_by_receipt_id(receipt_bundle)
+    all_operation_consents_resolve = bool(
+        operation_bundle_valid
+        and all(
+            set(operation.get("consent_ids", [])) <= set(consents)
+            for operation in operations.values()
+            if isinstance(operation.get("consent_ids"), list)
+        )
+    )
+    receipt_contract_valid = bool(
+        receipt_bundle
+        and receipt_bundle.get("contract_version") == "0.4.0"
+        and _capabilities_valid(receipt_bundle)
+        and all_operation_consents_resolve
+        and all(
+            operation.get("status") in TERMINAL_OPERATION_STATUSES
+            and _nonempty_string(operation.get("provider"))
+            and _unique_string_list(operation.get("scope"), min_items=1)
+            and _unique_string_list(operation.get("consent_ids"), min_items=1)
+            and _operation_privilege_flags_valid(operation)
+            and (
+                operation.get("status") == "completed"
+                or _nonempty_string(operation.get("fallback"))
+            )
+            for operation in operations.values()
+        )
+    )
+
+    decision_context = record.get("decision_context")
+    focal_solution = record.get("focal_solution")
+    framing_valid = bool(
+        _exact_keys(decision_context, PROJECT_DECISION_CONTEXT_KEYS)
+        and _nonempty_string(decision_context.get("decision"))
+        and _nonempty_string(decision_context.get("commitment_type"))
+        and isinstance(decision_context.get("material_change"), bool)
+        and decision_context.get("prior_conclusion_status") in {"none", "current", "pending_reassessment"}
+        and (
+            decision_context.get("material_change") is False
+            or decision_context.get("prior_conclusion_status") == "pending_reassessment"
+        )
+        and _nonempty_string(record.get("user_outcome"))
+        and _exact_keys(focal_solution, PROJECT_FOCAL_SOLUTION_KEYS)
+        and _nonempty_string(focal_solution.get("description"))
+        and focal_solution.get("status") == "candidate"
+    )
+
+    evidence_items = record.get("evidence_items")
+    evidence_ids_valid, evidence_by_id = _ids_unique(evidence_items)
+    evidence_items_valid = bool(
+        evidence_ids_valid
+        and all(
+            _exact_keys(item, PROJECT_EVIDENCE_ITEM_KEYS)
+            and item.get("state") in PROJECT_EVIDENCE_STATES
+            and _nonempty_string(item.get("claim"))
+            and _unique_string_list(item.get("source_ids"))
+            for item in evidence_by_id.values()
+        )
+    )
+    evidence_ids = set(evidence_by_id)
+
+    sources = record.get("sources")
+    source_ids_valid, sources_by_id = _ids_unique(sources)
+    source_links_valid = bool(
+        source_ids_valid
+        and bool(sources_by_id)
+        and all(_source_link_valid(source, operations) for source in sources_by_id.values())
+    )
+    source_ids = set(sources_by_id)
+    evidence_source_refs_valid = bool(
+        evidence_items_valid
+        and all(_refs_exist(item.get("source_ids"), source_ids) for item in evidence_by_id.values())
+    )
+
+    layers = record.get("validation_layers")
+    layers_valid = bool(
+        _exact_keys(layers, set(PROJECT_VALIDATION_LAYERS))
+        and all(
+            _exact_keys(layers.get(name), PROJECT_LAYER_KEYS)
+            and layers[name].get("status") in {"supported", "unsupported", "conflicted", "unknown"}
+            and _refs_exist(layers[name].get("evidence_item_ids"), evidence_ids)
+            for name in PROJECT_VALIDATION_LAYERS
+        )
+    )
+
+    search_passes = record.get("search_passes")
+    search_passes_valid = bool(
+        isinstance(search_passes, list)
+        and len(search_passes) == 2
+        and [item.get("type") for item in search_passes if isinstance(item, dict)] == list(PROJECT_SEARCH_PASS_TYPES)
+        and all(
+            _exact_keys(item, PROJECT_SEARCH_PASS_KEYS)
+            and item.get("status") in PROJECT_SEARCH_STATUSES
+            and _unique_string_list(item.get("query_boundaries"), min_items=1)
+            and _refs_exist(item.get("source_ids"), source_ids)
+            and (
+                (
+                    item.get("status") in {"completed", "partial"}
+                    and bool(item.get("source_ids"))
+                    and _project_operation_link_valid(
+                        receipt_id=item.get("receipt_id"),
+                        consent_id=item.get("consent_id"),
+                        expected_kind="research",
+                        consent_type="capability_call",
+                        consents=consents,
+                        operations=operations,
+                        receipt_bundle=receipt_bundle,
+                        allowed_statuses={"completed", "partial"},
+                    )
+                )
+                or (
+                    item.get("status") == "not_authorized"
+                    and item.get("source_ids") == []
+                    and not item.get("receipt_id")
+                    and not item.get("consent_id")
+                )
+                or (
+                    item.get("status") in {"not_performed", "unavailable"}
+                    and item.get("source_ids") == []
+                    and not item.get("receipt_id")
+                )
+                or (
+                    item.get("status") == "failed"
+                    and item.get("source_ids") == []
+                    and _project_operation_link_valid(
+                        receipt_id=item.get("receipt_id"),
+                        consent_id=item.get("consent_id"),
+                        expected_kind="research",
+                        consent_type="capability_call",
+                        consents=consents,
+                        operations=operations,
+                        receipt_bundle=receipt_bundle,
+                        allowed_statuses={"failed"},
+                    )
+                    and _nonempty_string(operations[item.get("receipt_id")].get("fallback"))
+                )
+            )
+            for item in search_passes
+        )
+    )
+
+    candidates = record.get("candidates")
+    candidate_ids_valid, candidates_by_id = _ids_unique(candidates)
+    candidate_categories = {
+        candidate.get("category") for candidate in candidates_by_id.values()
+    }
+    categories_complete = candidate_categories == PROJECT_CANDIDATE_CATEGORIES
+    candidates_valid = bool(
+        candidate_ids_valid
+        and categories_complete
+        and all(
+            _exact_keys(candidate, PROJECT_CANDIDATE_KEYS)
+            and _nonempty_string(candidate.get("name"))
+            and candidate.get("category") in PROJECT_CANDIDATE_CATEGORIES
+            and candidate.get("coverage_status") in PROJECT_COVERAGE_STATUSES
+            and isinstance(candidate.get("material"), bool)
+            and _refs_exist(candidate.get("source_ids"), source_ids)
+            and (
+                (
+                    candidate.get("coverage_status") == "covered"
+                    and bool(candidate.get("source_ids"))
+                )
+                or (
+                    candidate.get("coverage_status") == "not_applicable"
+                    and _nonempty_string(candidate.get("reason"))
+                    and not candidate.get("source_ids")
+                )
+                or (
+                    candidate.get("coverage_status") == "unknown"
+                    and _nonempty_string(candidate.get("reason"))
+                    and not candidate.get("source_ids")
+                )
+            )
+            and isinstance(candidate.get("verification_dimensions"), list)
+            and bool(candidate.get("verification_dimensions"))
+            and all(
+                _exact_keys(dimension, PROJECT_VERIFICATION_KEYS)
+                and _nonempty_string(dimension.get("dimension"))
+                and dimension.get("status") in PROJECT_VERIFICATION_STATUSES
+                and _refs_exist(dimension.get("source_ids"), source_ids)
+                and (
+                    (
+                        dimension.get("status") == "verified"
+                        and bool(dimension.get("source_ids"))
+                    )
+                    or (
+                        dimension.get("status") == "not_applicable"
+                        and _nonempty_string(dimension.get("reason"))
+                        and not dimension.get("source_ids")
+                    )
+                    or (
+                        dimension.get("status") == "unknown"
+                        and _nonempty_string(dimension.get("reason"))
+                        and not dimension.get("source_ids")
+                    )
+                )
+                for dimension in candidate.get("verification_dimensions")
+            )
+            for candidate in candidates_by_id.values()
+        )
+    )
+    strongest_id = record.get("strongest_alternative_id")
+    strongest_valid = bool(
+        _nonempty_string(strongest_id)
+        and strongest_id in candidates_by_id
+        and candidates_by_id[strongest_id].get("category") != "independent_build"
+        and candidates_by_id[strongest_id].get("coverage_status") in {"covered", "unknown"}
+        and candidates_by_id[strongest_id].get("material") is True
+        and (
+            candidates_by_id[strongest_id].get("coverage_status") == "covered"
+            or _nonempty_string(candidates_by_id[strongest_id].get("reason"))
+        )
+    )
+
+    trial = record.get("alternative_trial")
+    trial_valid = bool(
+        _exact_keys(trial, PROJECT_TRIAL_KEYS)
+        and trial.get("status") in PROJECT_TRIAL_STATUSES
+        and trial.get("candidate_id") == strongest_id
+        and _unique_string_list(trial.get("real_tasks"), min_items=1)
+        and _unique_string_list(trial.get("success_criteria"), min_items=1)
+        and trial.get("result") in PROJECT_TRIAL_RESULTS
+        and _refs_exist(trial.get("evidence_item_ids"), evidence_ids)
+        and _unique_string_list(trial.get("consent_ids"))
+        and _unique_string_list(trial.get("receipt_ids"))
+        and (
+            (
+                trial.get("status") == "receipt_backed"
+                and bool(trial.get("consent_ids"))
+                and bool(trial.get("receipt_ids"))
+                and len(trial.get("consent_ids")) == len(trial.get("receipt_ids"))
+                and all(
+                    _project_operation_link_valid(
+                        receipt_id=receipt_id,
+                        consent_id=consent_id,
+                        expected_kind="tool_call",
+                        consent_type="capability_call",
+                        consents=consents,
+                        operations=operations,
+                        receipt_bundle=receipt_bundle,
+                        allowed_statuses={"completed"},
+                    )
+                    and bool(operations[receipt_id].get("sources"))
+                    for consent_id, receipt_id in zip(
+                        trial.get("consent_ids"), trial.get("receipt_ids")
+                    )
+                )
+            )
+            or (
+                trial.get("status") == "user_reported"
+                and not trial.get("consent_ids")
+                and not trial.get("receipt_ids")
+                and _nonempty_string(trial.get("result"))
+            )
+            or (
+                trial.get("status") == "not_performed"
+                and not trial.get("consent_ids")
+                and not trial.get("receipt_ids")
+                and trial.get("result") == "unknown"
+                and _nonempty_string(trial.get("reason"))
+            )
+        )
+    )
+
+    adversarial = record.get("adversarial_review")
+    adversarial_valid = bool(
+        _exact_keys(adversarial, PROJECT_ADVERSARIAL_KEYS)
+        and isinstance(adversarial.get("required"), bool)
+        and adversarial.get("status") in PROJECT_ADVERSARIAL_STATUSES
+        and _refs_exist(adversarial.get("evidence_item_ids"), evidence_ids)
+        and (
+            (
+                adversarial.get("required") is False
+                and adversarial.get("status") == "not_needed"
+                and not adversarial.get("consent_id")
+                and not adversarial.get("receipt_id")
+                and adversarial.get("payload") is None
+                and _nonempty_string(adversarial.get("reason"))
+            )
+            or (
+                adversarial.get("required") is True
+                and adversarial.get("status") == "completed"
+                and _agent_payload_valid(adversarial.get("payload"))
+                and _project_operation_link_valid(
+                    receipt_id=adversarial.get("receipt_id"),
+                    consent_id=adversarial.get("consent_id"),
+                    expected_kind="delegation",
+                    consent_type="participation_delegation",
+                    consents=consents,
+                    operations=operations,
+                    receipt_bundle=receipt_bundle,
+                    allowed_statuses={"completed"},
+                )
+            )
+            or (
+                adversarial.get("required") is True
+                and adversarial.get("status") == "not_performed"
+                and not adversarial.get("consent_id")
+                and not adversarial.get("receipt_id")
+                and adversarial.get("payload") is None
+                and _nonempty_string(adversarial.get("reason"))
+            )
+            or (
+                adversarial.get("required") is True
+                and adversarial.get("status") == "failed"
+                and adversarial.get("payload") is None
+                and _nonempty_string(adversarial.get("reason"))
+                and _project_operation_link_valid(
+                    receipt_id=adversarial.get("receipt_id"),
+                    consent_id=adversarial.get("consent_id"),
+                    expected_kind="delegation",
+                    consent_type="participation_delegation",
+                    consents=consents,
+                    operations=operations,
+                    receipt_bundle=receipt_bundle,
+                    allowed_statuses={"failed"},
+                )
+                and _nonempty_string(operations[adversarial.get("receipt_id")].get("fallback"))
+            )
+        )
+    )
+
+    conditions_valid = True
+    for key in ("no_go_conditions", "reassessment_triggers"):
+        valid_ids, by_id = _ids_unique(record.get(key))
+        conditions_valid = bool(
+            conditions_valid
+            and valid_ids
+            and bool(by_id)
+            and all(
+                _exact_keys(item, PROJECT_CONDITION_KEYS)
+                and _nonempty_string(item.get("condition"))
+                and _refs_exist(item.get("evidence_item_ids"), evidence_ids)
+                for item in by_id.values()
+            )
+        )
+
+    commitment = record.get("commitment")
+    ceiling_rank, ceiling_reasons = _project_ceiling(
+        layers if isinstance(layers, dict) else {},
+        search_passes,
+        candidates,
+        trial,
+        adversarial,
+    )
+    direction = commitment.get("direction") if isinstance(commitment, dict) else None
+    chosen_rank = commitment.get("chosen_rank") if isinstance(commitment, dict) else None
+    commitment_valid = bool(
+        _exact_keys(commitment, PROJECT_COMMITMENT_KEYS)
+        and direction in PROJECT_COMMITMENT_DIRECTIONS
+        and isinstance(chosen_rank, int)
+        and not isinstance(chosen_rank, bool)
+        and chosen_rank == PROJECT_COMMITMENT_DIRECTIONS[direction]
+        and chosen_rank <= ceiling_rank
+        and _nonempty_string(commitment.get("rationale"))
+        and _refs_exist(commitment.get("evidence_item_ids"), evidence_ids)
+        and _unique_string_list(commitment.get("upgrade_conditions"), min_items=1)
+    )
+
+    return [
+        _check(
+            "PROJECT_VIABILITY sidecar 顶层 exact keys 与 v0.4.0 identity 正确",
+            top_level_valid and contract_version_valid,
+            f"keys={sorted(record)}；contract_version={record.get('contract_version')!r}",
+            severe=True,
+        ),
+        _check(
+            "PROJECT_VIABILITY 将实现形态去锚为候选并处理实质变化复查",
+            framing_valid,
+            f"decision_context={decision_context!r}；focal_solution={focal_solution!r}",
+            severe=True,
+        ),
+        _check(
+            "PROJECT_VIABILITY 四个价值维度与 evidence items 分开且引用有效",
+            layers_valid and evidence_items_valid and evidence_source_refs_valid,
+            f"layers_valid={layers_valid}；evidence_items_valid={evidence_items_valid}；source_refs={evidence_source_refs_valid}",
+            severe=True,
+        ),
+        _check(
+            "PROJECT_VIABILITY 两遍搜索顺序、状态、来源、授权与研究回执一致",
+            search_passes_valid and consent_bundle_valid and operation_bundle_valid and receipt_contract_valid,
+            f"search_passes_valid={search_passes_valid}；consents={consent_evidence}；operations={operation_evidence}",
+            severe=True,
+        ),
+        _check(
+            "PROJECT_VIABILITY source ID 唯一并关联 receipt locator",
+            source_links_valid,
+            f"source_ids={sorted(source_ids)}；source_links_valid={source_links_valid}",
+            severe=True,
+        ),
+        _check(
+            "PROJECT_VIABILITY material 候选类别、核验维度与最强替代引用完整",
+            candidates_valid and strongest_valid,
+            f"categories={sorted(str(item) for item in candidate_categories)}；strongest={strongest_id!r}",
+            severe=True,
+        ),
+        _check(
+            "PROJECT_VIABILITY 最强替代试用状态、任务、标准、结果与授权回执一致",
+            trial_valid,
+            f"trial={trial!r}",
+            severe=True,
+        ),
+        _check(
+            "PROJECT_VIABILITY 必要反方使用七字段 exact payload 并与委派授权回执一致",
+            adversarial_valid,
+            f"adversarial_review={adversarial!r}",
+            severe=True,
+        ),
+        _check(
+            "PROJECT_VIABILITY no-go 与复查触发器存在且引用有效",
+            conditions_valid,
+            f"conditions_valid={conditions_valid}",
+            severe=True,
+        ),
+        _check(
+            "PROJECT_VIABILITY chosen commitment 不超过 computed ceiling",
+            commitment_valid,
+            f"direction={direction!r}；chosen_rank={chosen_rank!r}；ceiling_rank={ceiling_rank}；reasons={ceiling_reasons}",
             severe=True,
         ),
     ]
@@ -2437,8 +3405,8 @@ def grade_decision_record(record: dict[str, object]) -> list[Check]:
     )
     return [
         _check(
-            "DecisionRecord 使用 v0.3.0 且包含全部核心字段",
-            _required_keys(record, required) and record.get("contract_version") == "0.3.0",
+            "DecisionRecord 使用 v0.4.0 且包含全部核心字段",
+            _required_keys(record, required) and record.get("contract_version") == "0.4.0",
             f"缺少字段={sorted(required - set(record))}；version={record.get('contract_version')!r}",
             severe=True,
         ),
@@ -2514,7 +3482,7 @@ def main() -> int:
     parser.add_argument(
         "--stage",
         required=True,
-        choices=("CHECKPOINT", "R", "A", "B", "EVIDENCE", "PARTICIPATION", "HUMAN", "DECISION_RECORD"),
+        choices=("CHECKPOINT", "R", "A", "B", "EVIDENCE", "PARTICIPATION", "PROJECT_VIABILITY", "HUMAN", "DECISION_RECORD"),
     )
     parser.add_argument("--input", required=True, type=Path, help="待评分的 Markdown、文本或 JSON 文件")
     parser.add_argument("--already-executed", action="store_true")
@@ -2527,8 +3495,8 @@ def main() -> int:
     )
     parser.add_argument("--interaction-json", type=Path, help="CHECKPOINT/R/A/B 的本轮结构化交互证据 JSON")
     parser.add_argument("--context-json", type=Path, help="CHECKPOINT 的结构化会话上下文 JSON")
-    parser.add_argument("--consent-json", type=Path, help="Evidence / Participation 的授权记录 JSON")
-    parser.add_argument("--receipt-json", type=Path, help="Evidence / Participation 的能力回执 JSON")
+    parser.add_argument("--consent-json", type=Path, help="Evidence / Participation 的授权记录或 PROJECT_VIABILITY consent bundle JSON")
+    parser.add_argument("--receipt-json", type=Path, help="Evidence / Participation / PROJECT_VIABILITY 的能力回执 JSON")
     parser.add_argument("--cancelled-method", action="append", default=[])
     parser.add_argument("--confirmed-method", action="append", default=[])
     parser.add_argument("--recommended-method", action="append", default=[])
@@ -2585,23 +3553,24 @@ def main() -> int:
             )
     else:
         record = parse_json_object(args.input, args.stage)
-        if args.stage in {"EVIDENCE", "PARTICIPATION"}:
+        if args.stage in {"EVIDENCE", "PARTICIPATION", "PROJECT_VIABILITY"}:
             if args.consent_json is None or args.receipt_json is None:
                 parser.error(f"{args.stage} 必须同时提供 --consent-json 和 --receipt-json")
             consent = parse_json_object(args.consent_json, "consent")
             receipt = parse_json_object(args.receipt_json, "receipt")
-            checks = (
-                grade_evidence_gate(record, consent, receipt)
-                if args.stage == "EVIDENCE"
-                else grade_participation_gate(record, consent, receipt)
-            )
+            if args.stage == "EVIDENCE":
+                checks = grade_evidence_gate(record, consent, receipt)
+            elif args.stage == "PARTICIPATION":
+                checks = grade_participation_gate(record, consent, receipt)
+            else:
+                checks = grade_project_viability(record, consent, receipt)
         elif args.stage == "HUMAN":
             checks = grade_human_review(record)
         else:
             checks = grade_decision_record(record)
     passed = sum(check.passed for check in checks)
     result = {
-        "contract_version": "0.3.0",
+        "contract_version": "0.4.0",
         "stage": args.stage,
         "expectations": [
             {key: value for key, value in asdict(check).items() if key != "severe"}

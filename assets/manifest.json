@@ -2,101 +2,33 @@
   "schema_version": "2",
   "assets": [
     {
-      "id": "readme-banner",
-      "role": "readme-opening-brand-banner",
-      "source": "assets/readme-banner-source.png",
-      "source_sha256": "af20a9b5224c77e9367f7e9c748461cba63c16533355bb38fc84d6f56d435d6b",
-      "source_canvas": {
-        "width": 1774,
-        "height": 887
-      },
-      "output_canvas": {
-        "width": 1200,
-        "height": 600
-      },
+      "id": "readme-invocation-card",
+      "role": "readme-opening-invocation-card",
       "variants": [
         {
           "locale": "neutral",
           "theme": "light",
-          "output": "assets/readme-banner-light.png"
+          "source": "assets/readme-invocation-card-light.png",
+          "source_sha256": "7c2bb4df41236ccb60396952a18d28e4a071ab970f479be24d8790afcc809bfa"
         },
         {
           "locale": "neutral",
           "theme": "dark",
-          "output": "assets/readme-banner-dark.png"
-        }
-      ],
-      "max_source_bytes": 1600000,
-      "max_output_bytes": 900000,
-      "generator": {
-        "script": "scripts/render_assets.py",
-        "decoder": "Pillow",
-        "decoder_version": "11.3.0",
-        "source_pixel_mode": "RGB",
-        "output_pixel_mode": "RGB",
-        "resize_filter": "LANCZOS",
-        "png_optimize": true,
-        "png_compress_level": 9,
-        "light_theme": {
-          "background_rgb": [
-            242,
-            239,
-            231
-          ],
-          "background_luma_max": 104,
-          "background_chroma_max": 32,
-          "feather_radius": 5,
-          "aperture_box": [
-            760,
-            210,
-            1014,
-            805
-          ],
-          "neutral_luma_scale": 0.72,
-          "neutral_luma_offset": 46,
-          "contact_shadow_box": [
-            610,
-            748,
-            1164,
-            838
-          ],
-          "contact_shadow_alpha": 30,
-          "contact_shadow_blur": 22
-        }
-      },
-      "provenance": {
-        "generator": "imagegen Skill CLI",
-        "model": "gpt-image-1.5",
-        "selection": "user-selected original 2:1 composition",
-        "reference_scope": "Darwin Skill README banner use and canvas intent only; no copied composition or brand elements"
-      }
-    },
-    {
-      "id": "brand-mark",
-      "role": "repository-brand-mark",
-      "variants": [
-        {
-          "locale": "neutral",
-          "theme": "light",
-          "source": "assets/brand-mark-light.svg"
-        },
-        {
-          "locale": "neutral",
-          "theme": "dark",
-          "source": "assets/brand-mark-dark.svg"
+          "source": "assets/readme-invocation-card-dark.png",
+          "source_sha256": "33760ccbbf4011f663f1e998ac41f006f31a8888a22945c6e395976c7bda7ff4"
         }
       ],
       "canvas": {
-        "width": 128,
-        "height": 128
+        "width": 600,
+        "height": 600
       },
-      "required_ids": [
-        "observation-frames",
-        "clarity-aperture",
-        "clarity-channel",
-        "reassessment-pivot"
-      ],
-      "max_bytes": 16384
+      "pixel_mode": "RGBA",
+      "max_bytes": 160000,
+      "provenance": {
+        "selection": "user-selected light and dark canonical raster originals",
+        "source_material": "the repository's canonical Thinking Light 3D subject",
+        "reference_scope": "reverse-skill README first-image use and compact badge intent only; no copied composition or brand elements"
+      }
     },
     {
       "id": "social-preview",

@@ -1,9 +1,9 @@
 {
-  "contract_version": "0.3.0",
+  "contract_version": "0.4.0",
   "id": "portable-adapters-and-decision-record",
   "domain": "portable-core",
   "decision_record": {
-    "contract_version": "0.3.0",
+    "contract_version": "0.4.0",
     "topic": "是否继续开发当前产品",
     "true_objectives": [
       "验证陌生客户是否愿意付费"
